@@ -15,9 +15,32 @@ Opensource implementation of Google ADK runtime and more.
     * GitOps CI/CD workflow for agents and tools.
     * Dashboard for centralized managements.
 
-# Installation
 
+# Roadmap
+
+
+* 1.0 - A2A support
+  * A2A runtime
+    * [ ] A2A fission env
+    * service implementation
+      * [ ] TaskStore: PgSQL backed task store
+      * [ ] PushNotifier: MQ based task notification
+      * [ ] QueueManager: Kafka based event queue
+    * [ ] Observability: logs and traces
+  * GitOps
+    * [ ] Embedded git server
+    * Tekton pipelines
+      * [ ] Build and apply 
+  * Dashboard
+    * [ ] Agent catalogue
+* 1.1 - Tool support
+
+
+
+# Installation
 
 # Usage
 
-## Deploy you ADK
+## Deploy an agent
+
+## Deploy a MCP server
