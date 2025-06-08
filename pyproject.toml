@@ -4,5 +4,6 @@ version = "0.1.0"
 description = "Add your description here"
 requires-python = ">=3.10"
 dependencies = [
+    "a2a-sdk>=0.2.5",
     "google-adk>=1.2.1",
 ]
