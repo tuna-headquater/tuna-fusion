@@ -19,7 +19,7 @@ Opensource implementation of Google ADK runtime and more.
 # Roadmap
 
 
-* 1.0 - A2A support
+* 1.0 - A2A support 
   * A2A runtime
     * [ ] A2A fission env
     * service implementation
@@ -27,13 +27,15 @@ Opensource implementation of Google ADK runtime and more.
       * [ ] PushNotifier: MQ based task notification
       * [ ] QueueManager: Kafka based event queue
     * [ ] Observability: logs and traces
-  * GitOps
-    * [ ] Embedded git server
-    * Tekton pipelines
-      * [ ] Build and apply 
-  * Dashboard
+  * Management server
+    * [ ] Namespace
     * [ ] Agent catalogue
+    * [ ] Git repo server
+    * Tekton pipelines
+      * [ ] Build and apply
+    * [ ] Dashboard UI
 * 1.1 - Tool support
+  
 
 
 
