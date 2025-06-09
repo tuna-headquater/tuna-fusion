@@ -1,0 +1,16 @@
+@startuml
+
+[*] --> Pending
+
+Pending -> Scheduled
+
+Scheduled: Underlying POD is created
+
+Scheduled -> Running
+Running -> Succeeded
+Running -> Failed
+
+Failed --> [*]
+Succeeded --> [*]
+
+@enduml
