@@ -1,0 +1,56 @@
+# 忽略文档
+*.md
+
+# 忽略测试目录
+test/
+
+# 忽略Python编译文件和缓存
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+*.py[cod]
+*$py.class
+
+# 忽略虚拟环境目录
+venv/
+env/
+.virtualenv/
+.venv/
+
+# 忽略node.js相关文件
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# 忽略git信息
+.git
+.gitignore
+
+# 忽略IDE配置文件
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# 忽略日志和数据库文件
+*.log
+*.sqlite3
+*.db
+
+# 忽略测试相关文件
+test/
+tests/
+
+# 忽略操作系统自动生成的文件
+.DS_Store
+Thumbs.db
+
+# 忽略本地开发使用的敏感信息
+.env
+config/secrets.json
+
+# 忽略CI/CD配置文件（除非需要）
+.circleci/
+.github/workflows/
+.travis.yml

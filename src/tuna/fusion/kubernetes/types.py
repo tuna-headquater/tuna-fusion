@@ -15,6 +15,13 @@ class AgentBuildPhase(Enum):
     Succeeded = "succeeded"
     Failed = "failed"
 
+
+class OperatorConfiguration(BaseModel):
+    staging_namespace: str
+    production_namespace: str
+    toolchain_image: str
+
+
 class AgentDeployment(BaseModel):
     class Status(BaseModel):
         class CurrentBuilds(BaseModel):
@@ -40,9 +47,12 @@ class AgentDeployment(BaseModel):
 class AgentBuild(BaseModel):
     class Spec(BaseModel):
         git_commit_id: str
-        builder_image: str
         build_target: AgentBuildTarget
         build_script: str
+        # fission_builder_image: str
+        # fission_runtime_image: str
+        fission_function_entrypoint: str
+        fission_env: str
 
     class Status(BaseModel):
         phase: AgentBuildPhase

@@ -1,50 +1,57 @@
 import logging
 import os
+import time
 
 import kopf
-from kubernetes import client, config
-from kubernetes.client import ApiClient
+from kubernetes import client
 from kubernetes.dynamic import DynamicClient, ResourceList
 from pydantic import ValidationError
 
-from src.tuna.fusion.kubernetes.types import AgentDeployment
-from tuna.fusion.kubernetes.types import AgentBuild
+from src.tuna.fusion.kubernetes.types import AgentDeployment, OperatorConfiguration
+from tuna.fusion.kubernetes.types import AgentBuild, AgentBuildTarget
 
 logger = logging.getLogger(__name__)
 
+def get_configuration(ns: str = os.getenv("TUNA_SYSTEM_NS", "tuna-system"), cm: str = "fusion-server-operator") -> OperatorConfiguration:
+    core_v1_api = client.CoreV1Api()
+    config_map = core_v1_api.read_namespaced_config_map(name=cm, namespace=ns)
+    return OperatorConfiguration(**config_map.data)
 
-def create_builder_job_object(job_name: str, agent_build: AgentBuild) -> client.V1Job:
+def create_builder_job_object(
+        configuration: OperatorConfiguration,
+        agent_deployment: AgentDeployment,
+        agent_build: AgentBuild) -> client.V1Job:
+    ns = configuration.staging_namespace if agent_build.spec.build_target == AgentBuildTarget.Staging else configuration.production_namespace
+
     # Configure Pod template container
     container = client.V1Container(
         name="tuna-builder",
-        image="tuna-builder:latest",
+        image=configuration.toolchain_image,
         resources=client.V1ResourceRequirements(
             limits={"memory": "512Mi", "cpu": "500m"},
             requests={"memory": "256Mi", "cpu": "250m"}),
         volume_mounts=[client.V1VolumeMount(mount_path="/build.sh", name="builder-script-volume", sub_path="build.sh")],
         env=[
-            client.V1EnvVar(
-                name=key,  # 环境变量名
-                value_from=client.V1EnvVarSource(
-                    config_map_key_ref=client.V1ConfigMapKeySelector(
-                        name=os.environ.get("TUNA_CONFIG_MAP_NAME"),  # ConfigMap 名称
-                        key=key  # ConfigMap 中的键
-                    )
-                )
-            ) for key in ["FISSION_JAVA_ENV", "FISSION_PYTHON_ENV"]
-        ]
+            client.V1EnvVar(name="AGENT_BUILD_TARGET", value=agent_build.spec.build_target),
+            client.V1EnvVar(name="GIT_COMMIT_ID", value=agent_build.spec.git_commit_id),
+            client.V1EnvVar(name="FUNCTION_NAME", value=agent_deployment.spec.agent_name),
+            client.V1EnvVar(name="FUNCTION_ENV", value=agent_build.spec.fission_env),
+            client.V1EnvVar(name="FUNCTION_ENTRYPOINT", value=agent_build.spec.fission_function_entrypoint),
+            client.V1EnvVar(name="STAGING_NAMESPACE", value=configuration.staging_namespace),
+            client.V1EnvVar(name="PRODUCTION_NAMESPACE", value=configuration.production_namespace),
+        ],
     )
 
     init_container = client.V1Container(
         name="init-build-script",
         image="tuna-builder:latest",
-        command=["sh", "-c", f"echo '{agent_build.spec.build_script}' > /workspace/build.sh && chmod +x /workspace/build.sh"],
+        command=["sh", "-c", f"echo $'{agent_build.spec.build_script}' > /workspace/build.sh && chmod +x /workspace/build.sh"],
         volume_mounts=[client.V1VolumeMount(mount_path="/workspace", name="workspace")],
     )
 
     # Create and configure a spec section
     template = client.V1PodTemplateSpec(
-        metadata=client.V1ObjectMeta(labels={"app": "tuna-builder"}),
+        metadata=client.V1ObjectMeta(namespace=ns),
         spec=client.V1PodSpec(
             restart_policy="Never",
             containers=[container],
@@ -68,24 +75,24 @@ def create_builder_job_object(job_name: str, agent_build: AgentBuild) -> client.
     job = client.V1Job(
         api_version="batch/v1",
         kind="Job",
-        metadata=client.V1ObjectMeta(name=job_name),
+        metadata=client.V1ObjectMeta(name=f"{agent_build.spec.build_target}_{agent_deployment.spec.agent_name}_{int(time.time())}"),
         spec=spec)
 
     return job
 
 
-def create_job(api_instance: client.BatchV1Api, job: client.V1Job):
+def create_job(api_instance: client.BatchV1Api, job: client.V1Job, ns: str):
     api_response = api_instance.create_namespaced_job(
         body=job,
-        namespace="default")
+        namespace=ns)
     logger.info(f"Job created. status='{str(api_response.status)}'")
     return api_response
 
 
-def get_job_status(api_instance, job_name: str) -> client.V1JobStatus:
+def get_job_status(api_instance, job_name: str, ns: str) -> client.V1JobStatus:
     api_response: client.V1Job = api_instance.read_namespaced_job_status(
         name=job_name,
-        namespace="default"
+        namespace=ns
     )
     return api_response.status
 
@@ -109,12 +116,12 @@ def get_agent_deployment_resource(dyn_client: DynamicClient):
         raise kopf.PermanentError("AgentDeployment resource not found")
 
 
-def get_agent_deployment(agent_deployment_resource: ResourceList, agent_deployment_name: str):
-    agent_deployment_object = agent_deployment_resource.get(name=agent_deployment_name)
-    if not agent_deployment_object:
+def get_agent_deployment(agent_deployment_resource: ResourceList, agent_deployment_name: str, ns: str):
+    agent_deployment_instance = agent_deployment_resource.get(name=agent_deployment_name, namespace=ns)
+    if not agent_deployment_instance:
         raise kopf.PermanentError("AgentDeployment object cannot be found: " + agent_deployment_name)
 
     try:
-        return AgentDeployment.model_validate(agent_deployment_object.to_dict())
+        return AgentDeployment.model_validate(agent_deployment_instance.to_dict())
     except ValidationError as e:
         raise kopf.PermanentError("AgentDeployment validation failed: " + e)

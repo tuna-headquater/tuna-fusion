@@ -30,7 +30,7 @@ spec:
                   type: string
                 build_script:
                   type: string
-                fission_env:
+                fission_runtime_env:
                   type: string
             status:
               type: object

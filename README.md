@@ -37,12 +37,22 @@ Opensource implementation of Google ADK runtime and more.
 * 1.1 - Tool support
   
 
+# User Guide
 
-
-# Installation
-
-# Usage
+## Installation
 
 ## Deploy an agent
 
 ## Deploy a MCP server
+
+
+# Contribution guide
+
+## Build docker images
+
+```shell
+docker buildx build --push --platform linux/amd64,linux/arm64 -t robinqu/tuna-fusion-server:$(date +%s) -f ./dockerfile/fusion-server.dockerfile .
+
+
+docker buildx build --push --platform linux/amd64,linux/arm64 -t robinqu/tuna-fusion-toolchain:$(date +%s) -f ./dockerfile/fusion-toolchain.dockerfile .
+```

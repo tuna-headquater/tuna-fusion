@@ -1,14 +1,14 @@
 import logging
 
 import kopf
-from kubernetes import config, client
+from kubernetes import config
 from kubernetes.client import ApiClient, BatchV1Api
 from kubernetes.dynamic import DynamicClient
 from pydantic import ValidationError
 
 from tuna.fusion.kubernetes.types import AgentBuildTarget, AgentBuild, AgentBuildPhase, AgentDeployment
 from tuna.fusion.kubernetes.utilities import get_agent_deployment, get_agent_deployment_resource, \
-    create_builder_job_object, create_job, get_job_status
+    create_builder_job_object, create_job, get_job_status, get_configuration
 
 logger = logging.getLogger(__name__)
 
@@ -25,9 +25,13 @@ def on_agent_build_create(body, meta, namespace,  **kwargs):
 
 
     config.load_kube_config()
+
+    configuration = get_configuration()
+
     agent_deployment = get_agent_deployment(
         get_agent_deployment_resource(DynamicClient(ApiClient())),
-        agent_deployment_name
+        agent_deployment_name,
+        namespace
     )
 
     agent_build = AgentBuild.model_validate(body)
@@ -37,10 +41,9 @@ def on_agent_build_create(body, meta, namespace,  **kwargs):
         raise kopf.TemporaryError("An existing production build is still running.")
 
     # 2. Create job
-    job_name = meta["name"]
-    job_obj = create_builder_job_object(job_name=job_name, agent_build=agent_build)
+    job_obj = create_builder_job_object(configuration=configuration, agent_deployment=agent_deployment, agent_build=agent_build)
     batch_api = BatchV1Api(ApiClient())
-    create_job_resp = create_job(batch_api, job_obj)
+    create_job_resp = create_job(batch_api, job_obj, namespace)
     if not create_job_resp.successful():
         raise kopf.TemporaryError("Failed to create job")
 
@@ -49,10 +52,10 @@ def on_agent_build_create(body, meta, namespace,  **kwargs):
 
 
 @kopf.timer('fusion.tuna.ai', 'v1', 'AgentBuild', interval=2, when=lambda status, **_: status["phase"] not in ["failed", "succeeded"])
-def check_active_agent_builds(body, meta, **kwargs):
+def check_active_agent_builds(namespace, meta, **kwargs):
     """
     Check job status and update status of agent build
-    :param body:
+    :param namespace:
     :param meta:
     :param kwargs:
     :return:
@@ -60,7 +63,7 @@ def check_active_agent_builds(body, meta, **kwargs):
     # agent_build = AgentBuild.model_validate(body)
     batch_api = BatchV1Api(ApiClient())
     job_name = meta["name"]
-    status = get_job_status(batch_api, job_name)
+    status = get_job_status(batch_api, job_name, namespace)
     if status.active or status.ready:
         return {"phase": AgentBuildPhase.Running}
     if status.failed:
