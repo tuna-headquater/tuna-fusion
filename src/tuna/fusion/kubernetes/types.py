@@ -37,13 +37,12 @@ class AgentDeployment(BaseModel):
     status: Status
 
 
-
 class AgentBuild(BaseModel):
     class Spec(BaseModel):
         git_commit_id: str
         builder_image: str
         build_target: AgentBuildTarget
-
+        build_script: str
 
     class Status(BaseModel):
         phase: AgentBuildPhase

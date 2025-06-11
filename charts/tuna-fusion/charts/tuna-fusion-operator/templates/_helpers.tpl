@@ -60,3 +60,29 @@ Create the name of the service account to use
 {{- default "default" .Values.serviceAccount.name }}
 {{- end }}
 {{- end }}
+
+{{- define "tuna-fusion-operator.clusterRoleName" -}}
+{{- if .Values.clusterRole.create }}
+{{- default (include "tuna-fusion-operator.fullname" .) .Values.clusterRole.name }}
+{{- else }}
+{{- default "default" .Values.clusterRole.name }}
+{{- end }}
+{{- end }}
+
+{{- define "tuna-fusion-operator.namespacedRoleName" -}}
+{{- if .Values.namespacedRole.create }}
+{{- default (include "tuna-fusion-operator.fullname" .) .Values.namespacedRole.name }}
+{{- else }}
+{{- default "default" .Values.namespacedRole.name }}
+{{- end }}
+{{- end }}
+
+
+{{- define "tuna-fusion-operator.configmap" -}}
+{{- if .Values.namespacedRole.create }}
+{{- default (include "tuna-fusion-operator.fullname" .) .Values.configmap.name }}
+{{- else }}
+{{- default "default" .Values.configmap.name }}
+{{- end }}
+
+{{- end }}

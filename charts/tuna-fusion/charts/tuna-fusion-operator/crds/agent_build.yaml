@@ -28,6 +28,10 @@ spec:
                   type: string
                 builder_image:
                   type: string
+                build_script:
+                  type: string
+                fission_env:
+                  type: string
             status:
               type: object
               x-kubernetes-preserve-unknown-fields: true

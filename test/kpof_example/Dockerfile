@@ -1,4 +1,4 @@
-# docker build bulidx -t exmaple-operator:latest -f ./Dockerfile --platform linux/amd64,linux/arm64  .
+# docker build bulidx -t exmaple-operator:latest -f ./fusion-toolchain.dockerfile --platform linux/amd64,linux/arm64  .
 
 FROM python:3.13
 ADD . /src

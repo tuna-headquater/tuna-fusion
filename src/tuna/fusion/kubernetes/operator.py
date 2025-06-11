@@ -38,7 +38,7 @@ def on_agent_build_create(body, meta, namespace,  **kwargs):
 
     # 2. Create job
     job_name = meta["name"]
-    job_obj = create_builder_job_object(job_name=job_name)
+    job_obj = create_builder_job_object(job_name=job_name, agent_build=agent_build)
     batch_api = BatchV1Api(ApiClient())
     create_job_resp = create_job(batch_api, job_obj)
     if not create_job_resp.successful():

@@ -3,4 +3,4 @@
 FROM python:3.13
 COPY --from=ghcr.io/astral-sh/uv:0.7.12 /uv /uvx /bin/
 ADD . /app
-RUN uv sync --locked
+RUN uv sync --locked --index https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple/
