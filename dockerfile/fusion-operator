@@ -1,0 +1,4 @@
+FROM python:3.13
+ADD ./src/tuna/fusion/kubernetes /src
+RUN pip install kopf
+CMD kopf run /src/operator.py --verbose

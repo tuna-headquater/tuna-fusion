@@ -5,7 +5,7 @@ Opensource implementation of Google ADK runtime and more.
 # Highlights
 
 * Runtime for any A2A protocol agents
-  * Based on [fission.io](https://fission.io/) `tuna-fussion` guarantees on-demand scalability across cluster.
+  * Based on [fission.io](https://fission.io/) `tuna-fusion` guarantees on-demand scalability across cluster.
   * Builtin observability.
 * Runtime services for Google ADK:
   * Builtin services including `MemroyService`, `ArtifactService`, `SessionService`.

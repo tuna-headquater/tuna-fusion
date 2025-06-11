@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: example-operator
+  labels:
+    app: example-operator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: example-operator
+  template:
+    metadata:
+      name: example-operator
+      labels:
+        app: example-operator
+    spec:
+      serviceAccountName: kopfexample-account
+      containers:
+        - name: example-operator
+          image: example-operator:1749538401
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+      restartPolicy: Always

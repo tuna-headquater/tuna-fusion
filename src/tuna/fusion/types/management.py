@@ -14,19 +14,19 @@ class AgentSnapshot(BaseModel):
     created_at: datetime
     updated_at: datetime
 
-
-class AgentDeployment(BaseModel):
-    class State(Enum):
-        PENDING="pending"
-        RUNNING="running"
-        DEPLOYED="deployed"
-        FAILED="failed"
-
-    agent_repository_id: int
-    state: State
-    snapshot_id: int
-    created_at: datetime
-    updated_at: datetime
+#
+# class AgentDeployment(BaseModel):
+#     class State(Enum):
+#         PENDING="pending"
+#         RUNNING="running"
+#         DEPLOYED="deployed"
+#         FAILED="failed"
+#
+#     agent_repository_id: int
+#     state: State
+#     snapshot_id: int
+#     created_at: datetime
+#     updated_at: datetime
 
 
 class AgentRepository(BaseModel):
