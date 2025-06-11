@@ -105,23 +105,9 @@ def validate_agent_deployment(body, **_):
         raise kopf.AdmissionError("AgentDeployment cannot have have current builds on creation")
 
 
-@kopf.on.create("fusion.tuna.ai", "v1", "AgentBuild"):
+@kopf.on.create("fusion.tuna.ai", "v1", "AgentBuild")
 def validate_agent_build(body, **_):
     try:
-        agent_build = AgentBuild.model_validate(body)
+        AgentBuild.model_validate(body)
     except ValidationError as e:
         raise kopf.AdmissionError(message=str(e))
-
-
-
-
-
-
-
-
-
-
-
-
-
-
