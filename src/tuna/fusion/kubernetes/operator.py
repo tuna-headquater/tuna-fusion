@@ -13,21 +13,50 @@ from tuna.fusion.kubernetes.utilities import get_agent_deployment, get_agent_dep
 logger = logging.getLogger(__name__)
 
 
+@kopf.on.validate("fusion.tuna.ai", "v1", "AgentDeployment")
+def validate_agent_deployment(body, **_):
+    """
+    Validate agent deployment configuration
+    :param body:
+    :param _:
+    :return:
+    """
+    try:
+        agent_deployment = AgentDeployment.model_validate(body)
+    except ValidationError as e:
+        raise kopf.AdmissionError(message=str(e))
+    if agent_deployment.status.current_builds.staging or agent_deployment.status.current_builds.production:
+        raise kopf.AdmissionError("AgentDeployment cannot have have current builds on creation")
 
-@kopf.on.create('fusion.tuna.ai', 'v1', 'AgentBuild')
-def on_agent_build_create(body, meta, namespace,  **kwargs):
-    # 1. check agent deployment
+
+@kopf.on.create("fusion.tuna.ai", "v1", "AgentBuild")
+def validate_agent_build(body, meta, namespace, **kwargs_):
+    """
+    Validate agent build:
+    1. data fields should be valid
+    2. parent (aka, AgentDeployment) should exist
+    3. parent (aka, AgentDeployment) should have no current build
+    :param namespace:
+    :param meta:
+    :param body:
+    :param _:
+    :return:
+    """
+    try:
+        AgentBuild.model_validate(body)
+    except ValidationError as e:
+        raise kopf.AdmissionError(message=str(e))
+
+
     agent_deployment_name = None
     try:
+        references = meta["ownerReferences"]
         agent_deployment_name = meta["ownerReferences"]["name"]
-    except KeyError:
-        raise kopf.PermanentError("AgentBuild should have ownerReference to a AgentDeployment")
 
+    except KeyError:
+        raise kopf.AdmissionError("AgentBuild should have ownerReference to a AgentDeployment")
 
     config.load_kube_config()
-
-    configuration = get_configuration()
-
     agent_deployment = get_agent_deployment(
         get_agent_deployment_resource(DynamicClient(ApiClient())),
         agent_deployment_name,
@@ -36,11 +65,27 @@ def on_agent_build_create(body, meta, namespace,  **kwargs):
 
     agent_build = AgentBuild.model_validate(body)
     if agent_build.spec.build_target == AgentBuildTarget.Staging and agent_deployment.status.current_builds.staging:
-        raise kopf.TemporaryError("An existing staging build is still running.")
+        raise kopf.AdmissionError("An existing staging build is still running.")
     if agent_build.spec.build_target == AgentBuildTarget.Production and agent_deployment.status.current_builds.production:
-        raise kopf.TemporaryError("An existing production build is still running.")
+        raise kopf.AdmissionError("An existing production build is still running.")
 
-    # 2. Create job
+
+@kopf.timer('fusion.tuna.ai', 'v1', 'AgentBuild', interval=2, when=lambda status, **_: status["phase"] not in ["failed", "succeeded"])
+def check_pending_agent_builds(body, **kwargs):
+    """
+    Find pending agent builds and create jobs
+    :param body:
+    :param kwargs:
+    :return:
+    """
+
+    configuration = get_configuration()
+    config.load_kube_config()
+    agent_deployment = get_agent_deployment(
+        get_agent_deployment_resource(DynamicClient(ApiClient())),
+        agent_deployment_name,
+        namespace
+    )
     job_obj = create_builder_job_object(configuration=configuration, agent_deployment=agent_deployment, agent_build=agent_build)
     batch_api = BatchV1Api(ApiClient())
     create_job_resp = create_job(batch_api, job_obj, namespace)
@@ -98,19 +143,4 @@ def on_agent_build_status_phase_update(body, meta, old, new, **kwargs):
         raise kopf.TemporaryError(f"Failed to patch AgentDeployment {agent_deployment_name}")
 
 
-@kopf.on.validate("fusion.tuna.ai", "v1", "AgentDeployment")
-def validate_agent_deployment(body, **_):
-    try:
-        agent_deployment = AgentDeployment.model_validate(body)
-    except ValidationError as e:
-        raise kopf.AdmissionError(message=str(e))
-    if agent_deployment.status.current_builds.staging or agent_deployment.status.current_builds.production:
-        raise kopf.AdmissionError("AgentDeployment cannot have have current builds on creation")
 
-
-@kopf.on.create("fusion.tuna.ai", "v1", "AgentBuild")
-def validate_agent_build(body, **_):
-    try:
-        AgentBuild.model_validate(body)
-    except ValidationError as e:
-        raise kopf.AdmissionError(message=str(e))

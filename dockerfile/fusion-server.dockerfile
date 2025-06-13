@@ -5,4 +5,4 @@ COPY --from=ghcr.io/astral-sh/uv:0.7.12 /uv /uvx /bin/
 ADD . /app
 WORKDIR /app/
 RUN uv sync --locked --index https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple/
-CMD /bin/bash
+CMD ["/bin/bash"]

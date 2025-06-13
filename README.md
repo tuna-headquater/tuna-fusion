@@ -18,7 +18,6 @@ Opensource implementation of Google ADK runtime and more.
 
 # Roadmap
 
-
 * 1.0 - A2A support 
   * A2A runtime
     * [ ] A2A fission env

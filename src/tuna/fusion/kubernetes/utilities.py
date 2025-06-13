@@ -7,7 +7,7 @@ from kubernetes import client
 from kubernetes.dynamic import DynamicClient, ResourceList
 from pydantic import ValidationError
 
-from src.tuna.fusion.kubernetes.types import AgentDeployment, OperatorConfiguration
+from tuna.fusion.kubernetes.types import AgentDeployment, OperatorConfiguration
 from tuna.fusion.kubernetes.types import AgentBuild, AgentBuildTarget
 
 logger = logging.getLogger(__name__)
