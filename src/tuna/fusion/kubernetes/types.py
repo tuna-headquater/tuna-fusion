@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Optional
+from typing import Optional, List
 
 from pydantic import BaseModel, Field
 
@@ -22,41 +22,59 @@ class OperatorConfiguration(BaseModel):
     toolchain_image: str
 
 
+class Metadata(BaseModel):
+    class OwnerReference(BaseModel):
+        apiVersion: str
+        blockOwnerDeletion: str
+        controller: bool
+        kind: str
+        name: str
+        uid: str
+
+    name: str
+    namespace: str
+    uid: str
+    labels: dict[str, str]
+    ownerReferences: List[OwnerReference]
+
+
 class AgentDeployment(BaseModel):
     class Status(BaseModel):
         class CurrentBuilds(BaseModel):
             class BuildInfo(BaseModel):
                 name: str
-                start_timestamp: int
+                startTimestamp: int
             staging: Optional[BuildInfo] = None
             production: Optional[BuildInfo] = None
-        current_builds: CurrentBuilds
+        currentBuilds: CurrentBuilds
 
     class Spec(BaseModel):
-        agent_name: str
-        agent_catalogue_id: int
-        agent_repository_id: int
-        agent_catalogue_name: str
-        agent_repository_name: str
-        git_repository_url: str
+        agentName: str
+        agentCatalogueId: int
+        agentRepositoryId: int
+        agentCatalogueName: str
+        agentRepositoryName: str
+        gitRepositoryUrl: str
 
+    metadata: Metadata
     spec: Spec
     status: Status
 
 
 class AgentBuild(BaseModel):
     class Spec(BaseModel):
-        git_commit_id: str
-        build_target: AgentBuildTarget
-        build_script: str
+        gitCommitId: str
+        buildTarget: AgentBuildTarget
+        buildScript: str
         # fission_builder_image: str
         # fission_runtime_image: str
-        fission_function_entrypoint: str
-        fission_env: str
+        fissionFunctionEntrypoint: str
+        fissionEnv: str
 
     class Status(BaseModel):
         phase: AgentBuildPhase
 
+    metadata: Metadata
     spec: Spec
     status: Status
 
