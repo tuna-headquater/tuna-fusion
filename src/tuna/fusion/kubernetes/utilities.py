@@ -1,16 +1,14 @@
 import logging
 import os
 import time
-from typing import Dict, Any
 
 import kopf
 from kubernetes import client, config
 from kubernetes.client import ApiClient
-from kubernetes.dynamic import DynamicClient, ResourceList
-from pydantic import ValidationError
+from kubernetes.dynamic import DynamicClient
 
-from tuna.fusion.kubernetes.types import AgentDeployment, OperatorConfiguration
 from tuna.fusion.kubernetes.types import AgentBuild, AgentBuildTarget
+from tuna.fusion.kubernetes.types import AgentDeployment, OperatorConfiguration
 
 logger = logging.getLogger(__name__)
 
@@ -30,12 +28,12 @@ def create_builder_job_object(
     :param agent_build:
     :return:
     """
-    ns = configuration.staging_namespace if agent_build.spec.buildTarget == AgentBuildTarget.Staging else configuration.production_namespace
+    ns = configuration.stagingNamespace if agent_build.spec.buildTarget == AgentBuildTarget.Staging else configuration.productionNamespace
 
     # Configure Pod template container
     container = client.V1Container(
         name="tuna-builder",
-        image=configuration.toolchain_image,
+        image=configuration.toolchainImage,
         resources=client.V1ResourceRequirements(
             limits={"memory": "512Mi", "cpu": "500m"},
             requests={"memory": "256Mi", "cpu": "250m"}),
@@ -44,10 +42,10 @@ def create_builder_job_object(
             client.V1EnvVar(name="AGENT_BUILD_TARGET", value=agent_build.spec.buildTarget),
             client.V1EnvVar(name="GIT_COMMIT_ID", value=agent_build.spec.gitCommitId),
             client.V1EnvVar(name="FUNCTION_NAME", value=agent_deployment.spec.agentName),
-            client.V1EnvVar(name="FUNCTION_ENV", value=agent_build.spec.fissionEnv),
-            client.V1EnvVar(name="FUNCTION_ENTRYPOINT", value=agent_build.spec.fissionFunctionEntrypoint),
-            client.V1EnvVar(name="STAGING_NAMESPACE", value=configuration.staging_namespace),
-            client.V1EnvVar(name="PRODUCTION_NAMESPACE", value=configuration.production_namespace),
+            # client.V1EnvVar(name="FUNCTION_ENV", value=agent_build.spec.fissionEnv),
+            # client.V1EnvVar(name="FUNCTION_ENTRYPOINT", value=agent_build.spec.fissionFunctionEntrypoint),
+            client.V1EnvVar(name="STAGING_NAMESPACE", value=configuration.stagingNamespace),
+            client.V1EnvVar(name="PRODUCTION_NAMESPACE", value=configuration.productionNamespace),
         ],
     )
 
@@ -137,12 +135,6 @@ def get_agent_deployment_resource(dyn_client: DynamicClient):
         raise kopf.PermanentError("AgentDeployment resource not found")
 
 
-# def get_agent_deployment(agent_deployment_resource: ResourceList, agent_deployment_name: str, ns: str):
-#     agent_deployment_instance = agent_deployment_resource.get(name=agent_deployment_name, namespace=ns)
-#     assert agent_deployment_instance, "should have found AgentDeployment object"
-#     return AgentDeployment.model_validate(agent_deployment_instance.to_dict())
-#
-
 def get_reference_agent_deployment(agent_build: AgentBuild):
     ref_names = [ref.name for ref in agent_build.metadata.ownerReferences if ref.kind == "AgentBuild"]
     assert ref_names, "should have at least one AgentDeployment"
@@ -153,14 +145,4 @@ def get_reference_agent_deployment(agent_build: AgentBuild):
     agent_deployment_instance = agent_deployment_resource.get(name=agent_deployment_name, namespace=agent_build.metadata.namespace)
     return AgentDeployment.model_validate(agent_deployment_instance.to_dict())
 
-
-
-#
-# def unsafe_extract_agent_deployment_name(body: Dict[str, Any]):
-#     refs = [ref["name"] for ref in body.get("metadata", {}).get("ownerReferences", []) if ref["kind"]=="AgentDeployment"]
-#     assert refs, "should have at least one AgentDeployment"
-#     return refs[0]
-#
-#
-#
 

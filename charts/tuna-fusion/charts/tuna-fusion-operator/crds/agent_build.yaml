@@ -1,14 +1,14 @@
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
-  name: AgentBuild
+  name: agentbuilds.fusion.tuna.ai
 spec:
   scope: Namespaced
   group: fusion.tuna.ai
   names:
     kind: AgentBuild
-    plural: AgentBuilds
-    singular: AgentBuild
+    plural: agentbuilds
+    singular: agentbuild
     shortNames:
       - ab
       - build

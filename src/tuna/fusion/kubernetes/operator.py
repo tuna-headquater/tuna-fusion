@@ -92,17 +92,6 @@ def check_pending_agent_builds(body, namespace, **kwargs):
     create_job_resp = create_job(batch_api, job_obj, namespace)
     if not create_job_resp.successful():
         raise kopf.TemporaryError("Failed to create job")
-    #
-    # # update agent deployment
-    # agent_deployment_resource = get_agent_deployment_resource(DynamicClient(ApiClient()))
-    # agent_deployment_resource.patch(name=agent_deployment.metadata.name,
-    #     body={"currentBuilds": {
-    #         agent_build.spec.buildTarget: {
-    #             "name": agent_build.metadata.name,
-    #             "startTimestamp":  int(datetime.now().timestamp())
-    #         }
-    #     }},
-    #     content_type="application/merge-patch+json")
 
     # update agent build
     return {"phase": AgentBuildPhase.Scheduled}
@@ -132,6 +121,15 @@ def check_active_agent_builds(namespace, meta, **kwargs):
 
 @kopf.on.field('fusion.tuna.ai', 'v1', 'AgentBuild', field='status.phase')
 def on_agent_build_status_phase_update(body, meta, old, new, **kwargs):
+    """
+    Listen to the changes of `phase` on AgentBuild, and update `currentBuilds` of `AgentDeployment`.
+    :param body:
+    :param meta:
+    :param old:
+    :param new:
+    :param kwargs:
+    :return:
+    """
     dynamic_client = DynamicClient(ApiClient())
     agent_deployment_resource = get_agent_deployment_resource(dynamic_client)
     agent_build = AgentBuild.model_validate(body)

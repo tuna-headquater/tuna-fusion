@@ -17,9 +17,9 @@ class AgentBuildPhase(Enum):
 
 
 class OperatorConfiguration(BaseModel):
-    staging_namespace: str
-    production_namespace: str
-    toolchain_image: str
+    stagingNamespace: str
+    productionNamespace: str
+    toolchainImage: str
 
 
 class Metadata(BaseModel):
@@ -53,7 +53,6 @@ class AgentDeployment(BaseModel):
         agentCatalogueId: int
         agentRepositoryId: int
         agentCatalogueName: str
-        agentRepositoryName: str
         gitRepositoryUrl: str
 
     metadata: Metadata
@@ -68,8 +67,8 @@ class AgentBuild(BaseModel):
         buildScript: str
         # fission_builder_image: str
         # fission_runtime_image: str
-        fissionFunctionEntrypoint: str
-        fissionEnv: str
+        # fissionFunctionEntrypoint: str
+        # fissionEnv: str
 
     class Status(BaseModel):
         phase: AgentBuildPhase
