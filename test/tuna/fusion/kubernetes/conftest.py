@@ -1,3 +1,5 @@
+from time import sleep
+
 import pytest
 from kubernetes.dynamic import DynamicClient, ResourceList
 import uuid
@@ -52,8 +54,10 @@ def _create_and_get_crd(crd_file_path: str, namespace: str = "default") -> tuple
         api_version = f"{crd_spec.get('group')}/{crd_spec.get('versions')[0].get('name')}"
         kind = crd_content.get('spec', {}).get("names", {}).get("kind")
         name = crd_content.get('metadata', {}).get("name")
-        extension_api.create_custom_resource_definition(crd_content)
-
+        response = extension_api.create_custom_resource_definition(crd_content)
+        assert response is not None, "Failed to create CustomResourceDefinition"
+        # wait for k8s to register CRD
+        sleep(2)
 
     # Create DynamicClient instance
     dyn_client = DynamicClient(client.api_client.ApiClient())

@@ -24,19 +24,18 @@ class OperatorConfiguration(BaseModel):
 
 class Metadata(BaseModel):
     class OwnerReference(BaseModel):
-        apiVersion: str
-        blockOwnerDeletion: str
-        controller: bool
+        apiVersion: Optional[str] = None
+        blockOwnerDeletion: bool = True
+        controller: Optional[str] = None
         kind: str
         name: str
-        uid: str
+        uid: Optional[str] = None
 
     name: str
     namespace: str
-    uid: str
-    labels: dict[str, str]
-    ownerReferences: List[OwnerReference]
-
+    uid: Optional[str] = None
+    labels: Optional[dict[str, str]] = None
+    ownerReferences: Optional[List[OwnerReference]] = None
 
 class AgentDeployment(BaseModel):
     class Status(BaseModel):
@@ -55,9 +54,9 @@ class AgentDeployment(BaseModel):
         agentCatalogueName: str
         gitRepositoryUrl: str
 
-    metadata: Metadata
+    metadata: Optional[Metadata] = None
     spec: Spec
-    status: Status
+    status: Optional[Status] = None
 
 
 class AgentBuild(BaseModel):
@@ -73,7 +72,7 @@ class AgentBuild(BaseModel):
     class Status(BaseModel):
         phase: AgentBuildPhase
 
-    metadata: Metadata
+    metadata: Optional[Metadata] = None
     spec: Spec
-    status: Status
+    status: Optional[Status] = None
 

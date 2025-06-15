@@ -2,6 +2,7 @@ import logging
 from datetime import datetime
 
 import kopf
+from kopf import WebhookDockerDesktopServer
 from kubernetes import config
 from kubernetes.client import ApiClient, BatchV1Api
 from kubernetes.dynamic import DynamicClient
@@ -10,9 +11,15 @@ from pydantic import ValidationError
 from tuna.fusion.kubernetes.types import AgentBuildTarget, AgentBuild, AgentBuildPhase, AgentDeployment
 from tuna.fusion.kubernetes.utilities import get_agent_deployment_resource, \
     create_builder_job_object, create_job, get_job_status, get_configuration, \
-    get_reference_agent_deployment
+    get_reference_agent_deployment, print_validation_error
 
 logger = logging.getLogger(__name__)
+
+
+@kopf.on.startup()
+def configure(settings: kopf.OperatorSettings, **_):
+    settings.admission.managed = 'auto.kopf.dev'
+    settings.admission.server = WebhookDockerDesktopServer()
 
 
 @kopf.on.validate("fusion.tuna.ai", "v1", "AgentDeployment")
@@ -26,8 +33,8 @@ def validate_agent_deployment(body, **_):
     try:
         agent_deployment = AgentDeployment.model_validate(body)
     except ValidationError as e:
-        raise kopf.AdmissionError(message=str(e))
-    if agent_deployment.status.current_builds.staging or agent_deployment.status.current_builds.production:
+        raise kopf.AdmissionError(message=print_validation_error(e))
+    if agent_deployment.status and (agent_deployment.status.currentBuilds.staging or agent_deployment.status.currentBuilds.production):
         raise kopf.AdmissionError("AgentDeployment cannot have have current builds on creation")
 
 
@@ -47,7 +54,7 @@ def validate_agent_build(body, meta, namespace, **kwargs_):
     try:
         agent_build = AgentBuild.model_validate(body)
     except ValidationError as e:
-        raise kopf.AdmissionError(message=str(e))
+        raise kopf.AdmissionError(message=print_validation_error(e))
 
     try:
         agent_deployment = get_reference_agent_deployment(agent_build)

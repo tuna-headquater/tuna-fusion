@@ -6,11 +6,23 @@ import kopf
 from kubernetes import client, config
 from kubernetes.client import ApiClient
 from kubernetes.dynamic import DynamicClient
+from pydantic.v1 import ValidationError
 
 from tuna.fusion.kubernetes.types import AgentBuild, AgentBuildTarget
 from tuna.fusion.kubernetes.types import AgentDeployment, OperatorConfiguration
 
 logger = logging.getLogger(__name__)
+
+
+def print_validation_error(e: ValidationError) -> str:
+    error_messages = []
+    for error in e.errors():
+        field = ".".join(error["loc"])
+        message = error["msg"]
+        error_messages.append(f"Field '{field}': {message}")
+    return "\n".join(error_messages)
+
+
 
 def get_configuration(ns: str = os.getenv("TUNA_SYSTEM_NS", "tuna-system"), cm: str = "fusion-server-operator") -> OperatorConfiguration:
     core_v1_api = client.CoreV1Api()
