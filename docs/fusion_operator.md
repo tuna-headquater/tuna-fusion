@@ -1,11 +1,16 @@
-# GitOps Architecture
+# Operators in fusion-server
 
 ## Custom resources
 
-| CRD             | State diagram                                             |
-|-----------------|-----------------------------------------------------------|
-| AgentDeployment | ![Agent Deployment](./state_diagram/agent_deployment.svg) |
-| AgentBuildRun   | ![AgentBuildRun](./state_diagram/agent_build_run.svg)     |
+| CRD               	| Usage                                          | State diagram                                             |
+|-----------------------|------------------------------------------------|-----------------------------------------------------------|
+| AgentDeployment		| Manages lifecycle for agent repository         | ![Agent Deployment](./state_diagram/agent_deployment.svg) |
+| AgentBuild			| Manages a single build run of agent repository | ![AgentBuildRun](./state_diagram/agent_build_run.svg)     |
+| MCPServerDeployment	| Manages a lifecycle for MCP server             |                                                           |
+| MCPServerBuild		| Manages a single build run of MCP server       |                                                           |
+| HTTPToolDeplyoment	|                                                |                                                           |
+| AgentResourceBinding	| Manages relationships between a single agent and other resources |											|
+| AgentMemory			| Manages agent memory resource					 |															| 
 
 
 ## Workflow

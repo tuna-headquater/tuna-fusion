@@ -24,25 +24,22 @@ spec:
               type: object
               x-kubernetes-preserve-unknown-fields: true
               properties:
-                git_commit_id:
+                gitCommitId:
                   type: string
-                builder_image:
+                builderImage:
                   type: string
-                build_script:
-                  type: string
-                fission_runtime_env:
+                buildScript:
                   type: string
             status:
               type: object
               x-kubernetes-preserve-unknown-fields: true
-              fission_objects:
-                source_package:
               properties:
                 phase:
                   type: string
-                  enums:
+                  enum:
                     - Pending
                     - Scheduled
                     - Running
                     - Succeeded
                     - Failed
+                    - Terminating

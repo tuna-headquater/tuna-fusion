@@ -1,15 +1,36 @@
+import logging
+import os
+import subprocess
+import time
+import uuid
+from pathlib import Path
 from time import sleep
 
 import pytest
-from kubernetes.dynamic import DynamicClient, ResourceList
-import uuid
-from kubernetes import client, config, utils
-import os
 import yaml
-from pathlib import Path
+from kubernetes import client, config
+from kubernetes.dynamic import DynamicClient, ResourceList
 
+logging.basicConfig(level=logging.DEBUG)
 
 PROJECT_ROOT = Path(os.path.join(os.path.dirname(__file__), "..", "..", "..", ".."))
+
+@pytest.fixture(scope="module")
+def kopf_runner():
+    p = subprocess.Popen(
+    [
+            "kopf",
+            "run",
+            "-A",
+            "-d",
+            "--verbose"
+        ],
+        stdout=None,
+        stderr=None,
+    )
+    time.sleep(3)
+    yield p
+    p.terminate()
 
 
 @pytest.fixture(scope="module")
@@ -35,11 +56,10 @@ def test_namespace():
     v1.delete_namespace(name=namespace_name, body=client.V1DeleteOptions())
 
 
-def _create_and_get_crd(crd_file_path: str, namespace: str = "default") -> tuple[ResourceList, str]:
+def _create_and_get_crd(crd_file_path: str) -> tuple[ResourceList, str]:
     """
     Internal method to create CRD and return its DynamicClient resource instance.
     :param crd_file_path: absolute path to the CRD YAML file
-    :param namespace: namespace to deploy CRD in (defaults to "default")
     :return: DynamicClient resource instance for the CRD
     """
     # Create CRD using extension_api
@@ -79,6 +99,7 @@ def _delete_crd(name: str):
         body=client.V1DeleteOptions(),  # 删除选项，可以指定删除策略
     )
 
+
 @pytest.fixture(scope="module")
 def agent_deployment_crd(test_namespace: str):
     """
@@ -94,7 +115,7 @@ def agent_deployment_crd(test_namespace: str):
     crd_file_path = PROJECT_ROOT / "charts/tuna-fusion/charts/tuna-fusion-operator/crds/agent_deployment.yaml"
     crd_file_path = os.path.abspath(crd_file_path)
 
-    api_instance, kind = _create_and_get_crd(crd_file_path, namespace=test_namespace)
+    api_instance, kind = _create_and_get_crd(crd_file_path)
     yield api_instance
     _delete_crd(kind)
 
@@ -114,6 +135,6 @@ def agent_build_crd(test_namespace: str):
     crd_file_path = PROJECT_ROOT / "charts/tuna-fusion/charts/tuna-fusion-operator/crds/agent_build.yaml"
     crd_file_path = os.path.abspath(crd_file_path)
 
-    api_instance, kind = _create_and_get_crd(crd_file_path, namespace=test_namespace)
+    api_instance, kind = _create_and_get_crd(crd_file_path)
     yield api_instance
     _delete_crd(kind)

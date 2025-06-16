@@ -36,37 +36,28 @@ spec:
                   type: string
             status:
               x-kubernetes-preserve-unknown-fields: true
-              currentBuilds:
-                type: object
-                properties:
-                  staging:
-                    startTimestamp:
-                      type: integer
-                    name:
-                      type: string
-                  production:
+              properties:
+                currentBuild:
+                  type: object
+                  properties:
                     startTimestamp:
                       type: integer
                     name:
                       type: string
 
       additionalPrinterColumns:
-        - jsonPath: .spec.agentRepositoryName
+        - jsonPath: .spec.agentName
           name: Agent
           type: string
           description: Name for agent repository
 
-        - jsonPath: .spec.agentCatalogue_name
+        - jsonPath: .spec.agentCatalogueName
           name: Catalogue
           type: string
           description: Name for agent catalogue
 
-        - jsonPath: .status.currentBuilds.staging.name
-          name: Staging build
-          type: string
-
-        - jsonPath: .status.currentBuilds.production.name
-          name: Production build
+        - jsonPath: .status.currentBuild.name
+          name: Current build name
           type: string
 
 

@@ -1,6 +1,9 @@
 import logging
 import os
+import subprocess
 import time
+from contextlib import contextmanager
+from typing import List
 
 import kopf
 from kubernetes import client, config
@@ -8,7 +11,7 @@ from kubernetes.client import ApiClient
 from kubernetes.dynamic import DynamicClient
 from pydantic.v1 import ValidationError
 
-from tuna.fusion.kubernetes.types import AgentBuild, AgentBuildTarget
+from tuna.fusion.kubernetes.types import AgentBuild
 from tuna.fusion.kubernetes.types import AgentDeployment, OperatorConfiguration
 
 logger = logging.getLogger(__name__)
@@ -40,7 +43,7 @@ def create_builder_job_object(
     :param agent_build:
     :return:
     """
-    ns = configuration.stagingNamespace if agent_build.spec.buildTarget == AgentBuildTarget.Staging else configuration.productionNamespace
+    ns = agent_build.metadata.namespace
 
     # Configure Pod template container
     container = client.V1Container(
@@ -51,7 +54,7 @@ def create_builder_job_object(
             requests={"memory": "256Mi", "cpu": "250m"}),
         volume_mounts=[client.V1VolumeMount(mount_path="/build.sh", name="builder-script-volume", sub_path="build.sh")],
         env=[
-            client.V1EnvVar(name="AGENT_BUILD_TARGET", value=agent_build.spec.buildTarget),
+
             client.V1EnvVar(name="GIT_COMMIT_ID", value=agent_build.spec.gitCommitId),
             client.V1EnvVar(name="FUNCTION_NAME", value=agent_deployment.spec.agentName),
             # client.V1EnvVar(name="FUNCTION_ENV", value=agent_build.spec.fissionEnv),
@@ -95,7 +98,7 @@ def create_builder_job_object(
         api_version="batch/v1",
         kind="Job",
         metadata=client.V1ObjectMeta(
-            name=f"{agent_build.spec.buildTarget}_{agent_deployment.spec.agentName}_{int(time.time())}",
+            name=f"build_{int(time.time())}",
             owner_references=[
                 client.V1OwnerReference(
                     api_version="fusion.tuna.ai",
@@ -148,7 +151,7 @@ def get_agent_deployment_resource(dyn_client: DynamicClient):
 
 
 def get_reference_agent_deployment(agent_build: AgentBuild):
-    ref_names = [ref.name for ref in agent_build.metadata.ownerReferences if ref.kind == "AgentBuild"]
+    ref_names = [ref.name for ref in agent_build.metadata.ownerReferences if ref.kind == "AgentDeployment"]
     assert ref_names, "should have at least one AgentDeployment"
     agent_deployment_name = ref_names[0]
     config.load_kube_config()
@@ -157,4 +160,21 @@ def get_reference_agent_deployment(agent_build: AgentBuild):
     agent_deployment_instance = agent_deployment_resource.get(name=agent_deployment_name, namespace=agent_build.metadata.namespace)
     return AgentDeployment.model_validate(agent_deployment_instance.to_dict())
 
+
+
+@contextmanager
+def kopf_runner(args: List[str]):
+    """
+    Run kopf in a subprocess.
+    """
+    p = subprocess.Popen(
+        ["kopf"] + args,
+        stdout=None,
+        stderr=None,
+    )
+    time.sleep(10)
+    logger.info("Kopf started...")
+    yield p
+    p.terminate()
+    logger.info("Kopf terminated...")
 

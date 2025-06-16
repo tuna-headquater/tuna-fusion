@@ -1,19 +1,16 @@
-from enum import Enum
+from enum import Enum, StrEnum
 from typing import Optional, List
 
-from pydantic import BaseModel, Field
-
-class AgentBuildTarget(Enum):
-    Staging = "staging"
-    Production = "production"
+from pydantic import BaseModel
 
 
-class AgentBuildPhase(Enum):
-    Pending = "pending"
-    Scheduled = "scheduled"
-    Running = "running"
-    Succeeded = "succeeded"
-    Failed = "failed"
+class AgentBuildPhase(StrEnum):
+    Pending = "Pending"
+    Scheduled = "Scheduled"
+    Running = "Running"
+    Succeeded = "Succeeded"
+    Failed = "Failed"
+    Terminating = "Terminating"
 
 
 class OperatorConfiguration(BaseModel):
@@ -24,12 +21,12 @@ class OperatorConfiguration(BaseModel):
 
 class Metadata(BaseModel):
     class OwnerReference(BaseModel):
-        apiVersion: Optional[str] = None
+        apiVersion: str = None
         blockOwnerDeletion: bool = True
         controller: Optional[str] = None
         kind: str
         name: str
-        uid: Optional[str] = None
+        uid: str = None
 
     name: str
     namespace: str
@@ -39,13 +36,10 @@ class Metadata(BaseModel):
 
 class AgentDeployment(BaseModel):
     class Status(BaseModel):
-        class CurrentBuilds(BaseModel):
-            class BuildInfo(BaseModel):
-                name: str
-                startTimestamp: int
-            staging: Optional[BuildInfo] = None
-            production: Optional[BuildInfo] = None
-        currentBuilds: CurrentBuilds
+        class BuildInfo(BaseModel):
+            name: str
+            startTimestamp: int
+        currentBuild: Optional[BuildInfo] = None
 
     class Spec(BaseModel):
         agentName: str
@@ -62,12 +56,7 @@ class AgentDeployment(BaseModel):
 class AgentBuild(BaseModel):
     class Spec(BaseModel):
         gitCommitId: str
-        buildTarget: AgentBuildTarget
         buildScript: str
-        # fission_builder_image: str
-        # fission_runtime_image: str
-        # fissionFunctionEntrypoint: str
-        # fissionEnv: str
 
     class Status(BaseModel):
         phase: AgentBuildPhase
