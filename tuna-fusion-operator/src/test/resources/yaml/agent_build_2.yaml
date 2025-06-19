@@ -1,0 +1,17 @@
+apiVersion: fusion.tuna.ai/v1
+kind: AgentBuild
+metadata:
+  name: test-build-2
+  namespace: default
+  ownerReferences:
+    - kind: AgentDeployment
+      name: test-deploy-1
+      apiVersion: fusion.tuna.ai/v1
+      uid: 7350a43f-cfa3-423d-bad4-37117b78f30e
+spec:
+  gitCommitId: xxxxx
+  builderImage: robinqu/fission-toolchain:latest
+  buildScript: |-
+    set -e
+    set -x
+    echo ""

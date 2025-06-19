@@ -27,3 +27,6 @@ dependencies:
   - name: tuna-fusion-operator
     version: 0.1.0
     condition: tuna-fusion-operator.enabled
+  - name: fission-all
+    repository: https://fission.github.io/fission-charts/
+    version: v1.21.0
