@@ -43,3 +43,7 @@ spec:
                     - Succeeded
                     - Failed
                     - Terminating
+
+      subresources:
+        status: { }
+
