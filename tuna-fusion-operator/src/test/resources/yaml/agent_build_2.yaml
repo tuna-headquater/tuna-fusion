@@ -14,4 +14,49 @@ spec:
   buildScript: |-
     set -e
     set -x
-    echo ""
+    cat << EOF >> main.py
+    from fastapi import Request, Response
+    async def handler(request: Request):
+        return Response("hello world", status_code=200)
+    EOF
+    
+    cat << EOF >> build.sh
+    pip install -y fastapi
+    EOF
+    
+    if ! fission fn get --name "$FUNCTION_NAME" -n "$STAGING_NAMESPACE" &>/dev/null; then
+        echo "Function $FUNCTION_NAME does not exist. Creating it now..."
+
+        # Create the function
+        fission fn create \
+          -n "$NAMESPACE" \
+          --name "$FUNCTION_NAME" \
+          --env "$FUNCTION_ENV" \
+          --src main.py \
+          --entrypoint "$FUNCTION_ENTRYPOINT" \ 
+          --buildcmd "./build.sh"
+    else
+        echo "Function $FUNCTION_NAME is to be updated."
+        fission update create \
+          -n "$NAMESPACE" \
+          --name "$FUNCTION_NAME" \
+          --env "$FUNCTION_ENV" \
+          --src main.py \
+          --entrypoint "main.handler" \
+          --buildcmd "./build.sh"
+    fi
+    
+    # Create route if necessary
+    if ! fission route get --name "$FUNCTION_NAME" &>/dev/null; then
+      echo "Route $FUNCTION_NAME does not exist. Creating it now..."
+      # Create the function
+      fission route create \
+        -n "$NAMESPACE" \
+        --name "$FUNCTION_NAME" \
+        --function "$FUNCTION_NAME" \
+        --url "/$FUNCTION_NAME" \
+        --prefix "/$CATALOGUE_NAME"
+    else
+      echo "Route $FUNCTION_NAME already exists."
+    fi
+

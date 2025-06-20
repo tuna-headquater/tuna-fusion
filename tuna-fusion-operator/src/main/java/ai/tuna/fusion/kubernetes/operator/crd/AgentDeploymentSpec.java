@@ -15,5 +15,6 @@ public class AgentDeploymentSpec {
     private int agentRepositoryId;
     private String agentCatalogueName;
     private String gitRepositoryUrl;
+    private String agentEnvironmentName;
 
 }

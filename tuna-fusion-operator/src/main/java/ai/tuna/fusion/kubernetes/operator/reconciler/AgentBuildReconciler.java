@@ -21,6 +21,9 @@ import java.time.Instant;
 import java.util.Objects;
 import java.util.Optional;
 
+import static ai.tuna.fusion.kubernetes.operator.ResourceUtils.getReferencedAgentDeployment;
+import static ai.tuna.fusion.kubernetes.operator.ResourceUtils.getReferencedAgentDeploymentName;
+
 /**
  * @author robinqu
  */
@@ -53,10 +56,7 @@ public class AgentBuildReconciler implements Reconciler<AgentBuild>, Cleaner<Age
     @Override
     public UpdateControl<AgentBuild> reconcile(AgentBuild resource, Context<AgentBuild> context) throws Exception {
         // 获取关联的 AgentDeploymentCR
-        var agentDeployment = client.resources(AgentDeployment.class)
-                .inNamespace(resource.getMetadata().getNamespace())
-                .withName(getReferencedAgentDeploymentName(resource))
-                .get();
+        var agentDeployment = getReferencedAgentDeployment(client, resource);
 
         if(Objects.isNull(agentDeployment)) {
             throw new IllegalStateException("AgentDeployment referenced doesn't exist");
@@ -123,11 +123,4 @@ public class AgentBuildReconciler implements Reconciler<AgentBuild>, Cleaner<Age
     }
 
 
-    private String getReferencedAgentDeploymentName(AgentBuild agentBuild) {
-        return agentBuild.getMetadata().getOwnerReferences().stream()
-                .filter(ownerReference -> StringUtils.equals(ownerReference.getKind(),HasMetadata.getKind(AgentDeployment.class)))
-                .findFirst()
-                .map(OwnerReference::getName)
-                .orElseThrow();
-    }
 }
