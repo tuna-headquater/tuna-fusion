@@ -4,15 +4,11 @@ import ai.tuna.fusion.kubernetes.operator.ResourceUtils;
 import ai.tuna.fusion.kubernetes.operator.crd.AgentBuild;
 import ai.tuna.fusion.kubernetes.operator.crd.AgentBuildStatus;
 import io.fabric8.kubernetes.api.model.EnvVar;
-import io.fabric8.kubernetes.api.model.EnvVarBuilder;
-import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.batch.v1.Job;
 import io.fabric8.kubernetes.api.model.batch.v1.JobBuilder;
-import io.fabric8.kubernetes.client.KubernetesClient;
 import io.javaoperatorsdk.operator.api.config.informer.Informer;
 import io.javaoperatorsdk.operator.api.reconciler.Context;
 import io.javaoperatorsdk.operator.api.reconciler.dependent.DependentResource;
-import io.javaoperatorsdk.operator.processing.dependent.Matcher;
 import io.javaoperatorsdk.operator.processing.dependent.kubernetes.CRUDKubernetesDependentResource;
 import io.javaoperatorsdk.operator.processing.dependent.kubernetes.KubernetesDependent;
 import io.javaoperatorsdk.operator.processing.dependent.workflow.Condition;
@@ -30,10 +26,6 @@ import static ai.tuna.fusion.kubernetes.operator.reconciler.AgentBuildReconciler
 )
 public class AgentBuildJobDependentResource extends CRUDKubernetesDependentResource<Job, AgentBuild> {
 
-    public AgentBuildJobDependentResource(KubernetesClient client) {
-        this.client = client;
-    }
-
     public static class IsJobRequiredCondition implements Condition<Job, AgentBuild> {
         @Override
         public boolean isMet(DependentResource<Job, AgentBuild> dependentResource, AgentBuild primary, Context<AgentBuild> context) {
@@ -44,8 +36,6 @@ public class AgentBuildJobDependentResource extends CRUDKubernetesDependentResou
         }
     }
 
-    private final KubernetesClient client;
-
 
     @Override
     public Result<Job> match(Job actualResource, Job desired, AgentBuild primary, Context<AgentBuild> context) {
@@ -55,7 +45,7 @@ public class AgentBuildJobDependentResource extends CRUDKubernetesDependentResou
 
     @Override
     protected Job desired(AgentBuild primary, Context<AgentBuild> context) {
-        var agentDeployment = ResourceUtils.getReferencedAgentDeployment(client, primary);
+        var agentDeployment = ResourceUtils.getReferencedAgentDeployment(context.getClient(), primary);
         return new JobBuilder()
                 .withNewMetadata()
                 .withName(jobName(primary))

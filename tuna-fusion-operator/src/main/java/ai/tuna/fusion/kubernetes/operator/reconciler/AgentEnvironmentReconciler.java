@@ -21,7 +21,7 @@ import java.util.Objects;
                 )
         }
 )
-@ControllerConfiguration(name="agentenvironments")
+@ControllerConfiguration(name="agentenvironment")
 @Component
 @Slf4j
 public class AgentEnvironmentReconciler implements Reconciler<AgentEnvironment> {
