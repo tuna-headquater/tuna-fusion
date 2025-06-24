@@ -2,15 +2,16 @@ apiVersion: fusion.tuna.ai/v1
 kind: AgentBuild
 metadata:
   name: test-build-2
-  namespace: default
+  namespace: tuna-fission
   ownerReferences:
     - kind: AgentDeployment
       name: test-deploy-1
       apiVersion: fusion.tuna.ai/v1
-      uid: 7350a43f-cfa3-423d-bad4-37117b78f30e
+      uid: 70ee9a7b-22b8-436f-997e-b9e8b75d7847
 spec:
+  serviceAccountName: fission-user
   gitCommitId: xxxxx
-  builderImage: robinqu/fission-toolchain:latest
+  builderImage: robinqu/tuna-fusion-toolchain:1750673901
   buildScript: |-
     #!/bin/bash
     set -e
@@ -29,7 +30,7 @@ spec:
     pip install -y fastapi
     EOF
     
-    if ! fission fn get --name "$FUNCTION_NAME" -n "$NAMESPACE" &>/dev/null; then
+    if ! fission fn get --name "$FUNCTION_NAME" -n "$NAMESPACE"; then
       echo "Function $FUNCTION_NAME does not exist. Creating it now..."
       # Create the function
       fission fn create \
@@ -39,6 +40,8 @@ spec:
       --code main.py \
       --entrypoint "main.handler" \
       --buildcmd "./build.sh"
+      # Should get function properly
+      fission fn get --name "$FUNCTION_NAME" -n "$NAMESPACE" 
     else
       echo "Function $FUNCTION_NAME is to be updated."
       fission fn update \
@@ -51,7 +54,7 @@ spec:
     fi
     
     # Create route if necessary
-    if ! fission route get --name "$FUNCTION_NAME" -n "$NAMESPACE" &>/dev/null; then
+    if ! fission route get --name "$FUNCTION_NAME" -n "$NAMESPACE"; then
       echo "Route $FUNCTION_NAME does not exist. Creating it now..."
       # Create the function
       fission route create \

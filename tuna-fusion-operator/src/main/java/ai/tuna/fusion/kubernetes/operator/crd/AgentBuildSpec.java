@@ -10,4 +10,5 @@ public class AgentBuildSpec {
     private String gitCommitId;
     private String buildScript;
     private String builderImage;
+    private String serviceAccountName;
 }

@@ -2,8 +2,6 @@ package ai.tuna.fusion.kubernetes.operator.crd;
 
 import lombok.Data;
 
-import java.util.Map;
-
 /**
  * @author robinqu
  */
@@ -21,7 +19,7 @@ public class AgentEnvironmentSpec {
         int poolSize;
     }
 
-    EngineType engineType = EngineType.Fission;
-    FissionEnvOptions fissionEnv;
+    private EngineType engineType = EngineType.Fission;
+    private FissionEnvOptions fissionEnv;
 
 }

@@ -2,10 +2,11 @@ apiVersion: fusion.tuna.ai/v1
 kind: AgentDeployment
 metadata:
   name: test-deploy-1
-  namespace: default
+  namespace: tuna-fission
 spec:
   agentName: agent_1
   agentCatalogueId: 111
   agentRepositoryId: 222
   agentCatalogueName: catalogue_1
   gitRepositoryUrl: https://test.com/project.git
+  agentEnvironmentName: env1

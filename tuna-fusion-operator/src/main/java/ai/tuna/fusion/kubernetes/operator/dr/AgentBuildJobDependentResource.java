@@ -12,6 +12,7 @@ import io.javaoperatorsdk.operator.api.reconciler.dependent.DependentResource;
 import io.javaoperatorsdk.operator.processing.dependent.kubernetes.CRUDKubernetesDependentResource;
 import io.javaoperatorsdk.operator.processing.dependent.kubernetes.KubernetesDependent;
 import io.javaoperatorsdk.operator.processing.dependent.workflow.Condition;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.Optional;
@@ -24,6 +25,7 @@ import static ai.tuna.fusion.kubernetes.operator.reconciler.AgentBuildReconciler
 @KubernetesDependent(
         informer = @Informer(labelSelector = SELECTOR)
 )
+@Slf4j
 public class AgentBuildJobDependentResource extends CRUDKubernetesDependentResource<Job, AgentBuild> {
 
     public static class IsJobRequiredCondition implements Condition<Job, AgentBuild> {
@@ -45,6 +47,7 @@ public class AgentBuildJobDependentResource extends CRUDKubernetesDependentResou
 
     @Override
     protected Job desired(AgentBuild primary, Context<AgentBuild> context) {
+        log.info("Creating Job DR for build {}", primary.getMetadata());
         var agentDeployment = ResourceUtils.getReferencedAgentDeployment(context.getClient(), primary);
         return new JobBuilder()
                 .withNewMetadata()
@@ -53,8 +56,9 @@ public class AgentBuildJobDependentResource extends CRUDKubernetesDependentResou
                 .addToLabels(SELECTOR, "true")
                 .endMetadata()
                 .withNewSpec()
-//                .withTtlSecondsAfterFinished(60)
-                .withBackoffLimit(1)
+                .withTtlSecondsAfterFinished(60*60)
+                // disallow retry
+                .withBackoffLimit(0)
                 .withCompletions(1)
                 .withActiveDeadlineSeconds(60 * 10L)
                 .withNewTemplate()
@@ -62,11 +66,12 @@ public class AgentBuildJobDependentResource extends CRUDKubernetesDependentResou
                 .withNamespace(primary.getMetadata().getNamespace())
                 .endMetadata()
                 .withNewSpec()
+                .withServiceAccountName(primary.getSpec().getServiceAccountName())
                 .withRestartPolicy("Never")
                 .addNewInitContainer()
                 .withName("builder-init-container")
                 .withImage("busybox:latest")
-                .withCommand("sh", "-c", "echo -e '%s' > /workspace/build.sh && chmod +x /workspace/build.sh".formatted(primary.getSpec().getBuildScript()))
+                .withCommand("sh", "-c", "echo -e '%s' > /workspace/build.sh && chmod +x /workspace/build.sh && cat /workspace/build.sh".formatted(primary.getSpec().getBuildScript()))
                 .addNewVolumeMount()
                 .withName("builder-script-volume")
                 .withMountPath("/workspace")
@@ -79,7 +84,8 @@ public class AgentBuildJobDependentResource extends CRUDKubernetesDependentResou
                 .addToEnv(
                         new EnvVar("FUNCTION_NAME", agentDeployment.getMetadata().getName(), null),
                         new EnvVar("FUNCTION_ENV", agentDeployment.getSpec().getAgentEnvironmentName(), null),
-                        new EnvVar("NAMESPACE", primary.getMetadata().getNamespace(), null)
+                        new EnvVar("NAMESPACE", primary.getMetadata().getNamespace(), null),
+                        new EnvVar("CATALOGUE_NAME", agentDeployment.getSpec().getAgentCatalogueName(), null)
                 )
                 .addNewVolumeMount()
                 .withMountPath("/workspace")

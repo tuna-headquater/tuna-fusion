@@ -5,8 +5,6 @@ import ai.tuna.fusion.kubernetes.operator.crd.AgentBuildStatus;
 import ai.tuna.fusion.kubernetes.operator.crd.AgentDeployment;
 import ai.tuna.fusion.kubernetes.operator.crd.AgentDeploymentStatus;
 import ai.tuna.fusion.kubernetes.operator.dr.AgentBuildJobDependentResource;
-import io.fabric8.kubernetes.api.model.HasMetadata;
-import io.fabric8.kubernetes.api.model.OwnerReference;
 import io.fabric8.kubernetes.api.model.batch.v1.Job;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.dsl.base.PatchContext;
@@ -14,7 +12,6 @@ import io.fabric8.kubernetes.client.dsl.base.PatchType;
 import io.javaoperatorsdk.operator.api.reconciler.*;
 import io.javaoperatorsdk.operator.api.reconciler.dependent.Dependent;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;
@@ -49,12 +46,12 @@ public class AgentBuildReconciler implements Reconciler<AgentBuild>, Cleaner<Age
     }
 
     @Override
-    public DeleteControl cleanup(AgentBuild resource, Context<AgentBuild> context) throws Exception {
+    public DeleteControl cleanup(AgentBuild resource, Context<AgentBuild> context)  {
         return DeleteControl.defaultDelete();
     }
 
     @Override
-    public UpdateControl<AgentBuild> reconcile(AgentBuild resource, Context<AgentBuild> context) throws Exception {
+    public UpdateControl<AgentBuild> reconcile(AgentBuild resource, Context<AgentBuild> context) {
         // 获取关联的 AgentDeploymentCR
         var agentDeployment = getReferencedAgentDeployment(client, resource);
 
@@ -71,7 +68,7 @@ public class AgentBuildReconciler implements Reconciler<AgentBuild>, Cleaner<Age
                     jobResource.getMetadata().getNamespace()
             );
             var jobStatus = fullJob.getStatus();
-            log.info("Job(meta={}) has already been created: ready={}, failed={}, active={}, succeeded={}", fullJob.getMetadata(), jobStatus.getReady(), jobStatus.getFailed(), jobStatus.getActive(), jobStatus.getSucceeded());
+            log.info("Job(namespace={},name={}) has already been created: ready={}, failed={}, active={}, succeeded={}", fullJob.getMetadata().getNamespace(), fullJob.getMetadata().getName(), jobStatus.getReady(), jobStatus.getFailed(), jobStatus.getActive(), jobStatus.getSucceeded());
             var agentBuildPatch = new AgentBuild();
             agentBuildPatch.getMetadata().setName(resource.getMetadata().getName());
             agentBuildPatch.getMetadata().setNamespace(resource.getMetadata().getNamespace());
@@ -80,7 +77,7 @@ public class AgentBuildReconciler implements Reconciler<AgentBuild>, Cleaner<Age
             agentBuildPatch.setStatus(status);
             if(Optional.ofNullable(jobStatus.getSucceeded()).orElse(0) >= jobResource.getSpec().getCompletions()) {
                 status.setPhase(AgentBuildStatus.Phase.Succeeded);
-            } else if (Optional.ofNullable(jobStatus.getFailed()).orElse(0) >= jobResource.getSpec().getBackoffLimit()) {
+            } else if (Optional.ofNullable(jobStatus.getFailed()).orElse(0) > jobResource.getSpec().getBackoffLimit()) {
                 status.setPhase(AgentBuildStatus.Phase.Failed);
             } else if (Optional.ofNullable(jobStatus.getActive()).orElse(0)>0) {
                 status.setPhase(AgentBuildStatus.Phase.Pending);
@@ -116,7 +113,9 @@ public class AgentBuildReconciler implements Reconciler<AgentBuild>, Cleaner<Age
     }
 
     private Job getBuildJob(String jobName, String ns) {
-        return client.resources(Job.class)
+        return client.batch()
+                .v1()
+                .jobs()
                 .inNamespace(ns)
                 .withName(jobName)
                 .get();

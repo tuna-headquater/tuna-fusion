@@ -36,6 +36,8 @@ spec:
                   type: string
                 gitRepositoryUrl:
                   type: string
+                agentEnvironmentName:
+                  type: string
             status:
               x-kubernetes-preserve-unknown-fields: true
               properties:
