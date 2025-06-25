@@ -28,7 +28,6 @@ import java.util.zip.ZipOutputStream;
 @Slf4j
 public class BuildPipelinePreReceiveHook implements PreReceiveHook {
 
-
     private static final SimpleDateFormat DATE_FORMAT =
             new SimpleDateFormat("yyyyMMdd-HHmmss");
 
@@ -41,9 +40,8 @@ public class BuildPipelinePreReceiveHook implements PreReceiveHook {
     @Override
     public void onPreReceive(ReceivePack receivePack,
                              Collection<ReceiveCommand> commands) {
-        Repository repo = receivePack.getRepository();
         try {
-            var zipPath = createRepoZip(repo, commands);
+            var zipPath = createRepoZip(receivePack, commands);
             receivePack.sendMessage("仓库快照已创建: " + zipPath);
         } catch (Exception e) {
             log.error("Exception occurred: {}", e.getMessage(), e);
@@ -52,7 +50,8 @@ public class BuildPipelinePreReceiveHook implements PreReceiveHook {
             }
         }
     }
-    private String createRepoZip(Repository repo, Collection<ReceiveCommand> commands) throws IOException {
+    private String createRepoZip(ReceivePack receivePack, Collection<ReceiveCommand> commands) throws IOException {
+        Repository repo = receivePack.getRepository();
         String timestamp = DATE_FORMAT.format(new Date());
         String zipName = "repo-snapshot-" + timestamp + ".zip";
         File zipFile = new File(repo.getDirectory().getParentFile(), zipName);
@@ -88,7 +87,7 @@ public class BuildPipelinePreReceiveHook implements PreReceiveHook {
                 log.info("Tree count after addTree: {}", treeWalk.getTreeCount());
 
                 while (treeWalk.next()) {
-                    addTreeEntryToZip(repo, treeWalk, zos);
+                    addTreeEntryToZip(receivePack, treeWalk, zos);
                 }
                 log.debug("Finished adding {} entries to zip", treeWalk.getPathString());
             }
@@ -99,7 +98,7 @@ public class BuildPipelinePreReceiveHook implements PreReceiveHook {
         return zipFile.getAbsolutePath();
     }
 
-    private void addTreeEntryToZip(Repository repo,
+    private void addTreeEntryToZip(ReceivePack receivePack,
                                    TreeWalk treeWalk,
                                    ZipOutputStream zos)
             throws IOException {
@@ -108,12 +107,12 @@ public class BuildPipelinePreReceiveHook implements PreReceiveHook {
         if (path.startsWith(".git")) {
             return;
         }
-        log.info("Adding zip entry: {}", path);
+        receivePack.sendMessage("Adding zip entry: " + path);
         ZipEntry entry = new ZipEntry(path);
         zos.putNextEntry(entry);
 
         ObjectId objectId = treeWalk.getObjectId(0);
-        try (InputStream in = repo.open(objectId).openStream()) {
+        try (InputStream in = receivePack.getRepository().open(objectId).openStream()) {
             byte[] buffer = new byte[4096];
             int len;
             while ((len = in.read(buffer)) > 0) {

@@ -31,7 +31,9 @@ public class GitServerConfig {
         GitServlet gitServlet = new GitServlet();
         gitServlet.setRepositoryResolver(new CustomRepositoryResolver(properties.getReposRootPath()));
         // 启用 push 支持
-        gitServlet.setReceivePackFactory(new CustomReceivePackFactory(buildPipelinePreReceiveHook));
+        gitServlet.setReceivePackFactory(new CustomReceivePackFactory(
+                buildPipelinePreReceiveHook
+        ));
 
         // 添加访问日志过滤器
         gitServlet.addUploadPackFilter(new Filter() {
@@ -39,11 +41,11 @@ public class GitServerConfig {
             public void doFilter(ServletRequest req, ServletResponse res,
                                  FilterChain chain) throws IOException, ServletException {
                 HttpServletRequest httpReq = (HttpServletRequest) req;
-                String requestURI = httpReq.getRequestURI();
+                String requestUri = httpReq.getRequestURI();
                 String method = httpReq.getMethod();
                 String user = httpReq.getRemoteUser() != null ?
                         httpReq.getRemoteUser() : "anonymous";
-                log.info("Git access: {} {} by {}", method, requestURI, user);
+                log.info("Git access: {} {} by {}", method, requestUri, user);
                 chain.doFilter(req, res);
             }
         });
