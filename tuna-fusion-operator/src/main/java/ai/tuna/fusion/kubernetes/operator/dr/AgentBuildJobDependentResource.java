@@ -1,8 +1,8 @@
 package ai.tuna.fusion.kubernetes.operator.dr;
 
 import ai.tuna.fusion.kubernetes.operator.ResourceUtils;
-import ai.tuna.fusion.kubernetes.operator.crd.AgentBuild;
-import ai.tuna.fusion.kubernetes.operator.crd.AgentBuildStatus;
+import ai.tuna.fusion.metadata.crd.AgentBuild;
+import ai.tuna.fusion.metadata.crd.AgentBuildStatus;
 import io.fabric8.kubernetes.api.model.EnvVar;
 import io.fabric8.kubernetes.api.model.batch.v1.Job;
 import io.fabric8.kubernetes.api.model.batch.v1.JobBuilder;

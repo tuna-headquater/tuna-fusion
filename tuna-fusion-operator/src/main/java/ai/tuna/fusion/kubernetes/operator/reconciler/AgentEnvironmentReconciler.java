@@ -1,8 +1,8 @@
 package ai.tuna.fusion.kubernetes.operator.reconciler;
 
-import ai.tuna.fusion.kubernetes.operator.crd.AgentEnvironment;
-import ai.tuna.fusion.kubernetes.operator.crd.AgentEnvironmentStatus;
 import ai.tuna.fusion.kubernetes.operator.dr.FissionEnvDependentResource;
+import ai.tuna.fusion.metadata.crd.AgentEnvironment;
+import ai.tuna.fusion.metadata.crd.AgentEnvironmentStatus;
 import io.javaoperatorsdk.operator.api.reconciler.*;
 import io.javaoperatorsdk.operator.api.reconciler.dependent.Dependent;
 import lombok.extern.slf4j.Slf4j;

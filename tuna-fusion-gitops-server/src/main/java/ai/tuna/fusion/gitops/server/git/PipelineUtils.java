@@ -2,22 +2,18 @@ package ai.tuna.fusion.gitops.server.git;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevTree;
 import org.eclipse.jgit.revwalk.RevWalk;
-import org.eclipse.jgit.transport.PreReceiveHook;
 import org.eclipse.jgit.transport.ReceiveCommand;
 import org.eclipse.jgit.transport.ReceivePack;
 import org.eclipse.jgit.treewalk.TreeWalk;
-import org.eclipse.jgit.treewalk.filter.PathFilterGroup;
 
 import java.io.*;
 import java.text.SimpleDateFormat;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Date;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -26,31 +22,11 @@ import java.util.zip.ZipOutputStream;
  * @author robinqu
  */
 @Slf4j
-public class BuildPipelinePreReceiveHook implements PreReceiveHook {
-
+public class PipelineUtils {
     private static final SimpleDateFormat DATE_FORMAT =
             new SimpleDateFormat("yyyyMMdd-HHmmss");
 
-    private final String defaultBranch;
-
-    public BuildPipelinePreReceiveHook(String defaultBranch) {
-        this.defaultBranch = defaultBranch;
-    }
-
-    @Override
-    public void onPreReceive(ReceivePack receivePack,
-                             Collection<ReceiveCommand> commands) {
-        try {
-            var zipPath = createRepoZip(receivePack, commands);
-            receivePack.sendMessage("仓库快照已创建: " + zipPath);
-        } catch (Exception e) {
-            log.error("Exception occurred: {}", e.getMessage(), e);
-            for (ReceiveCommand command : commands) {
-                command.setResult(ReceiveCommand.Result.REJECTED_OTHER_REASON, "Exception occurred: "  + e.getMessage());
-            }
-        }
-    }
-    private String createRepoZip(ReceivePack receivePack, Collection<ReceiveCommand> commands) throws IOException {
+    public static String createRepoZip(ReceivePack receivePack, Collection<ReceiveCommand> commands, String defaultBranch) throws IOException {
         Repository repo = receivePack.getRepository();
         String timestamp = DATE_FORMAT.format(new Date());
         String zipName = "repo-snapshot-" + timestamp + ".zip";
@@ -98,7 +74,7 @@ public class BuildPipelinePreReceiveHook implements PreReceiveHook {
         return zipFile.getAbsolutePath();
     }
 
-    private void addTreeEntryToZip(ReceivePack receivePack,
+    private static void addTreeEntryToZip(ReceivePack receivePack,
                                    TreeWalk treeWalk,
                                    ZipOutputStream zos)
             throws IOException {

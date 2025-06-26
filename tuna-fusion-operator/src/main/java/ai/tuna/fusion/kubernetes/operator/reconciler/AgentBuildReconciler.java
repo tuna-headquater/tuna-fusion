@@ -1,10 +1,10 @@
 package ai.tuna.fusion.kubernetes.operator.reconciler;
 
-import ai.tuna.fusion.kubernetes.operator.crd.AgentBuild;
-import ai.tuna.fusion.kubernetes.operator.crd.AgentBuildStatus;
-import ai.tuna.fusion.kubernetes.operator.crd.AgentDeployment;
-import ai.tuna.fusion.kubernetes.operator.crd.AgentDeploymentStatus;
 import ai.tuna.fusion.kubernetes.operator.dr.AgentBuildJobDependentResource;
+import ai.tuna.fusion.metadata.crd.AgentBuild;
+import ai.tuna.fusion.metadata.crd.AgentBuildStatus;
+import ai.tuna.fusion.metadata.crd.AgentDeployment;
+import ai.tuna.fusion.metadata.crd.AgentDeploymentStatus;
 import io.fabric8.kubernetes.api.model.batch.v1.Job;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.dsl.base.PatchContext;
@@ -84,6 +84,9 @@ public class AgentBuildReconciler implements Reconciler<AgentBuild>, Cleaner<Age
             } else  {
                 status.setPhase(AgentBuildStatus.Phase.Scheduled);
             }
+            AgentBuildStatus.JobPodInfo jobPodInfo = new AgentBuildStatus.JobPodInfo();
+            status.setJobPod(jobPodInfo);
+            jobPodInfo.setPodName(getJobPodName(jobResource.getMetadata().getName(), jobResource.getMetadata().getNamespace()));
 
             // 更新 AgentDeployment 状态
             if (agentBuildPatch.getStatus().getPhase() == AgentBuildStatus.Phase.Succeeded || agentBuildPatch.getStatus().getPhase() == AgentBuildStatus.Phase.Failed) {
@@ -100,6 +103,18 @@ public class AgentBuildReconciler implements Reconciler<AgentBuild>, Cleaner<Age
         }
         log.debug("Job is not created or already finished for AgentBuild: {}", resource.getMetadata().getName());
         return UpdateControl.noUpdate();
+    }
+
+    private String getJobPodName(String jobName, String namespace) {
+        return client.pods()
+                .inNamespace(namespace)
+                .withLabel("job-name", jobName)
+                .list()
+                .getItems()
+                .stream()
+                .findFirst()
+                .map(pod -> pod.getMetadata().getName())
+                .orElse(null);
     }
 
 

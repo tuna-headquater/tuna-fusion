@@ -1,7 +1,7 @@
 package ai.tuna.fusion.kubernetes.operator;
 
-import ai.tuna.fusion.kubernetes.operator.crd.AgentBuild;
-import ai.tuna.fusion.kubernetes.operator.crd.AgentDeployment;
+import ai.tuna.fusion.metadata.crd.AgentBuild;
+import ai.tuna.fusion.metadata.crd.AgentDeployment;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.OwnerReference;
 import io.fabric8.kubernetes.client.KubernetesClient;

@@ -24,4 +24,5 @@ public class GitOpsServerProperties {
     }
 
     private String defaultBranch = "refs/heads/master";
+
 }

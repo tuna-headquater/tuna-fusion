@@ -1,4 +1,4 @@
-package ai.tuna.fusion.kubernetes.operator.crd;
+package ai.tuna.fusion.metadata.crd;
 
 import lombok.Data;
 

@@ -1,6 +1,7 @@
 package ai.tuna.fusion.kubernetes.operator.dr;
 
-import ai.tuna.fusion.kubernetes.operator.crd.AgentEnvironment;
+
+import ai.tuna.fusion.metadata.crd.AgentEnvironment;
 import io.fabric8.kubernetes.api.model.GenericKubernetesResource;
 import io.fabric8.kubernetes.client.utils.Serialization;
 import io.javaoperatorsdk.operator.api.config.informer.Informer;
