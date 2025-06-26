@@ -27,6 +27,13 @@
         <dependency>
             <groupId>io.github.vishalmysore</groupId>
             <artifactId>a2ajava</artifactId>
+            <exclusions>
+                <!-- Due to Swagger conflicts       -->
+                <exclusion>
+                    <groupId>io.github.vishalmysore</groupId>
+                    <artifactId>tools4ai</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>io.fabric8</groupId>

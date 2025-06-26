@@ -68,11 +68,7 @@ public class CustomRepositoryResolver implements RepositoryResolver<HttpServletR
             return true;
         }
 
-        if (name.startsWith("../") || name.contains("/../") || name.contains("/./") || name.contains("//")) {
-            return true;
-        }
-
-        return false;
+        return name.startsWith("../") || name.contains("/../") || name.contains("/./") || name.contains("//");
     }
 
 }

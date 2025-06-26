@@ -1,5 +1,6 @@
 package ai.tuna.fusion.metadata.crd;
 
+import io.github.vishalmysore.a2a.domain.AgentCard;
 import lombok.Data;
 
 /**
@@ -8,8 +9,9 @@ import lombok.Data;
 @Data
 public class AgentDeploymentSpec {
 
-    private String agentCatalogueName;
-    private String agentEnvironmentName;
+    private String catalogueName;
+    private String environmentName;
+    private AgentCard agentCard;
 
     @Data
     public static class GitOptions {
