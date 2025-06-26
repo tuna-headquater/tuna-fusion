@@ -19,4 +19,12 @@ public class AgentDeploymentSpec {
     }
     private GitOptions git;
 
+    @Data
+    public static class BuildRecipe {
+        private String buildScript;
+        private String builderImage;
+        private String serviceAccountName;
+    }
+    private BuildRecipe buildRecipe;
+
 }

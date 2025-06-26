@@ -1,4 +1,4 @@
-package ai.tuna.fusion.gitops.server.spring.properties;
+package ai.tuna.fusion.gitops.server.spring.property;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -24,5 +24,13 @@ public class GitOpsServerProperties {
     }
 
     private String defaultBranch = "refs/heads/master";
+
+    @Data
+    public static class S3Properties {
+        private String endpointUrl;
+        private String accessKey;
+        private String accessSecret;
+    }
+    private S3Properties s3Properties;
 
 }

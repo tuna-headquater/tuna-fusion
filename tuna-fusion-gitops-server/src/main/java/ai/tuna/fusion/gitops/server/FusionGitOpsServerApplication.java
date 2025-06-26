@@ -1,6 +1,6 @@
 package ai.tuna.fusion.gitops.server;
 
-import ai.tuna.fusion.gitops.server.spring.properties.GitOpsServerProperties;
+import ai.tuna.fusion.gitops.server.spring.property.GitOpsServerProperties;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;

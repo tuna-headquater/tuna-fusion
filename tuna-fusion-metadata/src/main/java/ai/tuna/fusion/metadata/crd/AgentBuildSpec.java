@@ -7,13 +7,15 @@ import lombok.*;
  */
 @Data
 public class AgentBuildSpec {
-    enum SourcePackageProvider {
+    public enum SourcePackageProvider {
         S3,
         Fission
     }
+    @Data
     public static class SourcePackageResource {
         private SourcePackageProvider provider;
-        private String resourceLocation;
+        private String resourceId;
+        private String sha256Checksum;
     }
     private SourcePackageResource sourcePackageResource;
     private String buildScript;
