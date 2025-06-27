@@ -5,6 +5,7 @@ import ai.tuna.fusion.metadata.crd.AgentBuild;
 import ai.tuna.fusion.metadata.crd.AgentBuildStatus;
 import ai.tuna.fusion.metadata.crd.AgentDeployment;
 import ai.tuna.fusion.metadata.crd.AgentDeploymentStatus;
+import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.batch.v1.Job;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.dsl.base.PatchContext;
@@ -27,8 +28,8 @@ import static ai.tuna.fusion.kubernetes.operator.ResourceUtils.getReferencedAgen
 @Workflow(
     dependents = {
         @Dependent(
-                type = AgentBuildJobDependentResource.class,
-                activationCondition = AgentBuildJobDependentResource.IsJobRequiredCondition.class
+                type = AgentBuildJobDependentResource.class
+//                activationCondition = AgentBuildJobDependentResource.IsJobRequiredCondition.class
         )
     }
 )
@@ -80,13 +81,16 @@ public class AgentBuildReconciler implements Reconciler<AgentBuild>, Cleaner<Age
             } else if (Optional.ofNullable(jobStatus.getFailed()).orElse(0) > jobResource.getSpec().getBackoffLimit()) {
                 status.setPhase(AgentBuildStatus.Phase.Failed);
             } else if (Optional.ofNullable(jobStatus.getActive()).orElse(0)>0) {
-                status.setPhase(AgentBuildStatus.Phase.Pending);
+                status.setPhase(AgentBuildStatus.Phase.Running);
             } else  {
                 status.setPhase(AgentBuildStatus.Phase.Scheduled);
             }
             AgentBuildStatus.JobPodInfo jobPodInfo = new AgentBuildStatus.JobPodInfo();
             status.setJobPod(jobPodInfo);
-            jobPodInfo.setPodName(getJobPodName(jobResource.getMetadata().getName(), jobResource.getMetadata().getNamespace()));
+            var jobPod = getJobPod(jobResource.getMetadata().getName(), jobResource.getMetadata().getNamespace());
+            jobPodInfo.setPodName(jobPod.map(pod -> pod.getMetadata().getName()).orElseThrow());
+            jobPodInfo.setPodPhase(jobPod.map(pod -> pod.getStatus().getPhase()).orElseThrow());
+            log.info("JobPodInfo: {}", jobPodInfo);
 
             // 更新 AgentDeployment 状态
             if (agentBuildPatch.getStatus().getPhase() == AgentBuildStatus.Phase.Succeeded || agentBuildPatch.getStatus().getPhase() == AgentBuildStatus.Phase.Failed) {
@@ -105,16 +109,14 @@ public class AgentBuildReconciler implements Reconciler<AgentBuild>, Cleaner<Age
         return UpdateControl.noUpdate();
     }
 
-    private String getJobPodName(String jobName, String namespace) {
+    private Optional<Pod> getJobPod(String jobName, String namespace) {
         return client.pods()
                 .inNamespace(namespace)
                 .withLabel("job-name", jobName)
                 .list()
                 .getItems()
                 .stream()
-                .findFirst()
-                .map(pod -> pod.getMetadata().getName())
-                .orElse(null);
+                .findFirst();
     }
 
 

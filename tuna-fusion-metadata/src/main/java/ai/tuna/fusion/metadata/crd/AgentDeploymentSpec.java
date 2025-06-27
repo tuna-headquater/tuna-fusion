@@ -9,7 +9,6 @@ import lombok.Data;
 @Data
 public class AgentDeploymentSpec {
 
-    private String catalogueName;
     private String environmentName;
     private AgentCard agentCard;
 

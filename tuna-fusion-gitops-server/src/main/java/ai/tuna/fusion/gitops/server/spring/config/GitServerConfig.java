@@ -3,7 +3,6 @@ package ai.tuna.fusion.gitops.server.spring.config;
 import ai.tuna.fusion.gitops.server.git.CustomReceivePackFactory;
 import ai.tuna.fusion.gitops.server.git.CustomRepositoryResolver;
 import ai.tuna.fusion.gitops.server.spring.property.GitOpsServerProperties;
-import ai.tuna.fusion.gitops.server.spring.servlet.GitRequestContextFilter;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.jgit.http.server.GitServlet;
@@ -34,16 +33,13 @@ public class GitServerConfig {
     @Bean
     public GitServlet gitServlet(
             GitOpsServerProperties properties,
-            GitRequestContextFilter gitRequestContextFilter,
-            CustomReceivePackFactory customReceivePackFactory
+            CustomReceivePackFactory customReceivePackFactory,
+            KubernetesClient kubernetesClient
             ) {
         GitServlet gitServlet = new GitServlet();
         gitServlet.setRepositoryResolver(new CustomRepositoryResolver(properties.getReposRootPath()));
         // 启用 push 支持
         gitServlet.setReceivePackFactory(customReceivePackFactory);
-        // 添加过滤器
-        gitServlet.addReceivePackFilter(gitRequestContextFilter);
-        gitServlet.addUploadPackFilter(gitRequestContextFilter);
         return gitServlet;
     }
 

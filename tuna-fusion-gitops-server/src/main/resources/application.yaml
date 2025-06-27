@@ -1,5 +1,15 @@
 server:
   port: 8081
+
+
 spring:
   main:
     cloud-platform: KUBERNETES
+logging:
+  level:
+#    org.eclipse.jgit: debug
+    ai.tuna.fusion: debug
+    root: info
+
+
+

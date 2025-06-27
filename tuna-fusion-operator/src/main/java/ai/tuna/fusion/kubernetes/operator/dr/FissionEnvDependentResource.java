@@ -73,7 +73,6 @@ spec:
                 "runtimeImage", primary.getSpec().getFissionEnv().getRuntimeImage(),
                 "poolSize", String.valueOf(primary.getSpec().getFissionEnv().getPoolSize())
         );
-        StringSubstitutor sub = new StringSubstitutor(valuesMap);
-        return sub;
+        return new StringSubstitutor(valuesMap);
     }
 }

@@ -9,7 +9,6 @@ metadata:
       apiVersion: fusion.tuna.ai/v1
       uid: 7350a43f-cfa3-423d-bad4-37117b78f30e
 spec:
-  gitCommitId: xxxxx
   builderImage: busybox:latest
   buildScript: |-
     set -e

@@ -9,6 +9,7 @@ import io.fabric8.kubernetes.api.model.batch.v1.JobBuilder;
 import io.javaoperatorsdk.operator.api.config.informer.Informer;
 import io.javaoperatorsdk.operator.api.reconciler.Context;
 import io.javaoperatorsdk.operator.api.reconciler.dependent.DependentResource;
+import io.javaoperatorsdk.operator.processing.dependent.kubernetes.BooleanWithUndefined;
 import io.javaoperatorsdk.operator.processing.dependent.kubernetes.CRUDKubernetesDependentResource;
 import io.javaoperatorsdk.operator.processing.dependent.kubernetes.KubernetesDependent;
 import io.javaoperatorsdk.operator.processing.dependent.workflow.Condition;
@@ -38,16 +39,16 @@ public class AgentBuildJobDependentResource extends CRUDKubernetesDependentResou
         }
     }
 
-
-    @Override
-    public Result<Job> match(Job actualResource, Job desired, AgentBuild primary, Context<AgentBuild> context) {
-        boolean match = StringUtils.equals(actualResource.getMetadata().getName(), desired.getMetadata().getName());
-        return Result.nonComputed(match);
-    }
+//
+//    @Override
+//    public Result<Job> match(Job actualResource, Job desired, AgentBuild primary, Context<AgentBuild> context) {
+//        boolean match = StringUtils.equals(actualResource.getMetadata().getName(), desired.getMetadata().getName());
+//        return Result.nonComputed(match);
+//    }
 
     @Override
     protected Job desired(AgentBuild primary, Context<AgentBuild> context) {
-        log.info("Creating Job DR for build {}", primary.getMetadata());
+//        log.debug("Creating Job DR for build {}", primary.getMetadata());
         var agentDeployment = ResourceUtils.getReferencedAgentDeployment(context.getClient(), primary);
         return new JobBuilder()
                 .withNewMetadata()
@@ -85,7 +86,7 @@ public class AgentBuildJobDependentResource extends CRUDKubernetesDependentResou
                         new EnvVar("FUNCTION_NAME", agentDeployment.getMetadata().getName(), null),
                         new EnvVar("FUNCTION_ENV", agentDeployment.getSpec().getEnvironmentName(), null),
                         new EnvVar("NAMESPACE", primary.getMetadata().getNamespace(), null),
-                        new EnvVar("CATALOGUE_NAME", agentDeployment.getSpec().getCatalogueName(), null)
+                        new EnvVar("CATALOGUE_NAME", ResourceUtils.getReferenceAgentCatalogueName(agentDeployment), null)
                 )
                 .addNewVolumeMount()
                 .withMountPath("/workspace")

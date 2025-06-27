@@ -4,6 +4,9 @@ import ai.tuna.fusion.metadata.crd.AgentBuild;
 import ai.tuna.fusion.metadata.crd.AgentBuildSpec;
 import ai.tuna.fusion.metadata.crd.AgentBuildStatus;
 import ai.tuna.fusion.metadata.crd.AgentDeployment;
+import io.fabric8.kubernetes.api.model.HasMetadata;
+import io.fabric8.kubernetes.api.model.OwnerReference;
+import io.fabric8.kubernetes.client.CustomResource;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.dsl.LogWatch;
 import lombok.extern.slf4j.Slf4j;
@@ -25,7 +28,9 @@ import java.time.Instant;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -52,8 +57,19 @@ public class PipelineUtils {
         srcPkg.setResourceId(archiveId);
         srcPkg.setSha256Checksum(sha256Checksum);
         spec.setSourcePackageResource(srcPkg);
+        agentBuild.setSpec(spec);
+
         agentBuild.getMetadata().setName("%s-build-%s".formatted(agentDeployment.getMetadata().getName(), Instant.now().getEpochSecond()));
         agentBuild.getMetadata().setNamespace(agentDeployment.getMetadata().getNamespace());
+        OwnerReference ownerReference = new OwnerReference(
+                HasMetadata.getApiVersion(AgentDeployment.class),
+                false,
+                true,
+                HasMetadata.getKind(AgentDeployment.class),
+                agentDeployment.getMetadata().getName(),
+                agentDeployment.getMetadata().getUid()
+        );
+        agentBuild.getMetadata().getOwnerReferences().add(ownerReference);
         return kubernetesClient.resource(agentBuild)
                 .inNamespace(agentDeployment.getMetadata().getNamespace())
                 .create();
@@ -69,28 +85,38 @@ public class PipelineUtils {
     public static AgentBuildStatus.JobPodInfo waitForJobPod(
             final KubernetesClient kubernetesClient,
             final String agentBuildName,
-            final String namespace) {
+            final String namespace) throws InterruptedException {
+
         var agentBuildWithJob = kubernetesClient.resources(AgentBuild.class)
                 .inNamespace(namespace)
                 .withName(agentBuildName)
-                .waitUntilCondition(agentBuild ->
-                                agentBuild.getStatus()!=null &&
-                                        agentBuild.getStatus().getJobPod()!=null &&
-                        StringUtils.isNotBlank(agentBuild.getStatus().getJobPod().getPodName()
-                        ), 1, TimeUnit.MINUTES);
+                .waitUntilCondition(agentBuild -> {
+                    var podInfo = Optional.ofNullable(agentBuild)
+                            .map(AgentBuild::getStatus)
+                            .map(AgentBuildStatus::getJobPod);
+                    var valid = podInfo.map(AgentBuildStatus.JobPodInfo::getPodName).map(StringUtils::isNotBlank).orElse(false) &&
+                            podInfo.map(p -> !StringUtils.equals(p.getPodPhase(), "Pending")).orElse(false);
+                    log.debug("Check pod readiness: AgentBuild={}/{}, podInfo={}, valid={}", namespace, agentBuildName, podInfo.orElse(null), valid);
+                    return valid;
+                }, 5, TimeUnit.MINUTES);
+        return Optional.ofNullable(agentBuildWithJob).map(AgentBuild::getStatus).map(AgentBuildStatus::getJobPod).orElseThrow();
 
-        if (Objects.isNull(agentBuildWithJob)) {
-            throw new IllegalStateException("PodInfo is not present on AgentBuild");
-        }
-
-        return agentBuildWithJob.getStatus().getJobPod();
     }
 
-    public static LogWatch streamPodLogs(final KubernetesClient client, String podName, String namespace) {
-        return client.pods()
+    public static void streamPodLogs(final KubernetesClient client, String podName, String namespace, Consumer<String> logLineConsumer) throws IOException {
+        try(var logWatch = client.pods()
                 .inNamespace(namespace)
                 .withName(podName)
                 .watchLog();
+            BufferedReader reader = new BufferedReader(
+                    new InputStreamReader(logWatch.getOutput()))
+        ) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                log.debug(line);
+                logLineConsumer.accept(line);
+            }
+        }
     }
 
     /**
@@ -112,13 +138,16 @@ public class PipelineUtils {
                 String line;
                 StringBuilder archiveId = new StringBuilder();
 
+                StringBuilder stdout = new StringBuilder();
                 while ((line = reader.readLine()) != null) {
+                    stdout.append(line);
                     // 假设归档ID在输出的某一行中包含"ArchiveID:"标识
-                    if (line.contains("ArchiveID:")) {
+                    if (line.contains("ID:")) {
                         archiveId.append(line.trim());
                         break;
                     }
                 }
+                log.debug("fission archive command stdout: {}", stdout);
 
                 // 读取并记录错误流（可选）
                 while ((line = errorReader.readLine()) != null) {
@@ -135,12 +164,12 @@ public class PipelineUtils {
             }
     }
 
-    public static String getSHA256Checksum(String zipFilePath) throws NoSuchAlgorithmException, IOException {
+    public static String getSha256Checksum(String filePath) throws NoSuchAlgorithmException, IOException {
         MessageDigest digest = MessageDigest.getInstance("SHA-256");
-        File file = new File(zipFilePath);
+        File file = new File(filePath);
 
         if (!file.exists() || !file.isFile()) {
-            throw new IllegalArgumentException("Invalid file path: " + zipFilePath);
+            throw new IllegalArgumentException("Invalid file path: " + filePath);
         }
 
         try (InputStream inputStream = new FileInputStream(file)) {

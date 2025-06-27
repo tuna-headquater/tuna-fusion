@@ -1,7 +1,5 @@
 package ai.tuna.fusion.metadata.crd;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 
 /**
@@ -21,6 +19,7 @@ public class AgentBuildStatus {
     @Data
     public static class JobPodInfo {
         private String podName;
+        private String podPhase;
     }
 
     private Phase phase;

@@ -3,10 +3,33 @@ kind: AgentDeployment
 metadata:
   name: test-deploy-1
   namespace: tuna-fission
+  ownerReferences:
+    - apiVersion: fusion.tuna.ai/v1
+      kind: AgentCatalogue
+      name: agent-catalogue-1
+      uid: f9e4a242-74fb-4547-92c3-a9bfa16e708c
 spec:
-  agentName: agent_1
-  agentCatalogueId: 111
-  agentRepositoryId: 222
-  agentCatalogueName: catalogue_1
-  gitRepositoryUrl: https://test.com/project.git
-  agentEnvironmentName: env1
+  agentCard:
+    name: agent1
+    description: this is a super agent
+    capabilities:
+      streaming: true
+      pushNotifications: false
+      stateTransitionHistory: false
+    skills:
+      - id: skill1
+        name: Talk about interesting finance news
+        description: "Talk about interesting finance news"
+      - id: skill2
+        name: Talk about interesting tech news
+        description: "Talk about interesting tech news"
+  environmentName: env1
+  git:
+    watchedBranchName: "refs/heads/main"
+  buildRecipe:
+    buildScript: |-
+      set -e
+      set -x
+      echo "Pretend to be busy..."
+      sleep 120
+    builderImage: busybox:latest
