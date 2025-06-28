@@ -69,9 +69,9 @@ spec:
         Map<String, String> valuesMap = Map.of(
                 "name", primary.getMetadata().getName(),
                 "namespace", primary.getMetadata().getNamespace(),
-                "builderImage", primary.getSpec().getFissionEnv().getBuilderImage(),
-                "runtimeImage", primary.getSpec().getFissionEnv().getRuntimeImage(),
-                "poolSize", String.valueOf(primary.getSpec().getFissionEnv().getPoolSize())
+                "builderImage", primary.getSpec().getEngineOptions().getFission().getBuilderImage(),
+                "runtimeImage", primary.getSpec().getEngineOptions().getFission().getRuntimeImage(),
+                "poolSize", String.valueOf(primary.getSpec().getEngineOptions().getFission().getPoolSize())
         );
         return new StringSubstitutor(valuesMap);
     }

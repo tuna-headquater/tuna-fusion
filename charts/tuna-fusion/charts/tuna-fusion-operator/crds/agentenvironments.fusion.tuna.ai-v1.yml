@@ -19,19 +19,31 @@ spec:
         properties:
           spec:
             properties:
+              buildRecipe:
+                properties:
+                  buildScript:
+                    type: "string"
+                  builderImage:
+                    type: "string"
+                  serviceAccountName:
+                    type: "string"
+                type: "object"
+              engineOptions:
+                properties:
+                  fission:
+                    properties:
+                      builderImage:
+                        type: "string"
+                      poolSize:
+                        type: "integer"
+                      runtimeImage:
+                        type: "string"
+                    type: "object"
+                type: "object"
               engineType:
                 enum:
                 - "Fission"
                 type: "string"
-              fissionEnv:
-                properties:
-                  builderImage:
-                    type: "string"
-                  poolSize:
-                    type: "integer"
-                  runtimeImage:
-                    type: "string"
-                type: "object"
             type: "object"
           status:
             properties:

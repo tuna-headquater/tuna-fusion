@@ -26,10 +26,3 @@ spec:
   environmentName: env1
   git:
     watchedBranchName: "refs/heads/main"
-  buildRecipe:
-    buildScript: |-
-      set -e
-      set -x
-      echo "Pretend to be busy..."
-      sleep 120
-    builderImage: busybox:latest

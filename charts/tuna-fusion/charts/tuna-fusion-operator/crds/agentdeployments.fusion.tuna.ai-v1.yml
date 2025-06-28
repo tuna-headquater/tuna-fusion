@@ -111,15 +111,6 @@ spec:
                   version:
                     type: "string"
                 type: "object"
-              buildRecipe:
-                properties:
-                  buildScript:
-                    type: "string"
-                  builderImage:
-                    type: "string"
-                  serviceAccountName:
-                    type: "string"
-                type: "object"
               environmentName:
                 type: "string"
               git:

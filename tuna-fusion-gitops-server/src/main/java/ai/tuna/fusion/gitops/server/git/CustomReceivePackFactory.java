@@ -3,6 +3,7 @@ package ai.tuna.fusion.gitops.server.git;
 import ai.tuna.fusion.gitops.server.spring.GitRequestContextUtil;
 import ai.tuna.fusion.metadata.crd.AgentCatalogue;
 import ai.tuna.fusion.metadata.crd.AgentDeployment;
+import ai.tuna.fusion.metadata.crd.AgentEnvironment;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
@@ -33,16 +34,17 @@ public class CustomReceivePackFactory implements ReceivePackFactory<HttpServletR
         GitRequestContextUtil.initializeRequestAttributes(kubernetesClient, req);
         var agentDeployment = GitRequestContextUtil.getAgentDeployment().orElseThrow(()-> new ServiceNotEnabledException("AgentDeployment is not associated with this Git repository URL."));
         var agentCatalogue = GitRequestContextUtil.getAgentCatalogue().orElseThrow(()-> new ServiceNotEnabledException("AgentCatalogue is associated with this Git repository URL."));
+        var agentEnvironment = GitRequestContextUtil.getAgentEnvironment().orElseThrow(()-> new ServiceNotEnabledException("AgentEnvironment is associated with this Git repository URL."));
         // TODO check permissions
 
         ReceivePack receivePack = new ReceivePack(db);
         receivePack.setPreReceiveHook((rp, commands) -> {
-            handlePreReceiveHook(agentDeployment, agentCatalogue, req, receivePack, commands);
+            handlePreReceiveHook(agentEnvironment, agentDeployment, agentCatalogue, req, receivePack, commands);
         });
         return receivePack;
     }
 
-    private void handlePreReceiveHook(AgentDeployment agentDeployment, AgentCatalogue agentCatalogue, HttpServletRequest req, ReceivePack receivePack, Collection<ReceiveCommand> commands) {
+    private void handlePreReceiveHook(AgentEnvironment agentEnvironment, AgentDeployment agentDeployment, AgentCatalogue agentCatalogue, HttpServletRequest req, ReceivePack receivePack, Collection<ReceiveCommand> commands) {
         try {
             var zipPath = PipelineUtils.createRepoZip(receivePack, commands, agentDeployment.getSpec().getGit().getWatchedBranchName());
             logInfo(receivePack, "📦 Snapshot for repository is created successfully: %s", zipPath);
@@ -53,7 +55,7 @@ public class CustomReceivePackFactory implements ReceivePackFactory<HttpServletR
             var archiveId = PipelineUtils.fissionArchiveUpload(zipPath);
             logInfo(receivePack, "⏫ Archive ID for snapshot: %s", archiveId);
 
-            var agentBuild = PipelineUtils.createAgentBuild(kubernetesClient, agentDeployment, archiveId, sha256);
+            var agentBuild = PipelineUtils.createAgentBuild(kubernetesClient, agentDeployment, agentEnvironment, archiveId, sha256);
 
             logInfo(receivePack, "💾 AgentBuild CR is created successfully: %s", agentBuild.getMetadata().getName());
 

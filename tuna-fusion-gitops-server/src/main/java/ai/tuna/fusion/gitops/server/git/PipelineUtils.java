@@ -1,9 +1,6 @@
 package ai.tuna.fusion.gitops.server.git;
 
-import ai.tuna.fusion.metadata.crd.AgentBuild;
-import ai.tuna.fusion.metadata.crd.AgentBuildSpec;
-import ai.tuna.fusion.metadata.crd.AgentBuildStatus;
-import ai.tuna.fusion.metadata.crd.AgentDeployment;
+import ai.tuna.fusion.metadata.crd.*;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.OwnerReference;
 import io.fabric8.kubernetes.client.CustomResource;
@@ -45,13 +42,14 @@ public class PipelineUtils {
     public static AgentBuild createAgentBuild(
             KubernetesClient kubernetesClient,
             AgentDeployment agentDeployment,
+            AgentEnvironment agentEnvironment,
             String archiveId,
             String sha256Checksum) {
         AgentBuild agentBuild = new AgentBuild();
         AgentBuildSpec spec = new AgentBuildSpec();
-        spec.setBuilderImage(agentDeployment.getSpec().getBuildRecipe().getBuilderImage());
-        spec.setBuildScript(agentDeployment.getSpec().getBuildRecipe().getBuildScript());
-        spec.setServiceAccountName(agentDeployment.getSpec().getBuildRecipe().getServiceAccountName());
+        spec.setBuilderImage(agentEnvironment.getSpec().getBuildRecipe().getBuilderImage());
+        spec.setBuildScript(agentEnvironment.getSpec().getBuildRecipe().getBuildScript());
+        spec.setServiceAccountName(agentEnvironment.getSpec().getBuildRecipe().getServiceAccountName());
         var srcPkg = new AgentBuildSpec.SourcePackageResource();
         srcPkg.setProvider(AgentBuildSpec.SourcePackageProvider.Fission);
         srcPkg.setResourceId(archiveId);

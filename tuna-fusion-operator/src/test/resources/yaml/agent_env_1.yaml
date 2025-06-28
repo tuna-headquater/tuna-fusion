@@ -1,0 +1,20 @@
+apiVersion: fusion.tuna.ai/v1
+kind: AgentEnvironment
+metadata:
+  name: env1
+  namespace: tuna-fission
+spec:
+  engineType: Fission
+  engineOptions:
+    fission:
+      builderImage: ghcr.io/fission/python-fastapi-builder
+      poolSize: 3
+      runtimeImage: ghcr.io/fission/python-fastapi-env
+  buildRecipe:
+    buildScript: |-
+      set -e
+      set -x
+      echo "Pretend to be busy..."
+      sleep 120
+    builderImage: busybox:latest
+

@@ -2,6 +2,7 @@ package ai.tuna.fusion.gitops.server.spring;
 
 import ai.tuna.fusion.metadata.crd.AgentCatalogue;
 import ai.tuna.fusion.metadata.crd.AgentDeployment;
+import ai.tuna.fusion.metadata.crd.AgentEnvironment;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletRequest;
@@ -21,9 +22,15 @@ public class GitRequestContextUtil {
 
     public record URLParams (String namespace, String agentCatalogueName, String agentDeploymentName) {}
 
-    public static String AgentCatalogueName = "agent-catalogue";
-    public static String AgentDeploymentName = "agent-deployment";
+    public static String AgentEnvironmentName = "ai.tuna.fusion.gitops.server.agent-environment";
+    public static String AgentCatalogueName = "ai.tuna.fusion.gitops.server.agent-catalogue";
+    public static String AgentDeploymentName = "ai.tuna.fusion.gitops.server.agent-deployment";
 
+    public static Optional<AgentEnvironment> getAgentEnvironment() {
+        return Optional.ofNullable(
+                (AgentEnvironment) RequestContextHolder.currentRequestAttributes().getAttribute(AgentEnvironmentName, RequestAttributes.SCOPE_REQUEST)
+        );
+    }
 
     public static Optional<AgentDeployment> getAgentDeployment() {
         return Optional.ofNullable(
@@ -55,11 +62,14 @@ public class GitRequestContextUtil {
         if (Objects.isNull(agentDeployment)) {
             throw new ServiceNotEnabledException("AgentDeployment (name=%s,ns=%s) doesn't exist.".formatted(params.agentDeploymentName, params.namespace));
         }
+        var agentEnvironment = kubernetesClient.resources(AgentEnvironment.class)
+                .inNamespace(params.namespace)
+                .withName(agentDeployment.getSpec().getEnvironmentName())
+                .get();
         RequestContextHolder.currentRequestAttributes().setAttribute(AgentCatalogueName, agentCatalogue, RequestAttributes.SCOPE_REQUEST);
         RequestContextHolder.currentRequestAttributes().setAttribute(AgentDeploymentName, agentDeployment, RequestAttributes.SCOPE_REQUEST);
+        RequestContextHolder.currentRequestAttributes().setAttribute(AgentEnvironmentName, agentEnvironment, RequestAttributes.SCOPE_REQUEST);
     }
-
-
 
     public static URLParams parseUrlParams(ServletRequest request) throws ServiceNotEnabledException {
         String requestUri = ((jakarta.servlet.http.HttpServletRequest) request).getRequestURI();
