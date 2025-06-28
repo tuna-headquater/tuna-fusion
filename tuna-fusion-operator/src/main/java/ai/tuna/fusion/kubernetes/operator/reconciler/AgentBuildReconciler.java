@@ -1,5 +1,6 @@
 package ai.tuna.fusion.kubernetes.operator.reconciler;
 
+import ai.tuna.fusion.kubernetes.operator.ResourceUtils;
 import ai.tuna.fusion.kubernetes.operator.dr.AgentBuildJobDependentResource;
 import ai.tuna.fusion.metadata.crd.AgentBuild;
 import ai.tuna.fusion.metadata.crd.AgentBuildStatus;
@@ -13,6 +14,7 @@ import io.fabric8.kubernetes.client.dsl.base.PatchType;
 import io.javaoperatorsdk.operator.api.reconciler.*;
 import io.javaoperatorsdk.operator.api.reconciler.dependent.Dependent;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;
@@ -28,8 +30,8 @@ import static ai.tuna.fusion.kubernetes.operator.ResourceUtils.getReferencedAgen
 @Workflow(
     dependents = {
         @Dependent(
-                type = AgentBuildJobDependentResource.class
-//                activationCondition = AgentBuildJobDependentResource.IsJobRequiredCondition.class
+                type = AgentBuildJobDependentResource.class,
+                reconcilePrecondition = AgentBuildJobDependentResource.IsJobRequiredCondition.class
         )
     }
 )
@@ -91,6 +93,13 @@ public class AgentBuildReconciler implements Reconciler<AgentBuild>, Cleaner<Age
             jobPodInfo.setPodName(jobPod.map(pod -> pod.getMetadata().getName()).orElseThrow());
             jobPodInfo.setPodPhase(jobPod.map(pod -> pod.getStatus().getPhase()).orElseThrow());
             log.info("JobPodInfo: {}", jobPodInfo);
+            if (ResourceUtils.isJobTerminalPhase(jobPodInfo.getPodPhase())) {
+                var logs = client.pods().inNamespace(jobResource.getMetadata().getNamespace())
+                        .withName(jobPodInfo.getPodName())
+                        .getLog(true);
+                jobPodInfo.setLogs(logs);
+            }
+
 
             // 更新 AgentDeployment 状态
             if (agentBuildPatch.getStatus().getPhase() == AgentBuildStatus.Phase.Succeeded || agentBuildPatch.getStatus().getPhase() == AgentBuildStatus.Phase.Failed) {

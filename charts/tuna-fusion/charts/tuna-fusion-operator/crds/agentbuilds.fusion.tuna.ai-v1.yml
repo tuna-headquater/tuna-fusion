@@ -14,6 +14,14 @@ spec:
   scope: "Namespaced"
   versions:
   - additionalPrinterColumns:
+    - jsonPath: ".status.jobPod.podName"
+      name: "PodName"
+      priority: 0
+      type: "string"
+    - jsonPath: ".status.jobPod.podPhase"
+      name: "PodPhase"
+      priority: 0
+      type: "string"
     - jsonPath: ".status.phase"
       name: "Phase"
       priority: 0
@@ -47,6 +55,8 @@ spec:
             properties:
               jobPod:
                 properties:
+                  logs:
+                    type: "string"
                   podName:
                     type: "string"
                   podPhase:

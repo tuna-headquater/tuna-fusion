@@ -36,6 +36,10 @@ public class ResourceUtils {
                 .get();
     }
 
+    public static boolean isJobTerminalPhase(String phase) {
+        return StringUtils.equals("Succeeded", phase) || StringUtils.equals("Failed", phase);
+    }
+
 
 
 

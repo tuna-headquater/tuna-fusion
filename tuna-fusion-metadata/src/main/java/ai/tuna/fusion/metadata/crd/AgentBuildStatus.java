@@ -20,6 +20,7 @@ public class AgentBuildStatus {
     public static class JobPodInfo {
         private String podName;
         private String podPhase;
+        private String logs;
     }
 
     private Phase phase;

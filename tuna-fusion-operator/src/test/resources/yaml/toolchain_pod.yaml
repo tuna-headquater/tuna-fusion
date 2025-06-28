@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: toolchain-test
+  labels:
+    role: toolchain-test
+spec:
+  serviceAccountName: fission-user
+  containers:
+    - name: toolchain-test
+      image: robinqu/tuna-fusion-toolchain:1750673901
+      imagePullPolicy: IfNotPresent
+      command: ["/bin/sh", "-ec", "while :; do echo '.'; sleep 6 ; done"]
+
+  restartPolicy: Always
+  

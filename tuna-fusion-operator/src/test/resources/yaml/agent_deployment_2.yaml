@@ -1,0 +1,69 @@
+apiVersion: fusion.tuna.ai/v1
+kind: AgentDeployment
+metadata:
+  name: test-deploy-2
+  namespace: tuna-fission
+  ownerReferences:
+    - apiVersion: fusion.tuna.ai/v1
+      kind: AgentCatalogue
+      name: agent-catalogue-1
+      uid: f9e4a242-74fb-4547-92c3-a9bfa16e708c
+spec:
+  agentCard:
+    name: agent2
+    description: a simple http server that speaks hello
+    capabilities:
+      streaming: true
+      pushNotifications: false
+      stateTransitionHistory: false
+  environmentName: env1
+  git:
+    watchedBranchName: "refs/heads/main"
+  buildRecipe:
+    buildScript: |-
+      #!/bin/bash
+      set -e
+      set -x
+      
+      cd /tmp
+      
+      fission archive download --id="$FUNCTION_SOURCE_ARCHIVE_ID" -o src.zip
+      
+      if ! fission fn get --name "$FUNCTION_NAME" -n "$NAMESPACE"; then
+      echo "Function $FUNCTION_NAME does not exist. Creating it now..."      
+        # Create the function
+        fission fn create \
+        -n "$NAMESPACE" \
+        --name "$FUNCTION_NAME" \
+        --env "$FUNCTION_ENV" \
+        --src src.zip \
+        --entrypoint "main.handler"
+      else
+        echo "Function $FUNCTION_NAME is to be updated."
+        fission fn update \
+        -n "$NAMESPACE" \
+        --name "$FUNCTION_NAME" \
+        --env "$FUNCTION_ENV" \
+        --src src.zip \
+        --entrypoint "main.handler"
+      fi
+      
+      # Create route if necessary
+      if ! fission route get --name "$FUNCTION_NAME" -n "$NAMESPACE"; then
+        echo "Route $FUNCTION_NAME does not exist. Creating it now..."
+        # Create the function
+        fission route create \
+        -n "$NAMESPACE" \
+        --name "$FUNCTION_NAME" \
+        --function "$FUNCTION_NAME" \
+        --url "/$FUNCTION_NAME" \
+        --prefix "/$CATALOGUE_NAME"
+      else
+        echo "Route $FUNCTION_NAME already exists."
+      fi
+      
+      echo "Testing fn"
+      fission fn test -n "$NAMESPACE" --name "$FUNCTION_NAME"
+
+    builderImage: robinqu/tuna-fusion-toolchain:1750673901
+    serviceAccountName: fission-user

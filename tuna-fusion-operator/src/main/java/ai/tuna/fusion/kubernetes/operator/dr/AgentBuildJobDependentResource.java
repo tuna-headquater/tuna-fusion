@@ -35,7 +35,7 @@ public class AgentBuildJobDependentResource extends CRUDKubernetesDependentResou
             var phase = Optional.ofNullable(primary.getStatus())
                     .map(AgentBuildStatus::getPhase)
                     .orElse(AgentBuildStatus.Phase.Pending);
-            return phase == AgentBuildStatus.Phase.Pending;
+            return phase != AgentBuildStatus.Phase.Failed && phase != AgentBuildStatus.Phase.Succeeded;
         }
     }
 
@@ -83,6 +83,7 @@ public class AgentBuildJobDependentResource extends CRUDKubernetesDependentResou
                 .withImage(primary.getSpec().getBuilderImage())
                 .withCommand("sh", "/workspace/build.sh")
                 .addToEnv(
+                        new EnvVar("FUNCTION_SOURCE_ARCHIVE_ID", primary.getSpec().getSourcePackageResource().getResourceId(), null),
                         new EnvVar("FUNCTION_NAME", agentDeployment.getMetadata().getName(), null),
                         new EnvVar("FUNCTION_ENV", agentDeployment.getSpec().getEnvironmentName(), null),
                         new EnvVar("NAMESPACE", primary.getMetadata().getNamespace(), null),

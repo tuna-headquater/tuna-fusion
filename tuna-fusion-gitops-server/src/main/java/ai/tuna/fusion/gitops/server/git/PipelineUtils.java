@@ -113,7 +113,6 @@ public class PipelineUtils {
         ) {
             String line;
             while ((line = reader.readLine()) != null) {
-                log.debug(line);
                 logLineConsumer.accept(line);
             }
         }

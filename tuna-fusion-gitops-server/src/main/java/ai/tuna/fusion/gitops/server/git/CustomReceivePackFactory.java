@@ -60,13 +60,13 @@ public class CustomReceivePackFactory implements ReceivePackFactory<HttpServletR
             var podInfo = PipelineUtils.waitForJobPod(kubernetesClient, agentBuild.getMetadata().getName(), agentBuild.getMetadata().getNamespace());
             logInfo(receivePack, "⚒️ Job pod is created successfully: %s", podInfo.getPodName());
 
-
             PipelineUtils.streamPodLogs(kubernetesClient,
                     podInfo.getPodName(),
                     agentDeployment.getMetadata().getNamespace(),
                     line -> logInfo(receivePack, line)
             );
 
+            logInfo(receivePack, "✅ AgentBuild CR is completed successfully");
 
         } catch (Exception e) {
             logError(receivePack, "❌ Exception occurred: %s", e.getMessage());
