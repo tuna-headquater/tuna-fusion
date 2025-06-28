@@ -13,8 +13,7 @@ import org.eclipse.jgit.transport.resolver.ReceivePackFactory;
 import org.eclipse.jgit.transport.resolver.ServiceNotAuthorizedException;
 import org.eclipse.jgit.transport.resolver.ServiceNotEnabledException;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
+import java.io.IOException;
 import java.util.Collection;
 
 /**
@@ -43,40 +42,59 @@ public class CustomReceivePackFactory implements ReceivePackFactory<HttpServletR
         return receivePack;
     }
 
-
     private void handlePreReceiveHook(AgentDeployment agentDeployment, AgentCatalogue agentCatalogue, HttpServletRequest req, ReceivePack receivePack, Collection<ReceiveCommand> commands) {
         try {
             var zipPath = PipelineUtils.createRepoZip(receivePack, commands, agentDeployment.getSpec().getGit().getWatchedBranchName());
-            receivePack.sendMessage("📦 Snapshot for repository is created successfully: " + zipPath);
+            logInfo(receivePack, "📦 Snapshot for repository is created successfully: %s", zipPath);
 
             var sha256 = PipelineUtils.getSha256Checksum(zipPath);
-            receivePack.sendMessage("🔢 SHA256 for snapshot: " + sha256);
+            logInfo(receivePack, "🔢 SHA256 for snapshot: %s", sha256);
 
             var archiveId = PipelineUtils.fissionArchiveUpload(zipPath);
-            receivePack.sendMessage("⏫ Archive ID for snapshot: " + archiveId);
+            logInfo(receivePack, "⏫ Archive ID for snapshot: %s", archiveId);
 
             var agentBuild = PipelineUtils.createAgentBuild(kubernetesClient, agentDeployment, archiveId, sha256);
-            log.debug("Created AgentBuild: {}", agentBuild);
-            receivePack.sendMessage("💾 AgentBuild CR is created successfully: " + agentBuild.getMetadata().getName());
+
+            logInfo(receivePack, "💾 AgentBuild CR is created successfully: %s", agentBuild.getMetadata().getName());
 
             var podInfo = PipelineUtils.waitForJobPod(kubernetesClient, agentBuild.getMetadata().getName(), agentBuild.getMetadata().getNamespace());
-            log.debug("Job Pod for AgentBuild: {}", podInfo);
-            receivePack.sendMessage("💪 Job pod is created successfully: " + podInfo.getPodName());
+            logInfo(receivePack, "⚒️ Job pod is created successfully: %s", podInfo.getPodName());
 
-            receivePack.sendMessage("⚒️ Streaming build log:");
+
             PipelineUtils.streamPodLogs(kubernetesClient,
                     podInfo.getPodName(),
                     agentDeployment.getMetadata().getNamespace(),
-                    receivePack::sendMessage
+                    line -> logInfo(receivePack, line)
             );
-            receivePack.sendMessage("✅ AgentBuild is completed successfully");
+
 
         } catch (Exception e) {
-            log.error("Exception occurred: {}", e.getMessage(), e);
-            receivePack.sendError("❌ Exception occurred: " + e.getMessage());
+            logError(receivePack, "❌ Exception occurred: %s", e.getMessage());
             for (ReceiveCommand command : commands) {
                 command.setResult(ReceiveCommand.Result.REJECTED_OTHER_REASON, "Exception occurred: "  + e.getMessage());
             }
+        }
+    }
+
+    private void logInfo(ReceivePack receivePack, String msg, Object... objects) {
+        var line = msg.formatted(objects);
+        log.info(line);
+        receivePack.sendMessage(line);
+        try {
+            receivePack.getMessageOutputStream().flush();
+        } catch (IOException e) {
+            log.warn("Failed to flush message output stream", e);
+        }
+    }
+
+    private void logError(ReceivePack receivePack, String msg, Object... objects) {
+        var line = msg.formatted(objects);
+        log.error(line);
+        receivePack.sendError(line);
+        try {
+            receivePack.getMessageOutputStream().flush();
+        } catch (IOException e) {
+            log.warn("Failed to flush message output stream", e);
         }
     }
 
