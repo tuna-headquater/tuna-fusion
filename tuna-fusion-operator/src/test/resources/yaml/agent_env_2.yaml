@@ -40,17 +40,17 @@ spec:
       fi
 
       # Create route if necessary
-      if ! fission route get --name "$FUNCTION_NAME" -n "$NAMESPACE"; then
-        echo "Route $FUNCTION_NAME does not exist. Creating it now..."
+      if ! fission route get --name "$ROUTE_NAME" -n "$NAMESPACE"; then
+        echo "Route $ROUTE_NAME does not exist. Creating it now..."
         # Create the function
         fission route create \
         -n "$NAMESPACE" \
-        --name "$FUNCTION_NAME" \
+        --name "$ROUTE_NAME" \
         --function "$FUNCTION_NAME" \
         --url "/$FUNCTION_NAME" \
         --prefix "/$CATALOGUE_NAME"
       else
-        echo "Route $FUNCTION_NAME already exists."
+        echo "Route $ROUTE_NAME already exists."
       fi
 
       echo "Testing fn"

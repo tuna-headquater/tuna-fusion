@@ -84,7 +84,8 @@ public class AgentBuildJobDependentResource extends CRUDKubernetesDependentResou
                 .withCommand("sh", "/workspace/build.sh")
                 .addToEnv(
                         new EnvVar("FUNCTION_SOURCE_ARCHIVE_ID", primary.getSpec().getSourcePackageResource().getResourceId(), null),
-                        new EnvVar("FUNCTION_NAME", agentDeployment.getMetadata().getName(), null),
+                        new EnvVar("FUNCTION_NAME", ResourceUtils.computeFunctionName(agentDeployment), null),
+                        new EnvVar("ROUTE_NAME", ResourceUtils.computeRouteName(agentDeployment), null),
                         new EnvVar("FUNCTION_ENV", agentDeployment.getSpec().getEnvironmentName(), null),
                         new EnvVar("NAMESPACE", primary.getMetadata().getNamespace(), null),
                         new EnvVar("CATALOGUE_NAME", ResourceUtils.getReferenceAgentCatalogueName(agentDeployment), null)
