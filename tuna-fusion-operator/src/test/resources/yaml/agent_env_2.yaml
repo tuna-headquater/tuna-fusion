@@ -21,7 +21,7 @@ spec:
       fission archive download --id="$FUNCTION_SOURCE_ARCHIVE_ID" -o src.zip
 
       if ! fission fn get --name "$FUNCTION_NAME" -n "$NAMESPACE"; then
-      echo "Function $FUNCTION_NAME does not exist. Creating it now..."      
+        echo "Function $FUNCTION_NAME does not exist. Creating it now..."      
         # Create the function
         fission fn create \
         -n "$NAMESPACE" \
