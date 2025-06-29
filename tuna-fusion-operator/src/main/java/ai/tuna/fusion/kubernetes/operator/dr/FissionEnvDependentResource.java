@@ -16,6 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.text.StringSubstitutor;
 
 import java.util.Map;
+import java.util.Optional;
 
 import static ai.tuna.fusion.kubernetes.operator.reconciler.AgentEnvironmentReconciler.SELECTOR;
 
@@ -69,7 +70,7 @@ spec:
         Map<String, String> valuesMap = Map.of(
                 "name", primary.getMetadata().getName(),
                 "namespace", primary.getMetadata().getNamespace(),
-                "builderImage", primary.getSpec().getEngineOptions().getFission().getBuilderImage(),
+                "builderImage", Optional.ofNullable(primary.getSpec().getEngineOptions().getFission().getBuilderImage()).orElse(""),
                 "runtimeImage", primary.getSpec().getEngineOptions().getFission().getRuntimeImage(),
                 "poolSize", String.valueOf(primary.getSpec().getEngineOptions().getFission().getPoolSize())
         );

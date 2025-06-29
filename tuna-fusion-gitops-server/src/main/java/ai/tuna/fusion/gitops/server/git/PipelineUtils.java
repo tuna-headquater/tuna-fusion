@@ -39,6 +39,14 @@ public class PipelineUtils {
     private static final SimpleDateFormat DATE_FORMAT =
             new SimpleDateFormat("yyyyMMdd-HHmmss");
 
+
+    public static Optional<AgentBuild> getAgentBuild(KubernetesClient client, String ns, String name) {
+        return Optional.ofNullable(client.resources(AgentBuild.class)
+                .inNamespace(ns)
+                .withName(name)
+                .get());
+    }
+
     public static AgentBuild createAgentBuild(
             KubernetesClient kubernetesClient,
             AgentDeployment agentDeployment,
@@ -72,6 +80,7 @@ public class PipelineUtils {
                 .inNamespace(agentDeployment.getMetadata().getNamespace())
                 .create();
     }
+
 
     /**
      * Watch for events from AgentBuild. Return pod name in AgentBuildStatus if it's present and valid.

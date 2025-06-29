@@ -1,10 +1,9 @@
 package ai.tuna.fusion.gitops.server.git;
 
 import ai.tuna.fusion.gitops.server.spring.GitRequestContextUtil;
-import ai.tuna.fusion.metadata.crd.AgentCatalogue;
-import ai.tuna.fusion.metadata.crd.AgentDeployment;
-import ai.tuna.fusion.metadata.crd.AgentEnvironment;
+import ai.tuna.fusion.metadata.crd.*;
 import io.fabric8.kubernetes.client.KubernetesClient;
+import io.fabric8.kubernetes.client.ResourceNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.jgit.lib.Repository;
@@ -68,10 +67,17 @@ public class CustomReceivePackFactory implements ReceivePackFactory<HttpServletR
                     line -> logInfo(receivePack, line)
             );
 
-            logInfo(receivePack, "✅ AgentBuild CR is completed successfully");
-
+            var finalPhase = PipelineUtils.getAgentBuild(kubernetesClient, agentBuild.getMetadata().getNamespace(), agentBuild.getMetadata().getName())
+                    .map(AgentBuild::getStatus)
+                    .map(AgentBuildStatus::getPhase)
+                    .orElseThrow(()-> new ResourceNotFoundException("AgentBuild is not found: name=%s,ns=%s".formatted(agentBuild.getMetadata().getName(), agentBuild.getMetadata().getNamespace())));
+            if (finalPhase == AgentBuildStatus.Phase.Succeeded) {
+                logInfo(receivePack, "✅ AgentBuild CR is completed successfully");
+            } else {
+                throw new  RuntimeException("AgentBuild is in Failed Phase. Please check logs.");
+            }
         } catch (Exception e) {
-            logError(receivePack, "❌ Exception occurred: %s", e.getMessage());
+            logError(receivePack, e, "❌ Exception occurred: %s", e.getMessage());
             for (ReceiveCommand command : commands) {
                 command.setResult(ReceiveCommand.Result.REJECTED_OTHER_REASON, "Exception occurred: "  + e.getMessage());
             }
@@ -79,7 +85,7 @@ public class CustomReceivePackFactory implements ReceivePackFactory<HttpServletR
     }
 
     private void logInfo(ReceivePack receivePack, String msg, Object... objects) {
-        var line = msg.formatted(objects);
+        var line = objects.length >0 ? msg.formatted(objects) : msg;
         log.info(line);
         receivePack.sendMessage(line);
         try {
@@ -89,9 +95,9 @@ public class CustomReceivePackFactory implements ReceivePackFactory<HttpServletR
         }
     }
 
-    private void logError(ReceivePack receivePack, String msg, Object... objects) {
-        var line = msg.formatted(objects);
-        log.error(line);
+    private void logError(ReceivePack receivePack, Exception ex, String msg, Object... objects) {
+        var line = objects.length > 0 ? msg.formatted(objects) : msg;
+        log.error(line, ex);
         receivePack.sendError(line);
         try {
             receivePack.getMessageOutputStream().flush();

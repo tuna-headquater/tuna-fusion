@@ -1,0 +1,21 @@
+apiVersion: fusion.tuna.ai/v1
+kind: AgentDeployment
+metadata:
+  name: test-deploy-3
+  namespace: tuna-fission
+  ownerReferences:
+    - apiVersion: fusion.tuna.ai/v1
+      kind: AgentCatalogue
+      name: agent-catalogue-1
+      uid: f9e4a242-74fb-4547-92c3-a9bfa16e708c
+spec:
+  agentCard:
+    name: agent3
+    description: a simple http server that speaks hello
+    capabilities:
+      streaming: true
+      pushNotifications: false
+      stateTransitionHistory: false
+  environmentName: env3
+  git:
+    watchedBranchName: "refs/heads/main"

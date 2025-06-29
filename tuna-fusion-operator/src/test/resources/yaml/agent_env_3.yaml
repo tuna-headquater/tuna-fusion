@@ -1,13 +1,12 @@
 apiVersion: fusion.tuna.ai/v1
 kind: AgentEnvironment
 metadata:
-  name: env2
+  name: env3
   namespace: tuna-fission
 spec:
   engineType: Fission
   engineOptions:
     fission:
-      builderImage: ghcr.io/fission/python-fastapi-builder
       poolSize: 3
       runtimeImage: ghcr.io/fission/python-fastapi-env
   buildRecipe:
@@ -18,8 +17,14 @@ spec:
 
       cd /tmp
 
-      fission archive download --id="$FUNCTION_SOURCE_ARCHIVE_ID" -o src.zip      
-
+      fission archive download --id="$FUNCTION_SOURCE_ARCHIVE_ID" -o src.zip
+      mkdir src && unzip src.zip -d ./src
+      export SRC_PKG=/tmp/src
+      if [ -f ${SRC_PKG}/requirements.txt ]; then
+        uv pip install -i https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple -r ${SRC_PKG}/requirements.txt --target ${SRC_PKG}
+      fi
+      zip -r deploy.zip ${SRC_PKG}
+      
       if ! fission fn get --name "$FUNCTION_NAME" -n "$NAMESPACE"; then
         echo "Function $FUNCTION_NAME does not exist. Creating it now..."      
         # Create the function
@@ -28,6 +33,7 @@ spec:
         --name "$FUNCTION_NAME" \
         --env "$FUNCTION_ENV" \
         --src src.zip \
+        --deploy deploy.zip \
         --entrypoint "main.handler"
       else
         echo "Function $FUNCTION_NAME is to be updated."
@@ -36,6 +42,7 @@ spec:
         --name "$FUNCTION_NAME" \
         --env "$FUNCTION_ENV" \
         --src src.zip \
+        --deploy deploy.zip \
         --entrypoint "main.handler"
       fi
 
@@ -55,6 +62,6 @@ spec:
       echo "Testing fn"
       fission fn test -n "$NAMESPACE" --name "$FUNCTION_NAME"
 
-    builderImage: robinqu/tuna-fusion-toolchain:1750673901
+    builderImage: robinqu/tuna-fusion-toolchain-python:1751158637
     serviceAccountName: fission-user
 
