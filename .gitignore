@@ -4,3 +4,5 @@ pycache
 
 target
 .venv
+
+.DS_Store
