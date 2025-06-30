@@ -4,7 +4,7 @@ import json
 import logging
 import os
 import sys
-from typing import Callable, Optional, Any
+from typing import Callable, Optional, Any, Dict
 
 import httpx
 import uvicorn
@@ -37,8 +37,8 @@ def read_specialize_info():
 def import_src(path):
     return importlib.machinery.SourceFileLoader("mod", path).load_module()
 
-def read_agent_card() ->AgentCard:
-    return AgentCard.model_validate(json.load(open(os.path.join(USERFUNCVOL, "agent_card.json"))))
+def read_agent_card(file_root) ->AgentCard:
+    return AgentCard.model_validate(json.load(open(os.path.join(file_root, "agent_card.json"))))
 
 
 
@@ -76,7 +76,6 @@ class FuncApp(FastAPI):
             logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
         )
         self.logger.addHandler(self.ch)
-        self.agent_card = read_agent_card()
 
         if check_specialize_info_exists():
             self.logger.info('Found state.json')
@@ -84,20 +83,27 @@ class FuncApp(FastAPI):
             self.agent_app = self._load_v2(specialize_info)
             self.logger.info('Loaded user function {}'.format(specialize_info))
 
-    def build_json_rpc_app(self, executor_factory: Callable[[], AgentExecutor]) -> JSONRPCApplication:
+    def build_json_rpc_app(self, executor_factory: Callable[[], AgentExecutor], file_root: str) -> JSONRPCApplication:
         agent_executor = None
         try:
             agent_executor = executor_factory()
         except Exception as e:
             self.logger.error("Failed to execute factory method", exc_info=e)
-        return A2AApplication(agent_card=self.agent_card, agent_executor=agent_executor)
+
+        agent_card = None
+        try:
+            agent_card = read_agent_card(file_root)
+        except Exception as e:
+            self.logger.error("Failed to read agent card", exc_info=e)
+
+        return A2AApplication(agent_executor=agent_executor, agent_card=agent_card)
 
 
     async def load(self):
         self.logger.info("/specialize called")
         # load user function from codepath
         agent_executor_factory = import_src("/userfunc/user").main
-        self.agent_app = self.build_json_rpc_app(agent_executor_factory)
+        self.agent_app = self.build_json_rpc_app(agent_executor_factory, "/userfunc/user")
         return ""
 
     async def loadv2(self, request: Request):
@@ -105,7 +111,7 @@ class FuncApp(FastAPI):
         if check_specialize_info_exists():
             self.logger.warning("Found state.json, overwriting")
         agent_executor_factory = self._load_v2(specialize_info)
-        self.agent_app = self.build_json_rpc_app(agent_executor_factory)
+        self.agent_app = self.build_json_rpc_app(agent_executor_factory, specialize_info.get("filepath"))
         store_specialize_info(specialize_info)
         return ""
 

@@ -1,5 +1,5 @@
 #!/bin/sh
-set -euxo pipefail
+set -ex
 
 if [ -f ${SRC_PKG}/requirements.txt ]; then
   uv pip install -i https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple -r ${SRC_PKG}/requirements.txt --target ${SRC_PKG}

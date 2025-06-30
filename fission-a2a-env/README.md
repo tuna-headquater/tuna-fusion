@@ -30,6 +30,6 @@ docker buildx build --push --platform linux/amd64,linux/arm64 -t robinqu/fission
 For builder image:
 
 ```shell
-docker buildx build --push --platform linux/amd64,linux/arm64 -t robinqu/fission-a2a-python-builder-env:$(date +%s) -f ./builder/Dockerfile ./builder
+docker buildx build --push --platform linux/amd64,linux/arm64 -t robinqu/fission-a2a-python-builder-env:$(date +%s) ./builder
 ```
 
