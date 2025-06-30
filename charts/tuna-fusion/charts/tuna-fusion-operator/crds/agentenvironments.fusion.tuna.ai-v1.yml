@@ -27,6 +27,19 @@ spec:
                     type: "string"
                   serviceAccountName:
                     type: "string"
+                required:
+                - "buildScript"
+                - "builderImage"
+                type: "object"
+              endpoint:
+                properties:
+                  host:
+                    type: "string"
+                  protocol:
+                    type: "string"
+                required:
+                - "host"
+                - "protocol"
                 type: "object"
               engineOptions:
                 properties:
@@ -38,12 +51,22 @@ spec:
                         type: "integer"
                       runtimeImage:
                         type: "string"
+                    required:
+                    - "builderImage"
+                    - "runtimeImage"
                     type: "object"
+                required:
+                - "fission"
                 type: "object"
               engineType:
                 enum:
                 - "Fission"
                 type: "string"
+            required:
+            - "buildRecipe"
+            - "endpoint"
+            - "engineOptions"
+            - "engineType"
             type: "object"
           status:
             properties:

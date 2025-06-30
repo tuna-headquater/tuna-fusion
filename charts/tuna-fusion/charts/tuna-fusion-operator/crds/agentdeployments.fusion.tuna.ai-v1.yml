@@ -34,21 +34,6 @@ spec:
             properties:
               agentCard:
                 properties:
-                  authentication:
-                    properties:
-                      basicAuth:
-                        type: "boolean"
-                      bearerAuth:
-                        type: "boolean"
-                      credentials:
-                        type: "string"
-                      schemes:
-                        items:
-                          type: "string"
-                        type: "array"
-                      valid:
-                        type: "boolean"
-                    type: "object"
                   capabilities:
                     properties:
                       pushNotifications:
@@ -61,14 +46,18 @@ spec:
                   defaultInputModes:
                     items:
                       type: "string"
+                    minItems: 1
                     type: "array"
                   defaultOutputModes:
                     items:
                       type: "string"
+                    minItems: 1
                     type: "array"
                   description:
                     type: "string"
                   documentationUrl:
+                    type: "string"
+                  iconUrl:
                     type: "string"
                   name:
                     type: "string"
@@ -78,6 +67,28 @@ spec:
                         type: "string"
                       url:
                         type: "string"
+                    required:
+                    - "organization"
+                    - "url"
+                    type: "object"
+                  security:
+                    items:
+                      additionalProperties:
+                        items:
+                          type: "string"
+                        type: "array"
+                      type: "object"
+                    type: "array"
+                  securitySchemes:
+                    additionalProperties:
+                      properties:
+                        description:
+                          type: "string"
+                        type:
+                          type: "string"
+                      required:
+                      - "type"
+                      type: "object"
                     type: "object"
                   skills:
                     items:
@@ -104,12 +115,30 @@ spec:
                           items:
                             type: "string"
                           type: "array"
+                      required:
+                      - "description"
+                      - "id"
+                      - "name"
+                      - "tags"
                       type: "object"
+                    minItems: 1
                     type: "array"
+                  supportsAuthenticatedExtendedCard:
+                    type: "boolean"
                   url:
                     type: "string"
                   version:
                     type: "string"
+                required:
+                - "capabilities"
+                - "defaultInputModes"
+                - "defaultOutputModes"
+                - "description"
+                - "name"
+                - "provider"
+                - "skills"
+                - "url"
+                - "version"
                 type: "object"
               environmentName:
                 type: "string"
@@ -118,6 +147,10 @@ spec:
                   watchedBranchName:
                     type: "string"
                 type: "object"
+            required:
+            - "agentCard"
+            - "environmentName"
+            - "git"
             type: "object"
           status:
             properties:

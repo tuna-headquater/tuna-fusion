@@ -16,6 +16,7 @@ spec:
       streaming: true
       pushNotifications: false
       stateTransitionHistory: false
+
   environmentName: env3
   git:
     watchedBranchName: "refs/heads/main"

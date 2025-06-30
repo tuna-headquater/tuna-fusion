@@ -8,7 +8,13 @@ spec:
   engineOptions:
     fission:
       poolSize: 3
-      runtimeImage: ghcr.io/fission/python-fastapi-env
+      runtimeImage: robinqu/fission-a2a-python-env:1751276227
+      builderImage: robinqu/fission-a2a-python-builder-env:1751272340
+
+  endpoint:
+    host: router.tuna-fission.svc.cluster.local
+    protocol: http
+
   buildRecipe:
     buildScript: |-
       #!/bin/bash
@@ -16,15 +22,20 @@ spec:
       set -x
 
       cd /tmp
-
+      
+      # download and unzip
       fission archive download --id="$FUNCTION_SOURCE_ARCHIVE_ID" -o src.zip
       mkdir src && unzip src.zip -d ./src
+      
+      # create deploy archive
       export SRC_PKG=/tmp/src
+      cp $AGENT_CARD_JSON_PATH $SRC_PKG/agent_card.json
       if [ -f ${SRC_PKG}/requirements.txt ]; then
         uv pip install -i https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple -r ${SRC_PKG}/requirements.txt --target ${SRC_PKG}
       fi
-      zip -r deploy.zip ${SRC_PKG}
+      zip -jr deploy.zip ${SRC_PKG}/
       
+      # create function and route
       if ! fission fn get --name "$FUNCTION_NAME" -n "$NAMESPACE"; then
         echo "Function $FUNCTION_NAME does not exist. Creating it now..."      
         # Create the function
@@ -54,7 +65,7 @@ spec:
         -n "$NAMESPACE" \
         --name "$ROUTE_NAME" \
         --function "$FUNCTION_NAME" \
-        --url "/$CATALOGUE_NAME/$FUNCTION_NAME"
+        --url "$ROUTE_URL"
       else
         echo "Route $ROUTE_NAME already exists."
       fi
@@ -64,4 +75,5 @@ spec:
 
     builderImage: robinqu/tuna-fusion-toolchain-python:1751158637
     serviceAccountName: fission-user
+
 

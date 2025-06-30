@@ -3,6 +3,7 @@ package ai.tuna.fusion.kubernetes.operator;
 import ai.tuna.fusion.metadata.crd.AgentBuild;
 import ai.tuna.fusion.metadata.crd.AgentCatalogue;
 import ai.tuna.fusion.metadata.crd.AgentDeployment;
+import ai.tuna.fusion.metadata.crd.AgentEnvironment;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
@@ -54,11 +55,18 @@ public class ResourceUtils {
                 .orElseThrow();
     }
 
-    public static AgentDeployment getReferencedAgentDeployment(final KubernetesClient client, AgentBuild resource) {
-        return client.resources(AgentDeployment.class)
+    public static Optional<AgentDeployment> getReferencedAgentDeployment(final KubernetesClient client, AgentBuild resource) {
+        return Optional.ofNullable(client.resources(AgentDeployment.class)
                 .inNamespace(resource.getMetadata().getNamespace())
                 .withName(getReferencedAgentDeploymentName(resource))
-                .get();
+                .get());
+    }
+
+    public static Optional<AgentEnvironment> getReferencedAgentEnvironment(final KubernetesClient client, AgentDeployment agentDeployment) {
+        return Optional.ofNullable(client.resources(AgentEnvironment.class)
+                .inNamespace(agentDeployment.getMetadata().getNamespace())
+                .withName(agentDeployment.getSpec().getEnvironmentName())
+                .get());
     }
 
     public static boolean isJobTerminalPhase(String phase) {

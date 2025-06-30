@@ -56,11 +56,7 @@ public class AgentBuildReconciler implements Reconciler<AgentBuild>, Cleaner<Age
     @Override
     public UpdateControl<AgentBuild> reconcile(AgentBuild resource, Context<AgentBuild> context) {
         // 获取关联的 AgentDeploymentCR
-        var agentDeployment = getReferencedAgentDeployment(client, resource);
-
-        if(Objects.isNull(agentDeployment)) {
-            throw new IllegalStateException("AgentDeployment referenced doesn't exist");
-        }
+        var agentDeployment = getReferencedAgentDeployment(client, resource).orElseThrow();
 
         var jobResource = context.getSecondaryResource(Job.class)
                 .orElse(null);
