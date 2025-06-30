@@ -1,7 +1,6 @@
 ARG BUILDER_IMAGE=fission/builder
-FROM ${BUILDER_IMAGE} as builder
-
 ARG PYTHON_VERSION=3.13.5-bullseye
+FROM ${BUILDER_IMAGE} as builder
 FROM python:${PYTHON_VERSION}
 COPY --from=builder /builder /builder
 

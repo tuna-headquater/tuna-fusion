@@ -46,7 +46,6 @@ spec:
   poolsize: ${poolSize}
   runtime:
     image: ${runtimeImage}
-  version: 3
 """;
 
 
