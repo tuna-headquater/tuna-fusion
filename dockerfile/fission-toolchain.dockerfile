@@ -4,7 +4,7 @@ COPY --from=bitnami/kubectl:1.33.1 /opt/bitnami/kubectl/bin/kubectl /usr/local/b
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
   --mount=type=cache,target=/var/lib/apt,sharing=locked \
     apt update  && \
-  apt-get install -y curl git
+  apt-get install -y curl git zip unzip
 
 RUN ARCH=$(uname -m) && \
     echo "Detected architecture: ${ARCH}" && \

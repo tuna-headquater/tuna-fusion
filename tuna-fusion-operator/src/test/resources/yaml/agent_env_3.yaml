@@ -45,7 +45,7 @@ spec:
         --env "$FUNCTION_ENV" \
         --src src.zip \
         --deploy deploy.zip \
-        --entrypoint "main.handler"
+        --entrypoint "app.handle"
       else
         echo "Function $FUNCTION_NAME is to be updated."
         fission fn update \
@@ -54,7 +54,7 @@ spec:
         --env "$FUNCTION_ENV" \
         --src src.zip \
         --deploy deploy.zip \
-        --entrypoint "main.handler"
+        --entrypoint "app.handle"
       fi
 
       # Create route if necessary
@@ -71,9 +71,9 @@ spec:
       fi
 
       echo "Testing fn"
-      fission fn test -n "$NAMESPACE" --name "$FUNCTION_NAME"
+      fission fn test -n "$NAMESPACE" --name "$FUNCTION_NAME" --subpath=/.well-known/agent.json
 
-    builderImage: robinqu/tuna-fusion-toolchain-python:1751158637
+    builderImage: robinqu/tuna-fusion-toolchain:1751339595
     serviceAccountName: fission-user
 
 

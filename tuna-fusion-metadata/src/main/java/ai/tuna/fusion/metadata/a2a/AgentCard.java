@@ -8,9 +8,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.EnumNaming;
 import io.fabric8.generator.annotation.Required;
 import io.fabric8.generator.annotation.Size;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
+import lombok.*;
 
 import java.util.List;
 import java.util.Map;
@@ -20,6 +18,8 @@ import java.util.Map;
  */
 @Data
 @Builder(toBuilder = true)
+@NoArgsConstructor
+@AllArgsConstructor
 public class AgentCard {
     @Data
     public static class Capabilities {

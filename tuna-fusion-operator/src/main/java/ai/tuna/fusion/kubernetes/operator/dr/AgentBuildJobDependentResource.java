@@ -118,7 +118,11 @@ public class AgentBuildJobDependentResource extends CRUDKubernetesDependentResou
                 "agentDeploymentName", agentDeployment.getMetadata().getName(),
                 "agentEnvironmentName", agentDeployment.getSpec().getEnvironmentName()
         ));
-        return substitutor.replace(agentDeployment.getSpec().getAgentCard().getUrl());
+        var urlTemplate = agentDeployment.getSpec().getAgentCard().getUrl();
+        if (!urlTemplate.startsWith("/")) {
+            urlTemplate = "/" + urlTemplate;
+        }
+        return substitutor.replace(urlTemplate);
     }
 
     private String agentUrl(AgentDeployment agentDeployment, AgentEnvironment agentEnvironment) {
