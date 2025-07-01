@@ -8,7 +8,7 @@ spec:
   engineOptions:
     fission:
       poolSize: 3
-      runtimeImage: robinqu/fission-a2a-python-env:1751276227
+      runtimeImage: robinqu/fission-a2a-python-env:1751352015
       builderImage: robinqu/fission-a2a-python-builder-env:1751272340
 
   endpoint:
@@ -36,7 +36,7 @@ spec:
       zip -jr deploy.zip ${SRC_PKG}/
       
       # create function and route
-      if ! fission fn get --name "$FUNCTION_NAME" -n "$NAMESPACE"; then
+      if ! fission fn getmeta --name "$FUNCTION_NAME" -n "$NAMESPACE"; then
         echo "Function $FUNCTION_NAME does not exist. Creating it now..."      
         # Create the function
         fission fn create \
@@ -62,12 +62,21 @@ spec:
         echo "Route $ROUTE_NAME does not exist. Creating it now..."
         # Create the function
         fission route create \
-        -n "$NAMESPACE" \
-        --name "$ROUTE_NAME" \
-        --function "$FUNCTION_NAME" \
-        --url "$ROUTE_URL"
+          -n "$NAMESPACE" \
+          --name "$ROUTE_NAME" \
+          --method=GET \
+          --method=POST \
+          --function "$FUNCTION_NAME" \
+          --url "$ROUTE_URL"
       else
         echo "Route $ROUTE_NAME already exists."
+        fission route update \
+          -n "$NAMESPACE" \
+          --method=GET \
+          --method=POST \
+          --name "$ROUTE_NAME" \
+          --function "$FUNCTION_NAME" \
+          --url "$ROUTE_URL"
       fi
 
       echo "Testing fn"

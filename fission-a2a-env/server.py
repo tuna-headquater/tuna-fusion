@@ -177,8 +177,8 @@ def main():
     app.add_api_route(path='/specialize', endpoint=app.load, methods=["POST"])
     app.add_api_route(path='/v2/specialize', endpoint=app.loadv2, methods=["POST"])
     app.add_api_route(path='/healthz', endpoint=app.healthz, methods=["GET"])
-    app.add_api_route(path='/', endpoint=app.agent_task_call, methods=["POST"])
     app.add_api_route(path='/.well-known/agent.json', endpoint=app.agent_card_call, methods=["GET"])
+    app.add_api_route(path='/', endpoint=app.agent_task_call, methods=["POST"])
     uvicorn.run(app, host="0.0.0.0", port=RUNTIME_PORT, log_level=LOG_LEVEL)
 
 

@@ -127,10 +127,12 @@ public class AgentBuildJobDependentResource extends CRUDKubernetesDependentResou
 
     private String agentUrl(AgentDeployment agentDeployment, AgentEnvironment agentEnvironment) {
         if (agentEnvironment.getSpec().getEngineType() == AgentEnvironmentSpec.EngineType.Fission) {
-            return "%s://%s/fission-function%s".formatted(
+            // TODO figure out why relativeUrl is not working
+            return "%s://%s/fission-function/%s/%s".formatted(
                     agentEnvironment.getSpec().getEndpoint().getProtocol(),
                     agentEnvironment.getSpec().getEndpoint().getHost(),
-                    routeUrl(agentDeployment)
+                    agentDeployment.getMetadata().getNamespace(),
+                    agentDeployment.getMetadata().getName()
             );
         }
         throw new IllegalArgumentException("Unsupported engine type: " + agentEnvironment.getSpec().getEngineType());

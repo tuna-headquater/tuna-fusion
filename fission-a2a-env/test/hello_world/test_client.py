@@ -24,7 +24,7 @@ async def main() -> None:
 
     # --8<-- [start:A2ACardResolver]
 
-    base_url = 'http://localhost:8888'
+    base_url = 'http://router.tuna-fission.svc.cluster.local/fission-function/tuna-fission/test-deploy-3'
 
     async with httpx.AsyncClient() as httpx_client:
         # Initialize A2ACardResolver
