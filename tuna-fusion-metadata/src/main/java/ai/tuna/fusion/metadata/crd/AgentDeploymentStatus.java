@@ -1,7 +1,5 @@
 package ai.tuna.fusion.metadata.crd;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 
 /**

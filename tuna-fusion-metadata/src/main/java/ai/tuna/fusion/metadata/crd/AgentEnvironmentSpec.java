@@ -53,5 +53,4 @@ public class AgentEnvironmentSpec {
 
     @Required
     private Endpoint endpoint;
-
 }

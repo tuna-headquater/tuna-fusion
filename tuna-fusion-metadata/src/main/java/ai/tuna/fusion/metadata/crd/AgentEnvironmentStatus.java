@@ -13,6 +13,13 @@ public class AgentEnvironmentStatus {
         String name;
     }
 
+    @Data
+    public static class A2ARuntimeStatus {
+        private String initLogs;
+        private String teardownLogs;
+    }
+
     private FissionEnvStatus fissionEnv;
+    private A2ARuntimeStatus a2a;
 
 }

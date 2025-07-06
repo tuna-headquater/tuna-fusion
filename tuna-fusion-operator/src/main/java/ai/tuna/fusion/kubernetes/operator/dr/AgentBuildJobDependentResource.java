@@ -16,6 +16,8 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.text.StringSubstitutor;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -29,6 +31,13 @@ import static ai.tuna.fusion.kubernetes.operator.reconciler.AgentBuildReconciler
 )
 @Slf4j
 public class AgentBuildJobDependentResource extends CRUDKubernetesDependentResource<Job, AgentBuild> {
+
+    public static final String BUILD_SCRIPT_PATH = "/workspace/build.sh";
+    public static final String AGENT_CARD_JSON_PATH = "/workspace/agent_card.json";
+    public static final String A2A_RUNTIME_JSON_PATH = "/workspace/a2a_runtime.json";
+    public static final String INIT_CONTAINER_SCRIPT_TEMPLATE = "echo -e '${buildScript}' > ${buildScriptPath} && " +
+            "echo -e '%{agentCardJson}' > ${agentCardJsonPath} && " +
+            "echo -e '%{a2aRuntimeConfigJson}' > ${a2aRuntimeConfigPath}";
 
     public static class IsJobRequiredCondition implements Condition<Job, AgentBuild> {
         @Override
@@ -44,11 +53,10 @@ public class AgentBuildJobDependentResource extends CRUDKubernetesDependentResou
 
     @Override
     protected Job desired(AgentBuild primary, Context<AgentBuild> context) {
-//        log.debug("Creating Job DR for build {}", primary.getMetadata());
+        log.debug("Creating Job DR for build {}", primary.getMetadata());
         var agentDeployment = ResourceUtils.getReferencedAgentDeployment(context.getClient(), primary).orElseThrow();
         var agentEnvironment = ResourceUtils.getReferencedAgentEnvironment(context.getClient(), agentDeployment).orElseThrow();
         var routeUrl = routeUrl(agentDeployment);
-        var agentCardJson = renderAgentCardJson(agentDeployment, agentEnvironment);
 
         return new JobBuilder()
                 .withNewMetadata()
@@ -72,10 +80,7 @@ public class AgentBuildJobDependentResource extends CRUDKubernetesDependentResou
                 .addNewInitContainer()
                 .withName("builder-init-container")
                 .withImage("busybox:latest")
-                .withCommand("sh", "-c", "echo -e '%s' > /workspace/build.sh && chmod +x /workspace/build.sh && cat /workspace/build.sh && echo -e '%s' > /workspace/agent_card.json && cat /workspace/agent_card.json".formatted(
-                        primary.getSpec().getBuildScript(),
-                        agentCardJson
-                ))
+                .addAllToCommand(renderInitContainerScript(agentDeployment, agentEnvironment))
                 .addNewVolumeMount()
                 .withName("builder-script-volume")
                 .withMountPath("/workspace")
@@ -111,6 +116,19 @@ public class AgentBuildJobDependentResource extends CRUDKubernetesDependentResou
                 .build();
     }
 
+    private List<String> renderInitContainerScript(AgentDeployment agentDeployment, AgentEnvironment agentEnvironment) {
+        StringSubstitutor substitutor = new StringSubstitutor(Map.of(
+                agentEnvironment.getSpec().getBuildRecipe().getBuildScript(),
+                BUILD_SCRIPT_PATH,
+                renderAgentCardJson(agentDeployment, agentEnvironment),
+                AGENT_CARD_JSON_PATH,
+                renderA2ARuntimeConfigJson(agentDeployment, agentEnvironment),
+                A2A_RUNTIME_JSON_PATH
+        ));
+
+        return Arrays.asList("sh", "-c", substitutor.replace(INIT_CONTAINER_SCRIPT_TEMPLATE));
+    }
+
     private String routeUrl(AgentDeployment agentDeployment) {
         var substitutor = new StringSubstitutor(Map.of(
                 "namespace", agentDeployment.getMetadata().getNamespace(),
@@ -143,6 +161,20 @@ public class AgentBuildJobDependentResource extends CRUDKubernetesDependentResou
         var originalAgentCard = agentDeployment.getSpec().getAgentCard();
         var agentCard = originalAgentCard.toBuilder().url(agentUrl(agentDeployment, agentEnvironment)).build();
         return objectMapper.writeValueAsString(agentCard);
+    }
+
+    @SneakyThrows
+    private String renderA2ARuntimeConfigJson(AgentDeployment agentDeployment, AgentEnvironment agentEnvironment) {
+        var a2a = agentDeployment.getSpec().getA2a();
+        if (a2a.getQueueManager().getProvider() == AgentDeploymentSpec.A2ARuntime.QueueManagerProvider.Redis) {
+            Optional.ofNullable(a2a.getQueueManager().getRedis())
+                            .ifPresent(redis -> redis.setTaskIdRegistryKey("tuna.fusion.a2a.task.%s".formatted(agentDeployment.getMetadata().getName())));
+        }
+        if (a2a.getTaskStore().getProvider() != AgentDeploymentSpec.A2ARuntime.TaskStoreProvider.InMemory) {
+            Optional.ofNullable(a2a.getTaskStore().getSql())
+                    .ifPresent(sql -> sql.setTaskStoreTableName("tuna-fusion-%s-tasks".formatted(agentDeployment.getMetadata().getName())));
+        }
+        return objectMapper.writeValueAsString(a2a);
     }
 
     private String jobName(AgentBuild primary) {
