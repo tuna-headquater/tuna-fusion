@@ -122,7 +122,7 @@ public class AgentBuildJobDependentResource extends CRUDKubernetesDependentResou
                 BUILD_SCRIPT_PATH,
                 renderAgentCardJson(agentDeployment, agentEnvironment),
                 AGENT_CARD_JSON_PATH,
-                renderA2ARuntimeConfigJson(agentDeployment, agentEnvironment),
+                renderA2aRuntimeConfigJson(agentDeployment, agentEnvironment),
                 A2A_RUNTIME_JSON_PATH
         ));
 
@@ -164,11 +164,11 @@ public class AgentBuildJobDependentResource extends CRUDKubernetesDependentResou
     }
 
     @SneakyThrows
-    private String renderA2ARuntimeConfigJson(AgentDeployment agentDeployment, AgentEnvironment agentEnvironment) {
+    private String renderA2aRuntimeConfigJson(AgentDeployment agentDeployment, AgentEnvironment agentEnvironment) {
         var a2a = agentDeployment.getSpec().getA2a();
         if (a2a.getQueueManager().getProvider() == AgentDeploymentSpec.A2ARuntime.QueueManagerProvider.Redis) {
             Optional.ofNullable(a2a.getQueueManager().getRedis())
-                            .ifPresent(redis -> redis.setTaskIdRegistryKey("tuna.fusion.a2a.task.%s".formatted(agentDeployment.getMetadata().getName())));
+                            .ifPresent(redis -> redis.setTaskRegistryKey("tuna.fusion.a2a.task.%s".formatted(agentDeployment.getMetadata().getName())));
         }
         if (a2a.getTaskStore().getProvider() != AgentDeploymentSpec.A2ARuntime.TaskStoreProvider.InMemory) {
             Optional.ofNullable(a2a.getTaskStore().getSql())

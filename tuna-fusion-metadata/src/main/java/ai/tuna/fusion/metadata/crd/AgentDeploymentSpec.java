@@ -79,14 +79,14 @@ public class AgentDeploymentSpec {
                 @Required
                 private String redisUrl;
                 @Required
-                private int redisTaskIdTtlInSeconds = 60;
+                private int taskIdTtlInSecond = 60;
 
-                private String taskIdRegistryKey;
-                private String channelKeyPrefix;
+                private String taskRegistryKey;
+                private String relayChannelKeyPrefix;
             }
 
             @ValidationRules(
-                    @ValidationRule(value = "!has(redis.taskIdRegistryKey) && !has(redis.channelKeyPrefix)", message = "redis.taskIdRegistryKey and redis.channelKeyPrefix cannot be included in resource definition.")
+                    @ValidationRule(value = "!has(redis.taskRegistryKey) && !has(redis.relayChannelKeyPrefix)", message = "redis.taskIdRegistryKey and redis.channelKeyPrefix cannot be included in resource definition.")
             )
             private RedisConfig redis;
         }

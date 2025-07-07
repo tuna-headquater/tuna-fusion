@@ -4,17 +4,23 @@ import json
 import logging
 import os
 import sys
-from typing import Callable, Optional, Any, Dict
+from typing import Callable, Optional, Any
 
-import httpx
 import uvicorn
 from a2a.server.agent_execution import AgentExecutor
-from a2a.server.apps.jsonrpc.fastapi_app import JSONRPCApplication
 from a2a.server.request_handlers import DefaultRequestHandler
-from a2a.server.tasks import InMemoryTaskStore, InMemoryPushNotifier
+from a2a.server.apps.jsonrpc.fastapi_app import JSONRPCApplication
+from a2a.server.tasks import InMemoryTaskStore
+from a2a.server.events.in_memory_queue_manager import InMemoryQueueManager
 from a2a.types import AgentCard
 from fastapi import FastAPI, Request, Response
 from starlette.applications import Starlette
+
+from a2a_runtime.database_task_store import DatabaseTaskStore
+from redis_queue_manager import RedisQueueManager
+from a2a_runtime.models import A2ARuntimeConfig
+from redis.asyncio import Redis
+
 
 try:
     LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
@@ -24,6 +30,7 @@ except:
 
 USERFUNCVOL = os.environ.get("USERFUNCVOL", "/userfunc")
 RUNTIME_PORT = int(os.environ.get("RUNTIME_PORT", "8888"))
+
 
 def store_specialize_info(state):
     json.dump(state, open(os.path.join(USERFUNCVOL, "state.json"), "w"))
@@ -38,17 +45,47 @@ def import_src(path):
     return importlib.machinery.SourceFileLoader("mod", path).load_module()
 
 def read_agent_card(file_root) ->AgentCard:
-    return AgentCard.model_validate(json.load(open(os.path.join(file_root, "agent_card.json"))))
+    with open(os.path.join(file_root, "agent_card.json")) as f:
+        return AgentCard.model_validate(json.load(f))
 
+def read_runtime_config(file_root: str) -> A2ARuntimeConfig:
+    with open(os.path.join(file_root, "a2a_runtime.json")) as f:
+        return A2ARuntimeConfig.model_validate_json(json.load(f))
 
 
 class A2AApplication(JSONRPCApplication):
 
-    def __init__(self, agent_card: AgentCard, agent_executor: AgentExecutor):
+    def __init__(self, agent_card: AgentCard, agent_executor: AgentExecutor, runtime_config: A2ARuntimeConfig):
+        match runtime_config.queue_manager.provider:
+            case "InMemory":
+                queue_manager = InMemoryQueueManager()
+            case "Redis":
+                queue_manager = RedisQueueManager(
+                    redis_client=Redis.from_url(runtime_config.queue_manager.redis.redis_url),
+                    relay_channel_key_prefix=runtime_config.queue_manager.redis.channel_key_prefix,
+                    task_registry_key=runtime_config.queue_manager.redis.task_registry_key,
+                    task_id_ttl_in_second=runtime_config.queue_manager.redis.task_id_ttl_in_second
+                )
+            case _:
+                raise Exception("Invalid queue manager provider")
+        match runtime_config.task_store.provider:
+            case "InMemory":
+                task_store = InMemoryTaskStore()
+            case "MySQL" | "Postgres" | "SQLite":
+                task_store = DatabaseTaskStore(
+                    db_url=runtime_config.task_store.sql.database_url,
+                    create_table_if_not_exists=runtime_config.task_store.sql.create_table,
+                    table_name=runtime_config.task_store.sql.task_store_table_name
+                )
+            case _:
+                raise Exception("Invalid task store provider")
+
         request_handler = DefaultRequestHandler(
-            agent_executor=agent_executor, task_store=InMemoryTaskStore(), push_notifier=InMemoryPushNotifier(httpx_client=httpx.AsyncClient())
+            agent_executor=agent_executor,
+            task_store=task_store,
+            queue_manager=queue_manager
         )
-        super().__init__(agent_card, http_handler=request_handler)
+        super().__init__(agent_card=agent_card, http_handler=request_handler)
 
     def build(self, agent_card_url: str = '/.well-known/agent.json', rpc_url: str = '/',
               **kwargs: Any) -> FastAPI | Starlette:
@@ -96,12 +133,17 @@ class FuncApp(FastAPI):
         except Exception as e:
             self.logger.error("Failed to read agent card", exc_info=e)
 
-        return A2AApplication(agent_executor=agent_executor, agent_card=agent_card)
+        runtime_config = None
+        try:
+            runtime_config = read_runtime_config(file_root)
+        except Exception as e:
+            self.logger.error("Failed to read runtime config", exc_info=e)
 
+        return A2AApplication(agent_executor=agent_executor, agent_card=agent_card, runtime_config=runtime_config)
 
     async def load(self):
         self.logger.info("/specialize called")
-        # load user function from codepath
+        # load user function from code path
         agent_executor_factory = import_src("/userfunc/user").main
         self.agent_app = self.build_json_rpc_app(agent_executor_factory, "/userfunc/user")
         return ""

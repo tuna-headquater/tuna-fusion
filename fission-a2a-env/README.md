@@ -33,3 +33,20 @@ For builder image:
 docker buildx build --push --platform linux/amd64,linux/arm64 -t robinqu/fission-a2a-python-builder-env:$(date +%s) ./builder
 ```
 
+
+
+
+## Test dependencies
+
+
+```shell
+$ docker run -d \
+	--name pg-test \
+	-e POSTGRES_USER=app \
+	-e POSTGRES_PASSWORD=mysecretpassword \
+	-e POSTGRES_DB=app \
+	-e PGDATA=/var/lib/postgresql/data/pgdata \
+	-v ./pg_data:/var/lib/postgresql/data \
+	postgres
+
+```

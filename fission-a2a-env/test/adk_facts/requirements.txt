@@ -1,0 +1,6 @@
+a2a-sdk
+google-adk
+python-dotenv
+wikipedia
+click
+litellm
