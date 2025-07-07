@@ -6,30 +6,21 @@ import os
 import sys
 from typing import Callable, Optional, Any
 
-import uvicorn
 from a2a.server.agent_execution import AgentExecutor
-from a2a.server.request_handlers import DefaultRequestHandler
 from a2a.server.apps.jsonrpc.fastapi_app import JSONRPCApplication
-from a2a.server.tasks import InMemoryTaskStore
 from a2a.server.events.in_memory_queue_manager import InMemoryQueueManager
+from a2a.server.request_handlers import DefaultRequestHandler
+from a2a.server.tasks import InMemoryTaskStore
 from a2a.types import AgentCard
 from fastapi import FastAPI, Request, Response
+from redis.asyncio import Redis
 from starlette.applications import Starlette
 
 from a2a_runtime.database_task_store import DatabaseTaskStore
-from redis_queue_manager import RedisQueueManager
 from a2a_runtime.models import A2ARuntimeConfig
-from redis.asyncio import Redis
-
-
-try:
-    LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
-    LOG_LEVEL = getattr(logging, LOG_LEVEL)
-except:
-    LOG_LEVEL = logging.INFO
+from a2a_runtime.redis_queue_manager import RedisQueueManager
 
 USERFUNCVOL = os.environ.get("USERFUNCVOL", "/userfunc")
-RUNTIME_PORT = int(os.environ.get("RUNTIME_PORT", "8888"))
 
 
 def store_specialize_info(state):
@@ -213,16 +204,3 @@ class FuncApp(FastAPI):
         # load user function from module
         return getattr(mod, func_name)
 
-
-def main():
-    app = FuncApp()
-    app.add_api_route(path='/specialize', endpoint=app.load, methods=["POST"])
-    app.add_api_route(path='/v2/specialize', endpoint=app.loadv2, methods=["POST"])
-    app.add_api_route(path='/healthz', endpoint=app.healthz, methods=["GET"])
-    app.add_api_route(path='/.well-known/agent.json', endpoint=app.agent_card_call, methods=["GET"])
-    app.add_api_route(path='/', endpoint=app.agent_task_call, methods=["POST"])
-    uvicorn.run(app, host="0.0.0.0", port=RUNTIME_PORT, log_level=LOG_LEVEL)
-
-
-if __name__ == "__main__":
-    main()

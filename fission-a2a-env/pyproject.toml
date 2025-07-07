@@ -1,7 +1,7 @@
 [project]
-name = "fission-a2a-env"
+name = "a2a_runtime"
 version = "0.1.0"
-description = "Add your description here"
+description = "Runtime server for A2A protocol"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [

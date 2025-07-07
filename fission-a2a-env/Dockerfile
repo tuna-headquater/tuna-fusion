@@ -9,4 +9,4 @@ WORKDIR /app
 COPY *.py pyproject.toml uv.lock /app/
 RUN uv sync -i https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple
 
-CMD ["uv", "run", "server.py"]
+CMD ["uv", "run", "-m", "a2a_runtime"]
