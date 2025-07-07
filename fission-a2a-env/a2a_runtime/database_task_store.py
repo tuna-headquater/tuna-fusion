@@ -24,8 +24,7 @@ class DatabaseTaskStore(TaskStore):
         self._engine = create_async_engine(
             db_url,
             pool_size=pool_size,
-            pool_pre_ping=True,
-            connect_args={"server_settings": {"statement_timeout": "30s"}}
+            pool_pre_ping=True
         )
         self._metadata = MetaData()
         self._tasks_table = Table(
@@ -41,31 +40,30 @@ class DatabaseTaskStore(TaskStore):
         )
         self._initialized = False
 
-    async def _ensure_initialized(self):
+    async def ensure_initialized(self):
         if self._create_table_if_not_exists and not self._initialized:
             logger.debug("initialize createTable: %s", self._create_table_if_not_exists)
-            async with self._engine.begin() as conn:
+            async with self._engine.connect() as conn:
                 await conn.run_sync(self._metadata.create_all)
                 self._initialized = True
 
     async def save(self, task: Task) -> None:
-        await self._ensure_initialized()
+        await self.ensure_initialized()
         async with self._engine.connect() as session:
-            async with session.begin():
-                task_dict = task.model_dump(mode='json')
-                stmt = self._tasks_table.insert().values(
-                    id=task.id,
-                    contextId=task.contextId,
-                    status=json.dumps(task_dict['status']),
-                    artifacts=json.dumps(task_dict.get('artifacts')),
-                    history=json.dumps(task_dict.get('history')),
-                    metadata=json.dumps(task_dict.get('metadata'))
-                )
-                await session.execute(stmt)
-                await session.commit()
+            task_dict = task.model_dump(mode='json')
+            stmt = self._tasks_table.insert().values(
+                id=task.id,
+                contextId=task.contextId,
+                status=json.dumps(task_dict['status']),
+                artifacts=json.dumps(task_dict.get('artifacts')),
+                history=json.dumps(task_dict.get('history')),
+                metadata=json.dumps(task_dict.get('metadata'))
+            )
+            await session.execute(stmt)
+            await session.commit()
 
     async def get(self, task_id: str) -> Task | None:
-        await self._ensure_initialized()
+        await self.ensure_initialized()
         async with self._engine.connect() as session:
             stmt = select(self._tasks_table).where(self._tasks_table.c.id == task_id)
             result = await session.execute(stmt)
@@ -83,7 +81,7 @@ class DatabaseTaskStore(TaskStore):
                 return None
 
     async def delete(self, task_id: str) -> None:
-        await self._ensure_initialized()
+        await self.ensure_initialized()
         async with self._engine.connect() as session:
             async with session.begin():
                 stmt = self._tasks_table.delete().where(self._tasks_table.c.id == task_id)
