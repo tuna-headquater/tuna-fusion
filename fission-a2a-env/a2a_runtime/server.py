@@ -41,24 +41,26 @@ def read_agent_card(file_root) ->AgentCard:
 
 def read_runtime_config(file_root: str) -> A2ARuntimeConfig:
     with open(os.path.join(file_root, "a2a_runtime.json")) as f:
-        return A2ARuntimeConfig.model_validate_json(json.load(f))
+        return A2ARuntimeConfig.model_validate(json.load(f))
 
 
 class A2AApplication(JSONRPCApplication):
 
     def __init__(self, agent_card: AgentCard, agent_executor: AgentExecutor, runtime_config: A2ARuntimeConfig):
+        logging.debug("With runtime config: %s", runtime_config)
         match runtime_config.queue_manager.provider:
             case "InMemory":
                 queue_manager = InMemoryQueueManager()
             case "Redis":
                 queue_manager = RedisQueueManager(
                     redis_client=Redis.from_url(runtime_config.queue_manager.redis.redis_url),
-                    relay_channel_key_prefix=runtime_config.queue_manager.redis.channel_key_prefix,
+                    relay_channel_key_prefix=runtime_config.queue_manager.redis.relay_channel_key_prefix,
                     task_registry_key=runtime_config.queue_manager.redis.task_registry_key,
                     task_id_ttl_in_second=runtime_config.queue_manager.redis.task_id_ttl_in_second
                 )
             case _:
                 raise Exception("Invalid queue manager provider")
+
         match runtime_config.task_store.provider:
             case "InMemory":
                 task_store = InMemoryTaskStore()
@@ -117,18 +119,21 @@ class FuncApp(FastAPI):
             agent_executor = executor_factory()
         except Exception as e:
             self.logger.error("Failed to execute factory method", exc_info=e)
+            raise e
 
         agent_card = None
         try:
             agent_card = read_agent_card(file_root)
         except Exception as e:
             self.logger.error("Failed to read agent card", exc_info=e)
+            raise  e
 
         runtime_config = None
         try:
             runtime_config = read_runtime_config(file_root)
         except Exception as e:
             self.logger.error("Failed to read runtime config", exc_info=e)
+            raise e
 
         return A2AApplication(agent_executor=agent_executor, agent_card=agent_card, runtime_config=runtime_config)
 

@@ -33,7 +33,7 @@ class RedisConfig(BaseModel):
     redis_url: str
     task_id_ttl_in_second: int
     task_registry_key: str
-    channel_key_prefix: str
+    relay_channel_key_prefix: str
 
 
 class QueueManagerProvider(StrEnum):

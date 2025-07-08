@@ -30,7 +30,7 @@ class DatabaseTaskStore(TaskStore):
         self._tasks_table = Table(
             table_name, self._metadata,
             Column('id', String(36), primary_key=True),
-            Column('contextId', String(36), nullable=False),
+            Column('context_id', String(36), nullable=False),
             Column('status', JSON, nullable=False),
             Column('artifacts', JSON, nullable=True),
             Column('history', JSON, nullable=True),
@@ -41,24 +41,46 @@ class DatabaseTaskStore(TaskStore):
         self._initialized = False
 
     async def ensure_initialized(self):
+        logger.debug("ensure_initialized: _initialized: %s, _create_table_if_not_exists: %s", self._initialized,
+                     self._create_table_if_not_exists)
         if self._create_table_if_not_exists and not self._initialized:
-            logger.debug("initialize createTable: %s", self._create_table_if_not_exists)
             async with self._engine.connect() as conn:
                 await conn.run_sync(self._metadata.create_all)
+                await conn.commit()
                 self._initialized = True
 
     async def save(self, task: Task) -> None:
         await self.ensure_initialized()
         async with self._engine.connect() as session:
             task_dict = task.model_dump(mode='json')
-            stmt = self._tasks_table.insert().values(
-                id=task.id,
-                contextId=task.contextId,
-                status=json.dumps(task_dict['status']),
-                artifacts=json.dumps(task_dict.get('artifacts')),
-                history=json.dumps(task_dict.get('history')),
-                metadata=json.dumps(task_dict.get('metadata'))
-            )
+            task_id = task.id  # 添加：使用task.id作为task_id
+            select_stmt = select(self._tasks_table).where(self._tasks_table.c.id == task_id)
+            select_result = await session.execute(select_stmt)
+            upsert = True  # 修改：默认设为True，如果找不到结果再改为False
+            try:
+                select_result.one()
+            except NoResultFound:
+                upsert = False
+
+            if upsert:
+                stmt = self._tasks_table.update().where(self._tasks_table.c.id == task_id).values(
+                    context_id=task.contextId,
+                    status=json.dumps(task_dict['status']) if task.status else None,
+                    artifacts=json.dumps(task_dict.get('artifacts')) if task.artifacts else  None,
+                    history=json.dumps(task_dict.get('history')) if task.history else None,
+                    metadata=json.dumps(task_dict.get('metadata')) if task.metadata else None,
+                    updated_at=func.now()  # 可选添加：显式更新时间戳
+                )
+            else:
+                stmt = self._tasks_table.insert().values(
+                    id=task_id,
+                    context_id=task.contextId,
+                    status=json.dumps(task_dict['status']) if task.status else None,
+                    artifacts=json.dumps(task_dict.get('artifacts')) if task.artifacts else None,
+                    history=json.dumps(task_dict.get('history')) if task.history else None,
+                    metadata=json.dumps(task_dict.get('metadata')) if task.metadata else None,
+                )
+
             await session.execute(stmt)
             await session.commit()
 
@@ -71,7 +93,7 @@ class DatabaseTaskStore(TaskStore):
                 row = result.one()
                 return Task(
                     id=row.id,
-                    contextId=row.contextId,
+                    contextId=row.context_id,
                     status=TaskStatus.model_validate(json.loads(row.status)),
                     artifacts=[Artifact.model_validate(a) for a in json.loads(row.artifacts)] if row.artifacts else None,
                     history=[Message.model_validate(m) for m in json.loads(row.history)] if row.history else None,

@@ -9,7 +9,7 @@ A modern python environment for A2A compatible agent applications.
 
 ```shell
 # run runtime server
-USERFUNCVOL=$PWD/test/hello_word RUNTIME_PORT=8888 python server.py
+USERFUNCVOL=$PWD/test/hello_world RUNTIME_PORT=8888 uv run -m a2a_runtime
 
 # specialize to load agent executor
 curl -XPOST localhost:8888/v2/specialize -d "{\"functionName\": \"app.handle\", \"filepath\": \"$PWD/test/hello_world\"}"
@@ -32,8 +32,6 @@ For builder image:
 ```shell
 docker buildx build --push --platform linux/amd64,linux/arm64 -t robinqu/fission-a2a-python-builder-env:$(date +%s) ./builder
 ```
-
-
 
 
 ## Test dependencies

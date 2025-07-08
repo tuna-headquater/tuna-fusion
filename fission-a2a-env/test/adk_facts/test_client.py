@@ -7,9 +7,7 @@ import httpx
 from a2a.client.client import A2AClient,SendStreamingMessageRequest
 from a2a.types import MessageSendParams, Message, Role, Part, TextPart, AgentCard
 
-logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
-
 
 
 async def test_single_turn_chat(query: str):
@@ -33,9 +31,3 @@ async def test_single_turn_chat(query: str):
         async for chunk in stream_response:
             logger.info(chunk.model_dump_json(exclude_none=True))
 
-
-
-
-if __name__ == "__main__":
-    import asyncio
-    asyncio.run(test_single_turn_chat('Find more fun facts about Panda on wikipedia.'))

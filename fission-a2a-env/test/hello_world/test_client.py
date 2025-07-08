@@ -1,10 +1,9 @@
 import logging
-
 from typing import Any
 from uuid import uuid4
 
 import httpx
-
+import pytest
 from a2a.client import A2ACardResolver, A2AClient
 from a2a.types import (
     AgentCard,
@@ -14,9 +13,10 @@ from a2a.types import (
 )
 
 
-async def main() -> None:
+@pytest.mark.asyncio
+async def test_client_send_message_streaming() -> None:
     PUBLIC_AGENT_CARD_PATH = '/.well-known/agent.json'
-    EXTENDED_AGENT_CARD_PATH = '/agent/authenticatedExtendedCard'
+    # EXTENDED_AGENT_CARD_PATH = '/agent/authenticatedExtendedCard'
 
     # Configure logging to show INFO level messages
     logging.basicConfig(level=logging.INFO)
@@ -95,8 +95,3 @@ async def main() -> None:
             print(chunk.model_dump(mode='json', exclude_none=True))
         # --8<-- [end:send_message_streaming]
 
-
-if __name__ == '__main__':
-    import asyncio
-
-    asyncio.run(main())
