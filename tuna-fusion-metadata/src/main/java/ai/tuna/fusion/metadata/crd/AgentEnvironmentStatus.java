@@ -2,6 +2,8 @@ package ai.tuna.fusion.metadata.crd;
 
 import lombok.Data;
 
+import java.util.Map;
+
 /**
  * @author robinqu
  */
@@ -9,17 +11,25 @@ import lombok.Data;
 public class AgentEnvironmentStatus {
 
     @Data
-    public static class FissionEnvStatus {
-        String name;
+    public static class PodPoolStatus {
+        private String deploymentName;
+        private Map<String, String> genericPodSelectors;
+        private int availablePods;
+        private int orphanPods;
     }
 
     @Data
-    public static class A2ARuntimeStatus {
-        private String initLogs;
-        private String teardownLogs;
+    public static class AwsLambdaStatus {
+
     }
 
-    private FissionEnvStatus fissionEnv;
-    private A2ARuntimeStatus a2a;
+    @Data
+    public static class AlibabaCloudFCStatus {
+
+    }
+
+    private PodPoolStatus podPool;
+    private AwsLambdaStatus awsLambda;
+    private AlibabaCloudFCStatus fc;
 
 }

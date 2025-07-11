@@ -1,4 +1,4 @@
-package ai.tuna.fusion.kubernetes.operator.dr;
+package ai.tuna.fusion.kubernetes.operator.driver.podpool.dr;
 
 import ai.tuna.fusion.kubernetes.operator.ResourceUtils;
 import ai.tuna.fusion.metadata.crd.*;
@@ -6,11 +6,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.fabric8.kubernetes.api.model.EnvVar;
 import io.fabric8.kubernetes.api.model.batch.v1.Job;
 import io.fabric8.kubernetes.api.model.batch.v1.JobBuilder;
-import io.javaoperatorsdk.operator.api.config.informer.Informer;
 import io.javaoperatorsdk.operator.api.reconciler.Context;
 import io.javaoperatorsdk.operator.api.reconciler.dependent.DependentResource;
 import io.javaoperatorsdk.operator.processing.dependent.kubernetes.CRUDKubernetesDependentResource;
-import io.javaoperatorsdk.operator.processing.dependent.kubernetes.KubernetesDependent;
 import io.javaoperatorsdk.operator.processing.dependent.workflow.Condition;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -21,16 +19,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import static ai.tuna.fusion.kubernetes.operator.reconciler.AgentBuildReconciler.SELECTOR;
+import static ai.tuna.fusion.kubernetes.operator.driver.podpool.PodPoolAgentBuildProvisioner.DEPENDENT_RESOURCE_LABEL_SELECTOR;
 
 /**
  * @author robinqu
  */
-@KubernetesDependent(
-        informer = @Informer(labelSelector = SELECTOR)
-)
+//@KubernetesDependent(
+//        informer = @Informer(labelSelector = SELECTOR)
+//)
 @Slf4j
-public class AgentBuildJobDependentResource extends CRUDKubernetesDependentResource<Job, AgentBuild> {
+public class PodPoolBuildJobDependentResource extends CRUDKubernetesDependentResource<Job, AgentBuild> {
+
 
     public static final String BUILD_SCRIPT_PATH = "/workspace/build.sh";
     public static final String AGENT_CARD_JSON_PATH = "/workspace/agent_card.json";
@@ -62,7 +61,7 @@ public class AgentBuildJobDependentResource extends CRUDKubernetesDependentResou
                 .withNewMetadata()
                 .withName(jobName(primary))
                 .withNamespace(primary.getMetadata().getNamespace())
-                .addToLabels(SELECTOR, "true")
+                .addToLabels(DEPENDENT_RESOURCE_LABEL_SELECTOR, "true")
                 .endMetadata()
                 .withNewSpec()
                 .withTtlSecondsAfterFinished(60*60)
@@ -144,16 +143,7 @@ public class AgentBuildJobDependentResource extends CRUDKubernetesDependentResou
     }
 
     private String agentUrl(AgentDeployment agentDeployment, AgentEnvironment agentEnvironment) {
-        if (agentEnvironment.getSpec().getEngineType() == AgentEnvironmentSpec.EngineType.Fission) {
-            // TODO figure out why relativeUrl is not working
-            return "%s://%s/fission-function/%s/%s".formatted(
-                    agentEnvironment.getSpec().getEndpoint().getProtocol(),
-                    agentEnvironment.getSpec().getEndpoint().getHost(),
-                    agentDeployment.getMetadata().getNamespace(),
-                    agentDeployment.getMetadata().getName()
-            );
-        }
-        throw new IllegalArgumentException("Unsupported engine type: " + agentEnvironment.getSpec().getEngineType());
+        return "";
     }
 
     @SneakyThrows

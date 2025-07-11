@@ -1,10 +1,15 @@
 package ai.tuna.fusion.kubernetes.operator.reconciler;
 
-import ai.tuna.fusion.kubernetes.operator.ResourceUtils;
+import ai.tuna.fusion.kubernetes.operator.driver.ProvisioningDriverRegistry;
 import ai.tuna.fusion.metadata.crd.AgentDeployment;
 import io.javaoperatorsdk.operator.api.reconciler.*;
+import io.javaoperatorsdk.operator.api.reconciler.dependent.DependentResource;
+import io.javaoperatorsdk.operator.processing.event.source.EventSource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author robinqu
@@ -14,37 +19,32 @@ import org.springframework.stereotype.Component;
 @Slf4j
 public class AgentDeploymentReconciler implements Reconciler<AgentDeployment>, Cleaner<AgentDeployment> {
 
-    public static String FISSION_RESOURCES_FINALIZER = "ai.tuna.fusion/cleanup-fission-resources";
+
+    private final ProvisioningDriverRegistry driverRegistry;
+
+    public AgentDeploymentReconciler(ProvisioningDriverRegistry driverRegistry) {
+        this.driverRegistry = driverRegistry;
+    }
 
     @Override
     public DeleteControl cleanup(AgentDeployment resource, Context<AgentDeployment> context) throws Exception {
-        deleteFissionResources(resource, context);
-        resource.getFinalizers().remove(FISSION_RESOURCES_FINALIZER);
         return DeleteControl.defaultDelete();
     }
 
     @Override
-    public UpdateControl<AgentDeployment> reconcile(AgentDeployment resource, Context<AgentDeployment> context) throws Exception {
-        // handling deletion
-        if (resource.getMetadata().getDeletionTimestamp() == null
-                && !resource.getMetadata().getFinalizers().contains(FISSION_RESOURCES_FINALIZER)) {
-            log.info("Add fission resource finalizer to agent deployment: name={},ns={}", resource.getMetadata().getName(), resource.getMetadata().getNamespace());
-            var patch = new AgentDeployment();
-            for (var finalizer : resource.getFinalizers()) {
-                patch.addFinalizer(finalizer);
-            }
-            patch.addFinalizer(FISSION_RESOURCES_FINALIZER);
-            patch.getMetadata().setNamespace(resource.getMetadata().getNamespace());
-            patch.getMetadata().setName(resource.getMetadata().getName());
+    public List<EventSource<?, AgentDeployment>> prepareEventSources(EventSourceContext<AgentDeployment> context) {
+        List<EventSource<?, AgentDeployment>> eventSources = new ArrayList<>();
+        driverRegistry.allDrivers().forEach(driver -> {
+            eventSources.addAll(EventSourceUtils.dependentEventSources(
+                    context, driver.agentDeployment().dependentResource().toArray(new DependentResource[0])));
+        });
+        return eventSources;
+    }
 
-            return UpdateControl.patchResource(patch);
-        }
+    @Override
+    public UpdateControl<AgentDeployment> reconcile(AgentDeployment resource, Context<AgentDeployment> context) throws Exception {
         return UpdateControl.noUpdate();
     }
 
-    private void deleteFissionResources(AgentDeployment resource, Context<AgentDeployment> context) {
-        ResourceUtils.deleteFissionFunction(resource, context.getClient());
-        ResourceUtils.deleteFissionRoute(resource, context.getClient());
-    }
 
 }
