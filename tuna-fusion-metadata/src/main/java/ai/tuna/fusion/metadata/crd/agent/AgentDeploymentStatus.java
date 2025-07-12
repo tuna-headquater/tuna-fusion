@@ -8,8 +8,9 @@ import lombok.Data;
 @Data
 public class AgentDeploymentStatus {
     @Data
-    public static class FunctionInfo {
+    public static class PodFunctionInfo {
         private String functionName;
+        private String externalUrl;
     }
 
     @Data
@@ -22,7 +23,7 @@ public class AgentDeploymentStatus {
         private String functionName;
     }
 
-    private FunctionInfo function;
+    private PodFunctionInfo function;
     private LambdaInfo lambda;
     private FcInfo fc;
     private AgentEnvironmentSpec.DriverType driverType;

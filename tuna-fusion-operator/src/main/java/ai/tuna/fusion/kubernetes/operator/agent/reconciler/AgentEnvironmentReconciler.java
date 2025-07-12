@@ -14,8 +14,6 @@ import org.springframework.stereotype.Component;
 /**
  * @author robinqu
  */
-
-
 @Workflow(dependents = {
     @Dependent(
         type = AgentEnvironmentPodPoolDependentResource.class,
@@ -24,7 +22,7 @@ import org.springframework.stereotype.Component;
 })
 @Component
 @Slf4j
-@ControllerConfiguration(name="agentenvironment")
+@ControllerConfiguration
 public class AgentEnvironmentReconciler implements Reconciler<AgentEnvironment>, Cleaner<AgentEnvironment> {
 
     public static final String SELECTOR = "managed-by-agent-environment-reconciler";

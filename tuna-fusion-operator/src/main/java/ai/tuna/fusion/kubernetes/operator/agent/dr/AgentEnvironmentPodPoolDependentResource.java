@@ -26,6 +26,10 @@ public class AgentEnvironmentPodPoolDependentResource extends CRUDKubernetesDepe
 
     @Override
     protected PodPool desired(AgentEnvironment primary, Context<AgentEnvironment> context) {
-        return super.desired(primary, context);
+        var podPool = new PodPool();
+        podPool.getMetadata().setName(primary.getMetadata().getName());
+        podPool.getMetadata().setNamespace(primary.getMetadata().getNamespace());
+        podPool.setSpec(primary.getSpec().getDriver().getPodPoolSpec());
+        return podPool;
     }
 }

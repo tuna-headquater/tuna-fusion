@@ -26,4 +26,16 @@ public class PodPoolSpec {
 
     @Required
     private String archivePvcName;
+
+
+    @Data
+    public static class Endpoint {
+        @Required
+        String protocol = "https";
+        @Required
+        String externalHost;
+    }
+    @Required
+    private Endpoint endpoint;
+
 }

@@ -120,7 +120,7 @@ public class PodFunctionBuildReconciler implements Reconciler<PodFunctionBuild>,
             }
             context.getClient().resources(PodFunction.class)
                     .inNamespace(resource.getMetadata().getNamespace())
-                    .withName(PodPoolResourceUtils.getReferencedPodFunctionName(resource))
+                    .withName(PodPoolResourceUtils.getReferencedPodFunctionName(resource).orElseThrow())
                     .patch(PatchContext.of(PatchType.SERVER_SIDE_APPLY), patchPodFunction);
 
             // update PodFunctionBuild

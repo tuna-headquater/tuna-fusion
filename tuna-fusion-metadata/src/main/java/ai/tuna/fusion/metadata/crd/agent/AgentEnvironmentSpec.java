@@ -16,22 +16,6 @@ public class AgentEnvironmentSpec {
         AlibabaCloudFunctionCompute
     }
 
-//    @Data
-//    public static class BuildRecipe {
-//        @Required
-//        private String buildScript;
-//        @Required
-//        private String builderImage;
-//        private String serviceAccountName;
-//    }
-
-    @Data
-    public static class Endpoint {
-        @Required
-        String protocol = "https";
-        @Required
-        String externalHost;
-    }
 
     @Data
     public static class DriverSpec {
@@ -55,6 +39,4 @@ public class AgentEnvironmentSpec {
     @ValidationRule(value = "has(driver.podPoolSpec) || has(driver.awsLambdaSpec) || has(driver.alibabaCloudFunctionComputeSpec)", message = "driver must be included in resource definition.")
     private DriverSpec driver;
 
-    @Required
-    private Endpoint endpoint;
 }

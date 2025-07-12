@@ -18,9 +18,14 @@ import org.springframework.stereotype.Component;
 @Workflow(dependents = {
         @Dependent(type = PodPoolDeploymentDependentResource.class)
 })
-public class PodPoolReconciler implements Reconciler<PodPool> {
+public class PodPoolReconciler implements Reconciler<PodPool>, Cleaner<PodPool> {
 
     public static final String SELECTOR = "managed-by-pod-pool-reconciler";
+
+    @Override
+    public DeleteControl cleanup(PodPool resource, Context<PodPool> context) throws Exception {
+        return DeleteControl.defaultDelete();
+    }
 
     @Override
     public UpdateControl<PodPool> reconcile(PodPool resource, Context<PodPool> context) throws Exception {

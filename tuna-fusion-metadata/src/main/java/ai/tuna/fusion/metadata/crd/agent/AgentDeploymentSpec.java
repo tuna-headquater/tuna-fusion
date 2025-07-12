@@ -102,4 +102,7 @@ public class AgentDeploymentSpec {
 
     @Required
     private A2ARuntime a2a;
+
+    @Required
+    private String entrypoint;
 }

@@ -1,12 +1,17 @@
 package ai.tuna.fusion.kubernetes.operator.agent.reconciler;
 
+import ai.tuna.fusion.kubernetes.operator.agent.ResourceUtils;
 import ai.tuna.fusion.kubernetes.operator.agent.dr.AgentDeploymentPodFunctionDependentResource;
-import ai.tuna.fusion.kubernetes.operator.podpool.dr.PodPoolDeploymentDependentResource;
 import ai.tuna.fusion.metadata.crd.agent.AgentDeployment;
+import ai.tuna.fusion.metadata.crd.agent.AgentDeploymentStatus;
+import ai.tuna.fusion.metadata.crd.agent.AgentEnvironmentSpec;
+import ai.tuna.fusion.metadata.crd.podpool.PodFunction;
 import io.javaoperatorsdk.operator.api.reconciler.*;
 import io.javaoperatorsdk.operator.api.reconciler.dependent.Dependent;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+
+import java.util.Objects;
 
 
 /**
@@ -20,6 +25,8 @@ import org.springframework.stereotype.Component;
 })
 public class AgentDeploymentReconciler implements Reconciler<AgentDeployment>, Cleaner<AgentDeployment> {
 
+    public static final String SELECTOR = "managed-by-agent-deployment-reconciler";
+
     @Override
     public DeleteControl cleanup(AgentDeployment resource, Context<AgentDeployment> context) throws Exception {
         return DeleteControl.defaultDelete();
@@ -27,6 +34,22 @@ public class AgentDeploymentReconciler implements Reconciler<AgentDeployment>, C
 
     @Override
     public UpdateControl<AgentDeployment> reconcile(AgentDeployment resource, Context<AgentDeployment> context) throws Exception {
-        return null;
+        var agentEnvironment = ResourceUtils.getReferencedAgentEnvironment(context.getClient(), resource).orElseThrow();
+        AgentDeployment patch = new AgentDeployment();
+        patch.getMetadata().setNamespace(resource.getMetadata().getNamespace());
+        patch.getMetadata().setName(resource.getMetadata().getName());
+        var status = new AgentDeploymentStatus();
+        var driverType = agentEnvironment.getSpec().getDriver().getType();
+        status.setDriverType(driverType);
+        if (driverType == AgentEnvironmentSpec.DriverType.PodPool) {
+            context.getSecondaryResource(PodFunction.class).
+                    ifPresent(podFunction -> {
+                        var podFunctionInfo = new AgentDeploymentStatus.PodFunctionInfo();
+                        podFunctionInfo.setFunctionName(podFunction.getMetadata().getName());
+                        podFunctionInfo.setExternalUrl(ResourceUtils.agentExternalUrl(resource, agentEnvironment));
+                        status.setFunction(podFunctionInfo);
+                    });
+        }
+        return UpdateControl.patchStatus(patch);
     }
 }

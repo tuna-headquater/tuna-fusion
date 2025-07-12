@@ -1,13 +1,16 @@
 package ai.tuna.fusion.kubernetes.operator.podpool;
 
+import ai.tuna.fusion.kubernetes.operator.agent.ResourceUtils;
 import ai.tuna.fusion.metadata.crd.agent.AgentDeployment;
 import ai.tuna.fusion.metadata.crd.agent.AgentEnvironment;
 import ai.tuna.fusion.metadata.crd.podpool.PodFunction;
 import ai.tuna.fusion.metadata.crd.podpool.PodFunctionBuild;
 import ai.tuna.fusion.metadata.crd.podpool.PodPool;
+import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.client.KubernetesClient;
+import io.javaoperatorsdk.operator.processing.event.source.informer.Mappers;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.List;
@@ -71,30 +74,30 @@ public class PodPoolResourceUtils {
                 .get());
     }
 
-    public static Optional<PodFunction> getReferencedPodFunction(PodFunctionBuild build, KubernetesClient kubernetesClient) {
+    public static Optional<PodFunction> getReferencedPodFunction(PodFunctionBuild resource, KubernetesClient kubernetesClient) {
+        var ref = resource.getMetadata().getOwnerReferences().stream()
+                .filter(ownerReference -> StringUtils.equals(ownerReference.getKind(), HasMetadata.getKind(PodFunction.class)))
+                .filter(ownerReference -> StringUtils.equals(ownerReference.getApiVersion(), HasMetadata.getApiVersion(PodFunction.class)))
+                .findFirst();
 
-
+        return ref.map(ownerReference -> kubernetesClient.resources(PodFunction.class)
+                .inNamespace(resource.getMetadata().getNamespace())
+                .withName(ownerReference.getName())
+                .get());
     }
 
     public static Optional<PodPool> getReferencedPodPool(PodFunction resource, KubernetesClient kubernetesClient) {
-
+        return ResourceUtils.getReferencedResource(kubernetesClient, resource, PodPool.class);
     }
 
-    public static String getReferencedPodFunctionName(PodFunctionBuild build) {
-
-    }
-
-    public static String podFunctionNameForAgentDeployment(AgentDeployment agentDeployment) {
-        return agentDeployment.getMetadata().getName() + "-function";
+    public static Optional<String> getReferencedPodFunctionName(PodFunctionBuild build) {
+        return ResourceUtils.getReferencedResourceName(build, PodFunction.class);
     }
 
 
     public static boolean isJobTerminalPhase(String phase) {
         return StringUtils.equals("Succeeded", phase) || StringUtils.equals("Failed", phase);
     }
-
-
-
 
     public static String getPodLog(KubernetesClient client, String ns, String podName) {
         return client.pods().inNamespace(ns)
