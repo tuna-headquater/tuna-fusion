@@ -6,6 +6,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 
 /**
  * @author robinqu
@@ -13,11 +14,12 @@ import java.nio.file.Files;
 @ConfigurationProperties(prefix = "gitops")
 @Data
 public class GitOpsServerProperties {
-    private File reposRootPath;
+    private Path reposRootPath;
+    private Path sourceArchiveRootPath;
 
     {
         try {
-            reposRootPath = Files.createTempDirectory("gitops").toFile();
+            reposRootPath = Files.createTempDirectory("gitops").toAbsolutePath();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

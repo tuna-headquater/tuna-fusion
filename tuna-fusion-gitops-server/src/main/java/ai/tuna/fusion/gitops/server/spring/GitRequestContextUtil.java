@@ -1,10 +1,9 @@
 package ai.tuna.fusion.gitops.server.spring;
 
-import ai.tuna.fusion.metadata.crd.AgentCatalogue;
-import ai.tuna.fusion.metadata.crd.AgentDeployment;
-import ai.tuna.fusion.metadata.crd.AgentEnvironment;
+import ai.tuna.fusion.metadata.crd.agent.AgentCatalogue;
+import ai.tuna.fusion.metadata.crd.agent.AgentDeployment;
+import ai.tuna.fusion.metadata.crd.agent.AgentEnvironment;
 import io.fabric8.kubernetes.client.KubernetesClient;
-import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletRequest;
 import org.eclipse.jgit.http.server.ServletUtils;
 import org.eclipse.jgit.transport.ReceivePack;

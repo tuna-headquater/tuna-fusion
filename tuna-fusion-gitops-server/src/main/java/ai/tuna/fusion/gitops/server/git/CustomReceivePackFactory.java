@@ -1,7 +1,13 @@
 package ai.tuna.fusion.gitops.server.git;
 
 import ai.tuna.fusion.gitops.server.spring.GitRequestContextUtil;
-import ai.tuna.fusion.metadata.crd.*;
+import ai.tuna.fusion.metadata.crd.agent.AgentCatalogue;
+import ai.tuna.fusion.metadata.crd.agent.AgentDeployment;
+import ai.tuna.fusion.metadata.crd.agent.AgentEnvironment;
+import ai.tuna.fusion.metadata.crd.agent.AgentEnvironmentSpec;
+import ai.tuna.fusion.metadata.crd.podpool.PodFunction;
+import ai.tuna.fusion.metadata.crd.podpool.PodFunctionBuild;
+import ai.tuna.fusion.metadata.crd.podpool.PodFunctionBuildStatus;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.ResourceNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -14,7 +20,11 @@ import org.eclipse.jgit.transport.resolver.ServiceNotAuthorizedException;
 import org.eclipse.jgit.transport.resolver.ServiceNotEnabledException;
 
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Collection;
+import java.util.Optional;
+import java.util.UUID;
 
 /**
  * @author robinqu
@@ -24,8 +34,11 @@ public class CustomReceivePackFactory implements ReceivePackFactory<HttpServletR
 
     private final KubernetesClient kubernetesClient;
 
-    public CustomReceivePackFactory(KubernetesClient kubernetesClient) {
+    private final Path sourceArchiveRootPath;
+
+    public CustomReceivePackFactory(KubernetesClient kubernetesClient, Path sourceArchiveRootPath) {
         this.kubernetesClient = kubernetesClient;
+        this.sourceArchiveRootPath = sourceArchiveRootPath;
     }
 
     @Override
@@ -44,21 +57,29 @@ public class CustomReceivePackFactory implements ReceivePackFactory<HttpServletR
     }
 
     private void handlePreReceiveHook(AgentEnvironment agentEnvironment, AgentDeployment agentDeployment, AgentCatalogue agentCatalogue, HttpServletRequest req, ReceivePack receivePack, Collection<ReceiveCommand> commands) {
+        if (agentEnvironment.getSpec().getDriver().getType() != AgentEnvironmentSpec.DriverType.PodPool) {
+            logError(receivePack, null, "❌ Only PodPool driver is supported now");
+            return;
+        }
+
         try {
-            var zipPath = PipelineUtils.createRepoZip(receivePack, commands, agentDeployment.getSpec().getGit().getWatchedBranchName());
-            logInfo(receivePack, "📦 Snapshot for repository is created successfully: %s", zipPath);
+            var podFunction = getReferencedPodFunction(agentDeployment).orElseThrow(()-> new ServiceNotEnabledException("PodFunction for AgentDeployment is not found"));
 
-            var sha256 = PipelineUtils.getSha256Checksum(zipPath);
-            logInfo(receivePack, "🔢 SHA256 for snapshot: %s", sha256);
+            if (podFunction.getStatus().getCurrentBuild() != null) {
+                throw new RuntimeException("Current build is running for this AgentDeployment: " + podFunction.getStatus().getCurrentBuild().getName());
+            }
 
-            var archiveId = PipelineUtils.fissionArchiveUpload(zipPath);
-            logInfo(receivePack, "⏫ Archive ID for snapshot: %s", archiveId);
+            var sourceArchiveSubPath = Paths.get(agentEnvironment.getMetadata().getName(), agentDeployment.getMetadata().getName(), UUID.randomUUID().toString()).toString();
+            var destinationPath = sourceArchiveRootPath.resolve(sourceArchiveSubPath);
 
-            var agentBuild = PipelineUtils.createAgentBuild(kubernetesClient, agentDeployment, agentEnvironment, archiveId, sha256);
+            PipelineUtils.saveRepoToDirectory(destinationPath, receivePack, commands, agentDeployment.getSpec().getGit().getWatchedBranchName());
+            logInfo(receivePack, "📦 Snapshot for repository is created successfully: %s", destinationPath);
 
-            logInfo(receivePack, "💾 AgentBuild CR is created successfully: %s", agentBuild.getMetadata().getName());
+            var functionBuild = PipelineUtils.createAgentFunctionBuild(kubernetesClient, agentDeployment, podFunction, sourceArchiveSubPath);
 
-            var podInfo = PipelineUtils.waitForJobPod(kubernetesClient, agentBuild.getMetadata().getName(), agentBuild.getMetadata().getNamespace());
+            logInfo(receivePack, "💾 AgentBuild CR is created successfully: %s", functionBuild.getMetadata().getName());
+
+            var podInfo = PipelineUtils.waitForJobPod(kubernetesClient, functionBuild.getMetadata().getName(), functionBuild.getMetadata().getNamespace());
             logInfo(receivePack, "⚒️ Job pod is created successfully: %s", podInfo.getPodName());
 
             PipelineUtils.streamPodLogs(kubernetesClient,
@@ -67,14 +88,14 @@ public class CustomReceivePackFactory implements ReceivePackFactory<HttpServletR
                     line -> logInfo(receivePack, line)
             );
 
-            var finalPhase = PipelineUtils.getAgentBuild(kubernetesClient, agentBuild.getMetadata().getNamespace(), agentBuild.getMetadata().getName())
-                    .map(AgentBuild::getStatus)
-                    .map(AgentBuildStatus::getPhase)
-                    .orElseThrow(()-> new ResourceNotFoundException("AgentBuild is not found: name=%s,ns=%s".formatted(agentBuild.getMetadata().getName(), agentBuild.getMetadata().getNamespace())));
-            if (finalPhase == AgentBuildStatus.Phase.Succeeded) {
+            var finalPhase = PipelineUtils.getAgentBuild(kubernetesClient, functionBuild.getMetadata().getNamespace(), functionBuild.getMetadata().getName())
+                    .map(PodFunctionBuild::getStatus)
+                    .map(PodFunctionBuildStatus::getPhase)
+                    .orElseThrow(()-> new ResourceNotFoundException("AgentBuild is not found: name=%s,ns=%s".formatted(functionBuild.getMetadata().getName(), functionBuild.getMetadata().getNamespace())));
+            if (finalPhase == PodFunctionBuildStatus.Phase.Succeeded) {
                 logInfo(receivePack, "✅ AgentBuild CR is completed successfully");
             } else {
-                throw new  RuntimeException("AgentBuild is in Failed Phase. Please check logs.");
+                throw new RuntimeException("AgentBuild is in Failed Phase. Please check logs.");
             }
         } catch (Exception e) {
             logError(receivePack, e, "❌ Exception occurred: %s", e.getMessage());
@@ -104,6 +125,13 @@ public class CustomReceivePackFactory implements ReceivePackFactory<HttpServletR
         } catch (IOException e) {
             log.warn("Failed to flush message output stream", e);
         }
+    }
+
+    private Optional<PodFunction> getReferencedPodFunction(AgentDeployment agentDeployment) {
+        return Optional.ofNullable(kubernetesClient.resources(PodFunction.class)
+                .inNamespace(agentDeployment.getMetadata().getNamespace())
+                .withName(agentDeployment.getStatus().getFunction().getFunctionName())
+                .get());
     }
 
 }

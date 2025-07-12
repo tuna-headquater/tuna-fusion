@@ -26,8 +26,8 @@ import java.util.concurrent.CompletableFuture;
 public class GitServerConfig {
 
     @Bean
-    public CustomReceivePackFactory customReceivePackFactory(KubernetesClient kubernetesClient) {
-        return new CustomReceivePackFactory(kubernetesClient);
+    public CustomReceivePackFactory customReceivePackFactory(KubernetesClient kubernetesClient, GitOpsServerProperties properties) {
+        return new CustomReceivePackFactory(kubernetesClient, properties.getSourceArchiveRootPath());
     }
 
     @Bean

@@ -12,6 +12,7 @@ import org.eclipse.jgit.transport.resolver.ServiceNotAuthorizedException;
 import org.eclipse.jgit.transport.resolver.ServiceNotEnabledException;
 
 import java.io.File;
+import java.nio.file.Path;
 import java.util.UUID;
 
 /**
@@ -22,13 +23,13 @@ public class CustomRepositoryResolver implements RepositoryResolver<HttpServletR
     // 100MB
     private static final long MAX_REPO_SIZE = 100 * 1024 * 1024;
 
-    private final File repositoriesRootPath;
+    private final Path repositoriesRootPath;
 
     public CustomRepositoryResolver(
-            File repositoriesRootPath
+            Path repositoriesRootPath
             ) {
         this.repositoriesRootPath = repositoriesRootPath;
-        log.info("CustomRepositoryResolver initialized with root path: {}", repositoriesRootPath.getAbsolutePath());
+        log.info("CustomRepositoryResolver initialized with root path: {}", repositoriesRootPath.toAbsolutePath());
     }
 
     @Override
@@ -36,7 +37,7 @@ public class CustomRepositoryResolver implements RepositoryResolver<HttpServletR
         if (isUnreasonableName(name)) {
             throw new RepositoryNotFoundException(name);
         }
-        File dir = repositoriesRootPath.toPath().resolve(UUID.randomUUID().toString()).resolve(name).toFile();
+        File dir = repositoriesRootPath.resolve(UUID.randomUUID().toString()).resolve(name).toFile();
         if (!dir.mkdirs()) {
             throw new ServiceNotEnabledException("Failed to create temp repository");
         }
