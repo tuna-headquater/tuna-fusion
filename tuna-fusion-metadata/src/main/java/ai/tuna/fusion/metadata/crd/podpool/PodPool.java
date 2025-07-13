@@ -15,4 +15,8 @@ import io.fabric8.kubernetes.model.annotation.Version;
 @AdditionalPrinterColumn(name = "PoolSize", jsonPath = ".spec.poolSize")
 public class PodPool extends CustomResource<PodPoolSpec, PodPoolStatus> {
 
+    public static final String GENERIC_POD_LABEL_NAME = "is-generic-pod";
+    public static final String SPECIALIZED_POD_LABEL_VALUE = "is-specialized-pod";
+    public static final String MANAGED_POD_POOL_LABEL_NAME = "managed-by-pod-pool";
+
 }

@@ -1,6 +1,6 @@
 package ai.tuna.fusion.kubernetes.operator.agent.reconciler;
 
-import ai.tuna.fusion.kubernetes.operator.agent.ResourceUtils;
+import ai.tuna.fusion.kubernetes.operator.agent.AgentResourceUtils;
 import ai.tuna.fusion.kubernetes.operator.agent.dr.AgentDeploymentPodFunctionDependentResource;
 import ai.tuna.fusion.metadata.crd.agent.AgentDeployment;
 import ai.tuna.fusion.metadata.crd.agent.AgentDeploymentStatus;
@@ -10,8 +10,6 @@ import io.javaoperatorsdk.operator.api.reconciler.*;
 import io.javaoperatorsdk.operator.api.reconciler.dependent.Dependent;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-
-import java.util.Objects;
 
 
 /**
@@ -34,7 +32,7 @@ public class AgentDeploymentReconciler implements Reconciler<AgentDeployment>, C
 
     @Override
     public UpdateControl<AgentDeployment> reconcile(AgentDeployment resource, Context<AgentDeployment> context) throws Exception {
-        var agentEnvironment = ResourceUtils.getReferencedAgentEnvironment(context.getClient(), resource).orElseThrow();
+        var agentEnvironment = AgentResourceUtils.getReferencedAgentEnvironment(context.getClient(), resource).orElseThrow();
         AgentDeployment patch = new AgentDeployment();
         patch.getMetadata().setNamespace(resource.getMetadata().getNamespace());
         patch.getMetadata().setName(resource.getMetadata().getName());
@@ -46,7 +44,7 @@ public class AgentDeploymentReconciler implements Reconciler<AgentDeployment>, C
                     ifPresent(podFunction -> {
                         var podFunctionInfo = new AgentDeploymentStatus.PodFunctionInfo();
                         podFunctionInfo.setFunctionName(podFunction.getMetadata().getName());
-                        podFunctionInfo.setExternalUrl(ResourceUtils.agentExternalUrl(resource, agentEnvironment));
+                        podFunctionInfo.setExternalUrl(AgentResourceUtils.agentExternalUrl(resource, agentEnvironment));
                         status.setFunction(podFunctionInfo);
                     });
         }

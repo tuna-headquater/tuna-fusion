@@ -36,8 +36,6 @@ public class PodFunctionBuildJobDependentResource extends CRUDKubernetesDependen
         }
     }
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
-
     @Override
     protected Job desired(PodFunctionBuild primary, Context<PodFunctionBuild> context) {
         log.debug("Creating Job DR for build {}", primary.getMetadata());

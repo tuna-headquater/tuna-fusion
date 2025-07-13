@@ -1,7 +1,6 @@
 package ai.tuna.fusion.kubernetes.operator.podpool;
 
-import ai.tuna.fusion.kubernetes.operator.agent.ResourceUtils;
-import ai.tuna.fusion.metadata.crd.agent.AgentDeployment;
+import ai.tuna.fusion.kubernetes.operator.agent.AgentResourceUtils;
 import ai.tuna.fusion.metadata.crd.agent.AgentEnvironment;
 import ai.tuna.fusion.metadata.crd.podpool.PodFunction;
 import ai.tuna.fusion.metadata.crd.podpool.PodFunctionBuild;
@@ -10,12 +9,13 @@ import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.client.KubernetesClient;
-import io.javaoperatorsdk.operator.processing.event.source.informer.Mappers;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+
+import static ai.tuna.fusion.metadata.crd.podpool.PodPool.*;
 
 /**
  * @author robinqu
@@ -31,32 +31,31 @@ public class PodPoolResourceUtils {
     }
 
 
-    public static Map<String, String> computePodSelectors(PodPool resource) {
+    public static Map<String, String> computeGenericPodSelectors(PodPool resource) {
         return Map.of(
-                "is-generic-pod", "true",
-                "managed-by-pod-pool", resource.getMetadata().getName()
+                GENERIC_POD_LABEL_NAME, "true",
+                MANAGED_POD_POOL_LABEL_NAME, resource.getMetadata().getName()
         );
     }
 
-    public static List<Pod> listOrphanPods(PodPool resource, KubernetesClient kubernetesClient) {
+    public static List<Pod> listSpecializedPods(PodPool resource, KubernetesClient kubernetesClient) {
         return kubernetesClient.resources(Pod.class)
                 .inNamespace(resource.getMetadata().getNamespace())
-                .withLabels(computeOrphanPodLabels(resource))
+                .withLabels(computeSpecializedPodLabels(resource))
                 .list()
                 .getItems();
     }
 
-    public static Map<String, String> computeOrphanPodLabels(PodPool podPool) {
+    public static Map<String, String> computeSpecializedPodLabels(PodPool podPool) {
         return Map.of(
-                "managed-by-agent-env", podPool.getMetadata().getName(),
-                "is-specialized-pod", "true",
-                "managed-by-pod-pool", "true"
+                SPECIALIZED_POD_LABEL_VALUE, "true",
+                MANAGED_POD_POOL_LABEL_NAME, podPool.getMetadata().getName()
         );
     }
 
     public static Map<String, String> computeDeployLabels(PodPool resource) {
         return Map.of(
-                "managed-by-pod-pool", resource.getMetadata().getName()
+                MANAGED_POD_POOL_LABEL_NAME, resource.getMetadata().getName()
         );
     }
 
@@ -87,11 +86,11 @@ public class PodPoolResourceUtils {
     }
 
     public static Optional<PodPool> getReferencedPodPool(PodFunction resource, KubernetesClient kubernetesClient) {
-        return ResourceUtils.getReferencedResource(kubernetesClient, resource, PodPool.class);
+        return AgentResourceUtils.getReferencedResource(kubernetesClient, resource, PodPool.class);
     }
 
     public static Optional<String> getReferencedPodFunctionName(PodFunctionBuild build) {
-        return ResourceUtils.getReferencedResourceName(build, PodFunction.class);
+        return AgentResourceUtils.getReferencedResourceName(build, PodFunction.class);
     }
 
 

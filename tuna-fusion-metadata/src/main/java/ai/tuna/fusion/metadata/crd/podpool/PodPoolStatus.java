@@ -13,4 +13,5 @@ public class PodPoolStatus {
     private Map<String, String> genericPodSelectors;
     private int availablePods;
     private int orphanPods;
+    private String headlessServiceName;
 }

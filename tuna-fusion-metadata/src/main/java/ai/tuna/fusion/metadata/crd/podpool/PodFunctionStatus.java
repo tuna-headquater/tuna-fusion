@@ -12,6 +12,7 @@ public class PodFunctionStatus {
     public static class BuildInfo {
         private String name;
         private long startTimestamp;
+        private PodFunctionBuildStatus status;
     }
     private BuildInfo currentBuild;
     private BuildInfo effectiveBuild;

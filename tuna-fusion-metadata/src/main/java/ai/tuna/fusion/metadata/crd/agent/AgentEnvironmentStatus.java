@@ -10,17 +10,23 @@ import lombok.Data;
 public class AgentEnvironmentStatus {
 
     @Data
-    public static class AwsLambdaStatus {
+    public static class AwsLambdaInfo {
 
     }
 
     @Data
-    public static class AlibabaCloudFCStatus {
+    public static class AlibabaCloudFCInfo {
 
     }
 
-    private PodPoolStatus podPool;
-    private AwsLambdaStatus awsLambda;
-    private AlibabaCloudFCStatus fc;
+    @Data
+    public static class PodPoolInfo {
+        private String name;
+        private PodPoolStatus status;
+    }
+
+    private PodPoolInfo podPool;
+    private AwsLambdaInfo awsLambda;
+    private AlibabaCloudFCInfo fc;
 
 }

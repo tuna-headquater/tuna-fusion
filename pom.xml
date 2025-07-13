@@ -12,6 +12,7 @@
         <module>tuna-fusion-operator</module>
         <module>tuna-fusion-gitops-server</module>
         <module>tuna-fusion-metadata</module>
+        <module>tuna-fusion-executor</module>
     </modules>
 
     <properties>
@@ -123,6 +124,11 @@
                 <groupId>io.github.vishalmysore</groupId>
                 <artifactId>a2ajava</artifactId>
                 <version>0.1.8.2</version>
+            </dependency>
+            <dependency>
+                <groupId>com.google.guava</groupId>
+                <artifactId>guava</artifactId>
+                <version>33.4.6-jre</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

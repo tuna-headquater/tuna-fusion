@@ -44,7 +44,10 @@ public class AgentEnvironmentReconciler implements Reconciler<AgentEnvironment>,
             update.getMetadata().setName(resource.getMetadata().getName());
             update.getMetadata().setNamespace(resource.getMetadata().getNamespace());
             var status = new AgentEnvironmentStatus();
-            status.setPodPool(podPoolStatus.get());
+            var podPoolInfo = new AgentEnvironmentStatus.PodPoolInfo();
+            podPoolInfo.setName(podPool.get().getMetadata().getName());
+            podPoolInfo.setStatus(podPoolStatus.get());
+            status.setPodPool(podPoolInfo);
             return UpdateControl.patchStatus(update);
         }
         log.warn("PodPool for Agent Environment {} is not ready yet", resource.getMetadata().getName());

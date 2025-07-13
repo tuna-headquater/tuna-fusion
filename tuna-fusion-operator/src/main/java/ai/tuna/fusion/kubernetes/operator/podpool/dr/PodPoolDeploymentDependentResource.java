@@ -19,7 +19,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.util.Optional;
 
-import static ai.tuna.fusion.kubernetes.operator.podpool.PodPoolResourceUtils.computePodSelectors;
+import static ai.tuna.fusion.kubernetes.operator.podpool.PodPoolResourceUtils.computeGenericPodSelectors;
 import static ai.tuna.fusion.kubernetes.operator.podpool.PodPoolResourceUtils.getPodPoolDeploymentName;
 
 /**
@@ -33,7 +33,7 @@ public class PodPoolDeploymentDependentResource extends CRUDKubernetesDependentR
 
     @Override
     protected Deployment desired(PodPool primary, Context<PodPool> context) {
-        var selectorLabels = computePodSelectors(primary);
+        var selectorLabels = computeGenericPodSelectors(primary);
         var deployLabels = PodPoolResourceUtils.computeDeployLabels(primary);
         var poolSize = primary.getSpec().getPoolSize();
 

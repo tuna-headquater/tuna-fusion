@@ -1,6 +1,6 @@
 package ai.tuna.fusion.kubernetes.operator.agent.dr;
 
-import ai.tuna.fusion.kubernetes.operator.agent.ResourceUtils;
+import ai.tuna.fusion.kubernetes.operator.agent.AgentResourceUtils;
 import ai.tuna.fusion.kubernetes.operator.agent.reconciler.AgentDeploymentReconciler;
 import ai.tuna.fusion.metadata.crd.agent.AgentDeployment;
 import ai.tuna.fusion.metadata.crd.agent.AgentDeploymentSpec;
@@ -39,7 +39,7 @@ public class AgentDeploymentPodFunctionDependentResource extends CRUDKubernetesD
     public static class MatchingDriverCondition implements Condition<PodFunction, AgentDeployment> {
         @Override
         public boolean isMet(DependentResource<PodFunction, AgentDeployment> dependentResource, AgentDeployment primary, Context<AgentDeployment> context) {
-            var agentEnvironment = ResourceUtils.getReferencedAgentEnvironment(context.getClient(), primary).orElseThrow();
+            var agentEnvironment = AgentResourceUtils.getReferencedAgentEnvironment(context.getClient(), primary).orElseThrow();
             return agentEnvironment.getSpec().getDriver().getType() == AgentEnvironmentSpec.DriverType.PodPool;
         }
     }
@@ -48,14 +48,14 @@ public class AgentDeploymentPodFunctionDependentResource extends CRUDKubernetesD
 
     @Override
     protected PodFunction desired(AgentDeployment primary, Context<AgentDeployment> context) {
-        var agentEnvironment = ResourceUtils.getReferencedAgentEnvironment(context.getClient(), primary).orElseThrow();
+        var agentEnvironment = AgentResourceUtils.getReferencedAgentEnvironment(context.getClient(), primary).orElseThrow();
 
         var podFunction = new PodFunction();
-        podFunction.getMetadata().setName(ResourceUtils.computeFunctionName(primary));
+        podFunction.getMetadata().setName(AgentResourceUtils.computeFunctionName(primary));
         podFunction.getMetadata().setNamespace(primary.getMetadata().getNamespace());
         var podFunctionSpec = new PodFunctionSpec();
         podFunction.setSpec(podFunctionSpec);
-        podFunctionSpec.setRoutePrefix(ResourceUtils.routeUrl(primary));
+        podFunctionSpec.setRoutePrefix(AgentResourceUtils.routeUrl(primary));
         podFunctionSpec.setEntrypoint(primary.getSpec().getEntrypoint());
         podFunctionSpec.setInitCommands(renderInitContainerScript(primary, agentEnvironment));
         return podFunction;
@@ -73,11 +73,10 @@ public class AgentDeploymentPodFunctionDependentResource extends CRUDKubernetesD
         return Arrays.asList("sh", "-c", substitutor.replace(INIT_CONTAINER_SCRIPT_TEMPLATE));
     }
 
-
     @SneakyThrows
     private String renderAgentCardJson(AgentDeployment agentDeployment, AgentEnvironment agentEnvironment)  {
         var originalAgentCard = agentDeployment.getSpec().getAgentCard();
-        var agentCard = originalAgentCard.toBuilder().url(ResourceUtils.agentExternalUrl(agentDeployment, agentEnvironment)).build();
+        var agentCard = originalAgentCard.toBuilder().url(AgentResourceUtils.agentExternalUrl(agentDeployment, agentEnvironment)).build();
         return objectMapper.writeValueAsString(agentCard);
     }
 
