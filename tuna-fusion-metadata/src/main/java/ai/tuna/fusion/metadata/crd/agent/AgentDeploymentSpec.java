@@ -16,7 +16,7 @@ public class AgentDeploymentSpec {
     private String environmentName;
 
     @Required
-    @ValidationRule(value ="!has(url)", message = "URL cannot be set in AgentCard. It will be dynamic generated during reconciliation.")
+    @ValidationRule(value ="!has(self.url)", message = "URL cannot be set in AgentCard. It will be dynamic generated during reconciliation.")
     private AgentCard agentCard;
 
     @Data
@@ -56,7 +56,7 @@ public class AgentDeploymentSpec {
             private TaskStoreProvider provider;
 
 
-            @ValidationRule(value = "!has(sql.taskStoreTableName)", message = "sql.taskStoreTableName cannot be included in resource definition.")
+            @ValidationRule(value = "!has(self.taskStoreTableName)", message = "sql.taskStoreTableName cannot be included in resource definition.")
             private SQLConfig sql;
 
 
@@ -87,17 +87,17 @@ public class AgentDeploymentSpec {
             }
 
             @ValidationRules(
-                    @ValidationRule(value = "!has(redis.taskRegistryKey) && !has(redis.relayChannelKeyPrefix)", message = "redis.taskIdRegistryKey and redis.channelKeyPrefix cannot be included in resource definition.")
+                    @ValidationRule(value = "!has(self.taskRegistryKey) && !has(self.relayChannelKeyPrefix)", message = "self.taskIdRegistryKey and self.channelKeyPrefix cannot be included in resource definition.")
             )
             private RedisConfig redis;
         }
 
         @Required
-        @ValidationRule("taskStore.provider=='InMemory' || (taskStore.provider=='sql' && has(taskStore.sql))")
+        @ValidationRule("self.provider=='InMemory' || (self.provider=='sql' && has(self.sql))")
         private TaskStore taskStore;
 
         @Required
-        @ValidationRule("queueManager.provider=='InMemory' || (queueManager.provider=='redis' && has(queueManager.redis))")
+        @ValidationRule("self.provider=='InMemory' || (self.provider=='redis' && has(self.redis))")
         private QueueManager queueManager;
     }
 

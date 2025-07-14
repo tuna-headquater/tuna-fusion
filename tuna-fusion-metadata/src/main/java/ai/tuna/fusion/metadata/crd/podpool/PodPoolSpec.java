@@ -1,5 +1,6 @@
 package ai.tuna.fusion.metadata.crd.podpool;
 
+import io.fabric8.generator.annotation.Min;
 import io.fabric8.generator.annotation.Required;
 import io.fabric8.kubernetes.api.model.PodSpec;
 import lombok.Data;
@@ -14,6 +15,7 @@ public class PodPoolSpec {
     @Required
     private String builderImage;
     @Required
+    @Min(1)
     private int poolSize = 3;
     private PodSpec runtimePodSpec;
     private String runtimePodServiceAccountName;

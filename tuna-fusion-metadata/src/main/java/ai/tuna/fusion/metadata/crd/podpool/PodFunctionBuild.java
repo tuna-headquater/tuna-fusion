@@ -13,9 +13,10 @@ import io.fabric8.kubernetes.model.annotation.Version;
  */
 @Group("fusion.tuna.ai")
 @Version("v1")
-@ShortNames({"ab"})
+@ShortNames({"pfb"})
 @AdditionalPrinterColumns({
-        @AdditionalPrinterColumn(name = "BuildType", jsonPath = ".status.buildType"),
+        @AdditionalPrinterColumn(name = "Phase", jsonPath = ".status.phase"),
+        @AdditionalPrinterColumn(name = "JobPodName", jsonPath = ".status.jobPod.podName"),
 })
 public class PodFunctionBuild extends CustomResource<PodFunctionBuildSpec, PodFunctionBuildStatus> implements Namespaced {
 

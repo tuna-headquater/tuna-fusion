@@ -26,20 +26,13 @@ import static ai.tuna.fusion.kubernetes.operator.podpool.PodPoolResourceUtils.ge
 @KubernetesDependent(informer = @Informer(labelSelector = PodPoolReconciler.SELECTOR))
 public class PodPoolDeploymentDependentResource extends CRUDKubernetesDependentResource<Deployment, PodPool> {
 
-    static final private PodSpec TEMPLATE_POD_SPEC = new PodSpec();
-
     @Override
     protected Deployment desired(PodPool primary, Context<PodPool> context) {
         var selectorLabels = computeGenericPodSelectors(primary);
         var deployLabels = PodPoolResourceUtils.computeDeployLabels(primary);
         var poolSize = primary.getSpec().getPoolSize();
 
-        var podSpec = Optional.ofNullable(primary.getSpec().getRuntimePodSpec()).map(templatePodSpec -> templatePodSpec.toBuilder().build()).orElse(TEMPLATE_POD_SPEC);
-
-        podSpec.getContainers().getFirst().setImage(primary.getSpec().getRuntimeImage());
-        if (StringUtils.isNoneBlank(primary.getSpec().getRuntimePodServiceAccountName())) {
-            podSpec.setServiceAccountName(primary.getSpec().getRuntimePodServiceAccountName());
-        }
+        var podSpec = Optional.ofNullable(primary.getSpec().getRuntimePodSpec()).map(templatePodSpec -> templatePodSpec.toBuilder().build()).orElseGet(()-> podSpec(primary));
 
         podSpec.getVolumes().add(new VolumeBuilder()
                 .withName("archive-volume")
@@ -100,6 +93,16 @@ public class PodPoolDeploymentDependentResource extends CRUDKubernetesDependentR
                 .withSpec(podSpec)
                 .endTemplate()
                 .endSpec()
+                .build();
+    }
+
+    private PodSpec podSpec(PodPool podPool) {
+        return new PodSpecBuilder()
+                .withServiceAccountName(podPool.getSpec().getRuntimePodServiceAccountName())
+                .addNewContainer()
+                .withName(podPool.getMetadata().getName() + "-")
+                .withImage(podPool.getSpec().getRuntimeImage())
+                .endContainer()
                 .build();
     }
 
