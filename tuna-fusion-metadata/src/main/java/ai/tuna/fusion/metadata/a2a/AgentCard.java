@@ -2,13 +2,10 @@ package ai.tuna.fusion.metadata.a2a;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.EnumNamingStrategies;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.EnumNaming;
 import io.fabric8.generator.annotation.Required;
 import io.fabric8.generator.annotation.Size;
-import io.fabric8.generator.annotation.ValidationRule;
 import lombok.*;
 
 import java.util.List;

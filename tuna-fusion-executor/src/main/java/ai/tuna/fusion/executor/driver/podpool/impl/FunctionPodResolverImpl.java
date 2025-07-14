@@ -109,12 +109,5 @@ public class FunctionPodResolverImpl implements FunctionPodManager {
         return podPool.getMetadata().getNamespace() + "/" + podPool.getMetadata().getName();
     }
 
-    private Optional<String> computePodPoolKey(Pod pod) {
-        return Optional.ofNullable(pod.getMetadata())
-                .map(ObjectMeta::getLabels)
-                .map(labels -> labels.get(MANAGED_POD_POOL_LABEL_NAME))
-                .filter(StringUtils::isNoneBlank)
-                .map(podPoolName -> pod.getMetadata().getNamespace() + "/" + podPoolName);
-    }
 
 }

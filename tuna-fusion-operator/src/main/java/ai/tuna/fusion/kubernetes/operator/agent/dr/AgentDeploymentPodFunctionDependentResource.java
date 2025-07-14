@@ -67,7 +67,7 @@ public class AgentDeploymentPodFunctionDependentResource extends CRUDKubernetesD
                 BUILD_SCRIPT_PATH,
                 renderAgentCardJson(agentDeployment, agentEnvironment),
                 AGENT_CARD_JSON_PATH,
-                renderA2aRuntimeConfigJson(agentDeployment, agentEnvironment),
+                renderA2aRuntimeConfigJson(agentDeployment),
                 A2A_RUNTIME_JSON_PATH
         ));
         return Arrays.asList("sh", "-c", substitutor.replace(INIT_CONTAINER_SCRIPT_TEMPLATE));
@@ -81,7 +81,7 @@ public class AgentDeploymentPodFunctionDependentResource extends CRUDKubernetesD
     }
 
     @SneakyThrows
-    private String renderA2aRuntimeConfigJson(AgentDeployment agentDeployment, AgentEnvironment agentEnvironment) {
+    private String renderA2aRuntimeConfigJson(AgentDeployment agentDeployment) {
         var a2a = agentDeployment.getSpec().getA2a();
         if (a2a.getQueueManager().getProvider() == AgentDeploymentSpec.A2ARuntime.QueueManagerProvider.Redis) {
             Optional.ofNullable(a2a.getQueueManager().getRedis())

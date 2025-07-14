@@ -36,14 +36,12 @@ public class PodFunctionBuildReconciler implements Reconciler<PodFunctionBuild>,
     public static final String SELECTOR = "managed-by-pod-function-build-reconciler";
 
     @Override
-    public DeleteControl cleanup(PodFunctionBuild resource, Context<PodFunctionBuild> context) throws Exception {
+    public DeleteControl cleanup(PodFunctionBuild resource, Context<PodFunctionBuild> context) {
         return DeleteControl.defaultDelete();
     }
 
     @Override
-    public UpdateControl<PodFunctionBuild> reconcile(PodFunctionBuild resource, Context<PodFunctionBuild> context) throws Exception {
-        var podFunction = PodPoolResourceUtils.getReferencedPodFunction(resource, context.getClient()).orElseThrow();
-
+    public UpdateControl<PodFunctionBuild> reconcile(PodFunctionBuild resource, Context<PodFunctionBuild> context) {
         var jobResource = context.getSecondaryResource(Job.class)
                 .orElse(null);
 

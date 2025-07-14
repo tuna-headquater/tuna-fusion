@@ -31,12 +31,12 @@ public class PodPoolReconciler implements Reconciler<PodPool>, Cleaner<PodPool> 
     public static final String SELECTOR = "managed-by-pod-pool-reconciler";
 
     @Override
-    public DeleteControl cleanup(PodPool resource, Context<PodPool> context) throws Exception {
+    public DeleteControl cleanup(PodPool resource, Context<PodPool> context)  {
         return DeleteControl.defaultDelete();
     }
 
     @Override
-    public UpdateControl<PodPool> reconcile(PodPool resource, Context<PodPool> context) throws Exception {
+    public UpdateControl<PodPool> reconcile(PodPool resource, Context<PodPool> context) {
         var deploy = PodPoolResourceUtils.getPodPoolDeployment(resource, context.getClient());
         if (deploy.isEmpty()) {
             log.warn("Deploy is not ready yet for PodPool {}", resource.getMetadata().getName());
@@ -61,7 +61,6 @@ public class PodPoolReconciler implements Reconciler<PodPool>, Cleaner<PodPool> 
     private static final long TTL_IN_SECONDS_FOR_SPECIALIZED_POD = 60 * 60 * 24;
     private void cleanupOrphanPods(PodPool resource, Context<PodPool> context) {
         var specializedPods = PodPoolResourceUtils.listSpecializedPods(resource, context.getClient());
-        var deletedCount = 0;
         for (var pod : specializedPods) {
             try {
                 var creationTime = Instant.parse(pod.getMetadata().getCreationTimestamp());
@@ -69,7 +68,6 @@ public class PodPoolReconciler implements Reconciler<PodPool>, Cleaner<PodPool> 
                 if (isOrphan) {
                     log.debug("Found orphan pod for PodPool {}: {}", resource.getMetadata().getName(), pod.getMetadata().getName());
                     Preconditions.checkState(ResourceUtils.deleteResource(context.getClient(), pod.getMetadata().getNamespace(), pod.getMetadata().getName(), Pod.class), "Should have pod %s deleted", pod.getMetadata().getName());
-                    deletedCount++;
                 }
             } catch (Exception e) {
                 log.error("Exception occurred during checking specialized pod {}: {}", pod, e.getMessage(), e);

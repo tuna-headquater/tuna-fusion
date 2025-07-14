@@ -1,6 +1,5 @@
 package ai.tuna.fusion.executor;
 
-import ai.tuna.fusion.executor.driver.podpool.impl.FunctionPodResolverImpl;
 import ai.tuna.fusion.metadata.informer.AgentResources;
 import ai.tuna.fusion.metadata.informer.PodPoolResources;
 import ai.tuna.fusion.metadata.informer.impl.DefaultAgentResources;

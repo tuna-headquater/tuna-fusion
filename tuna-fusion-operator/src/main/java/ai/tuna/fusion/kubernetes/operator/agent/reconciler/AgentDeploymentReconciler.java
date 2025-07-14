@@ -26,12 +26,12 @@ public class AgentDeploymentReconciler implements Reconciler<AgentDeployment>, C
     public static final String SELECTOR = "managed-by-agent-deployment-reconciler";
 
     @Override
-    public DeleteControl cleanup(AgentDeployment resource, Context<AgentDeployment> context) throws Exception {
+    public DeleteControl cleanup(AgentDeployment resource, Context<AgentDeployment> context) {
         return DeleteControl.defaultDelete();
     }
 
     @Override
-    public UpdateControl<AgentDeployment> reconcile(AgentDeployment resource, Context<AgentDeployment> context) throws Exception {
+    public UpdateControl<AgentDeployment> reconcile(AgentDeployment resource, Context<AgentDeployment> context) {
         var agentEnvironment = AgentResourceUtils.getReferencedAgentEnvironment(context.getClient(), resource).orElseThrow();
         AgentDeployment patch = new AgentDeployment();
         patch.getMetadata().setNamespace(resource.getMetadata().getNamespace());
