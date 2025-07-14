@@ -23,7 +23,7 @@ import org.springframework.stereotype.Component;
 })
 public class AgentDeploymentReconciler implements Reconciler<AgentDeployment>, Cleaner<AgentDeployment> {
 
-    public static final String SELECTOR = "managed-by-agent-deployment-reconciler";
+    public static final String SELECTOR = "fusion.tuna.ai/managed-by-ad";
 
     @Override
     public DeleteControl cleanup(AgentDeployment resource, Context<AgentDeployment> context) {

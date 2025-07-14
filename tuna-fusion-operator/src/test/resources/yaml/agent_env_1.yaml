@@ -2,19 +2,27 @@ apiVersion: fusion.tuna.ai/v1
 kind: AgentEnvironment
 metadata:
   name: env1
-  namespace: tuna-fission
+  namespace: tuna-fusion
 spec:
-  engineType: Fission
-  engineOptions:
-    fission:
-      builderImage: ghcr.io/fission/python-fastapi-builder
+  driver:
+    type: PodPool
+    podPoolSpec:
+      archivePvcName: archive-pvc
+      buildScript: |-
+        set -e
+        set -x
+        echo "Pretend to be busy..."
+        sleep 120
+      builderImage: busybox:latest
       poolSize: 3
-      runtimeImage: ghcr.io/fission/python-fastapi-env
-  buildRecipe:
-    buildScript: |-
-      set -e
-      set -x
-      echo "Pretend to be busy..."
-      sleep 120
-    builderImage: busybox:latest
+      runtimePodSpec:
+        containers:
+          - image: busybox:latest
+            command:
+              - top
+
+  endpoint:
+    externalHost: localhost:8802
+    protocol: http
+
 

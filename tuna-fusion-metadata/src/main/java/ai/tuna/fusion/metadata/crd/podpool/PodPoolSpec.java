@@ -2,6 +2,7 @@ package ai.tuna.fusion.metadata.crd.podpool;
 
 import io.fabric8.generator.annotation.Min;
 import io.fabric8.generator.annotation.Required;
+import io.fabric8.generator.annotation.ValidationRule;
 import io.fabric8.kubernetes.api.model.PodSpec;
 import lombok.Data;
 
@@ -9,8 +10,8 @@ import lombok.Data;
  * @author robinqu
  */
 @Data
+@ValidationRule(value = "has(self.runtimePodSpec) || has(self.runtimeImage)")
 public class PodPoolSpec {
-    @Required
     private String runtimeImage;
     @Required
     private String builderImage;
@@ -26,16 +27,5 @@ public class PodPoolSpec {
 
     @Required
     private String archivePvcName;
-
-
-    @Data
-    public static class Endpoint {
-        @Required
-        String protocol = "https";
-        @Required
-        String externalHost;
-    }
-    @Required
-    private Endpoint endpoint;
 
 }

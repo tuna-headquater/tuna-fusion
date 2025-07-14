@@ -14,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -28,7 +29,7 @@ import java.util.concurrent.TimeUnit;
 })
 public class PodPoolReconciler implements Reconciler<PodPool>, Cleaner<PodPool> {
 
-    public static final String SELECTOR = "managed-by-pod-pool-reconciler";
+    public static final String SELECTOR = "fusion.tuna.ai/managed-by-pp";
 
     @Override
     public DeleteControl cleanup(PodPool resource, Context<PodPool> context)  {
@@ -47,7 +48,7 @@ public class PodPoolReconciler implements Reconciler<PodPool>, Cleaner<PodPool> 
         var podPoolStatus = new PodPoolStatus();
         podPoolStatus.setDeploymentName(PodPoolResourceUtils.getPodPoolDeploymentName(resource));
         podPoolStatus.setGenericPodSelectors(PodPoolResourceUtils.computeGenericPodSelectors(resource));
-        podPoolStatus.setAvailablePods(deployment.getStatus().getAvailableReplicas());
+        podPoolStatus.setAvailablePods(Optional.ofNullable(deployment.getStatus().getAvailableReplicas()).orElse(0));
         podPoolStatus.setHeadlessServiceName(PodPoolResourceUtils.computePodPoolServiceName(resource));
         var podPoolUpdate = new PodPool();
         podPoolUpdate.setStatus(podPoolStatus);
@@ -56,7 +57,6 @@ public class PodPoolReconciler implements Reconciler<PodPool>, Cleaner<PodPool> 
         return UpdateControl.patchStatus(podPoolUpdate)
                 .rescheduleAfter(10, TimeUnit.SECONDS);
     }
-
 
     private static final long TTL_IN_SECONDS_FOR_SPECIALIZED_POD = 60 * 60 * 24;
     private void cleanupOrphanPods(PodPool resource, Context<PodPool> context) {

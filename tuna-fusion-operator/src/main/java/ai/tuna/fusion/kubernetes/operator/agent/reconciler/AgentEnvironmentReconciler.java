@@ -25,7 +25,7 @@ import org.springframework.stereotype.Component;
 @ControllerConfiguration
 public class AgentEnvironmentReconciler implements Reconciler<AgentEnvironment>, Cleaner<AgentEnvironment> {
 
-    public static final String SELECTOR = "managed-by-agent-environment-reconciler";
+    public static final String SELECTOR = "fusion.tuna.ai/managed-by-ae";
 
     @Override
     public DeleteControl cleanup(AgentEnvironment resource, Context<AgentEnvironment> context) {

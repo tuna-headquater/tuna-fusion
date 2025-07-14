@@ -39,4 +39,15 @@ public class AgentEnvironmentSpec {
     @ValidationRule(value = "has(self.podPoolSpec) || has(self.awsLambdaSpec) || has(self.alibabaCloudFunctionComputeSpec)", message = "driver must be included in resource definition.")
     private DriverSpec driver;
 
+    @Data
+    public static class Endpoint {
+        @Required
+        String protocol = "https";
+        @Required
+        String externalHost;
+    }
+    @Required
+    private Endpoint endpoint;
+
+
 }

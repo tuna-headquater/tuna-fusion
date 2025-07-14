@@ -40,16 +40,6 @@ spec:
                         type: "string"
                       builderPodServiceAccountName:
                         type: "string"
-                      endpoint:
-                        properties:
-                          externalHost:
-                            type: "string"
-                          protocol:
-                            type: "string"
-                        required:
-                        - "externalHost"
-                        - "protocol"
-                        type: "object"
                       poolSize:
                         minimum: 1.0
                         type: "integer"
@@ -2943,10 +2933,10 @@ spec:
                     - "archivePvcName"
                     - "buildScript"
                     - "builderImage"
-                    - "endpoint"
                     - "poolSize"
-                    - "runtimeImage"
                     type: "object"
+                    x-kubernetes-validations:
+                    - rule: "has(self.runtimePodSpec) || has(self.runtimeImage)"
                   type:
                     enum:
                     - "AlibabaCloudFunctionCompute"
@@ -2959,8 +2949,19 @@ spec:
                 x-kubernetes-validations:
                 - message: "driver must be included in resource definition."
                   rule: "has(self.podPoolSpec) || has(self.awsLambdaSpec) || has(self.alibabaCloudFunctionComputeSpec)"
+              endpoint:
+                properties:
+                  externalHost:
+                    type: "string"
+                  protocol:
+                    type: "string"
+                required:
+                - "externalHost"
+                - "protocol"
+                type: "object"
             required:
             - "driver"
+            - "endpoint"
             type: "object"
           status:
             properties:

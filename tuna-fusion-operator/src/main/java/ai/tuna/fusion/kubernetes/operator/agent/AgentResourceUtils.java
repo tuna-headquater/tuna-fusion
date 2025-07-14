@@ -75,7 +75,7 @@ public class AgentResourceUtils {
 
     private static final String AGENT_EXECUTOR_URL_TEMPLATE = "${endpointProtocol}://${endpointHost}/${namespace}/${agentCatalogueName}/${agentDeploymentName}";
     public static  String agentExternalUrl(AgentDeployment agentDeployment, AgentEnvironment agentEnvironment) {
-        var endpoint = agentEnvironment.getSpec().getDriver().getPodPoolSpec().getEndpoint();
+        var endpoint = agentEnvironment.getSpec().getEndpoint();
         var substitutor = new StringSubstitutor(Map.of(
                 "endpointProtocol", endpoint.getProtocol(),
                 "endpointHost", endpoint.getExternalHost(),
@@ -85,8 +85,5 @@ public class AgentResourceUtils {
         ));
         return substitutor.replace(AGENT_EXECUTOR_URL_TEMPLATE);
     }
-
-
-
 
 }

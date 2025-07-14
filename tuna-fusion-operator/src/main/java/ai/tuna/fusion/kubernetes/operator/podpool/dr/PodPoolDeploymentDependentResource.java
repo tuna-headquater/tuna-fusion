@@ -11,7 +11,6 @@ import io.javaoperatorsdk.operator.api.reconciler.Context;
 import io.javaoperatorsdk.operator.processing.dependent.kubernetes.CRUDKubernetesDependentResource;
 import io.javaoperatorsdk.operator.processing.dependent.kubernetes.KubernetesDependent;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 
 import java.util.Arrays;
 import java.util.Optional;
@@ -100,7 +99,7 @@ public class PodPoolDeploymentDependentResource extends CRUDKubernetesDependentR
         return new PodSpecBuilder()
                 .withServiceAccountName(podPool.getSpec().getRuntimePodServiceAccountName())
                 .addNewContainer()
-                .withName(podPool.getMetadata().getName() + "-")
+                .withName(podPool.getMetadata().getName() + "-container")
                 .withImage(podPool.getSpec().getRuntimeImage())
                 .endContainer()
                 .build();

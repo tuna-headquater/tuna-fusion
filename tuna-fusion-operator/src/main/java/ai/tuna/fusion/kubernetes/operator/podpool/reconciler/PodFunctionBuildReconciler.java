@@ -33,7 +33,7 @@ import static ai.tuna.fusion.metadata.crd.podpool.PodFunctionBuildStatus.Phase.S
         @Dependent(type = PodFunctionBuildJobDependentResource.class, reconcilePrecondition = PodFunctionBuildJobDependentResource.IsJobRequiredCondition.class),
 })
 public class PodFunctionBuildReconciler implements Reconciler<PodFunctionBuild>, Cleaner<PodFunctionBuild> {
-    public static final String SELECTOR = "managed-by-pod-function-build-reconciler";
+    public static final String SELECTOR = "fusion.tuna.ai/managed-by-pfb";
 
     @Override
     public DeleteControl cleanup(PodFunctionBuild resource, Context<PodFunctionBuild> context) {
