@@ -44,7 +44,6 @@ public class AgentDeploymentReconciler implements Reconciler<AgentDeployment>, C
                     ifPresent(podFunction -> {
                         var podFunctionInfo = new AgentDeploymentStatus.PodFunctionInfo();
                         podFunctionInfo.setFunctionName(podFunction.getMetadata().getName());
-                        podFunctionInfo.setExternalUrl(AgentResourceUtils.agentExternalUrl(resource, agentEnvironment));
                         status.setFunction(podFunctionInfo);
                     });
         }

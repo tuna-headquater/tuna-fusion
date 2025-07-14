@@ -1,8 +1,8 @@
 package ai.tuna.fusion.kubernetes.operator.podpool.reconciler;
 
-import ai.tuna.fusion.kubernetes.operator.agent.AgentResourceUtils;
 import ai.tuna.fusion.kubernetes.operator.podpool.PodPoolResourceUtils;
 import ai.tuna.fusion.kubernetes.operator.podpool.dr.PodPoolDeploymentDependentResource;
+import ai.tuna.fusion.kubernetes.operator.podpool.dr.PodPoolServiceDependentResource;
 import ai.tuna.fusion.metadata.crd.ResourceUtils;
 import ai.tuna.fusion.metadata.crd.podpool.PodPool;
 import ai.tuna.fusion.metadata.crd.podpool.PodPoolStatus;
@@ -23,7 +23,8 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 @ControllerConfiguration
 @Workflow(dependents = {
-        @Dependent(type = PodPoolDeploymentDependentResource.class)
+        @Dependent(type = PodPoolDeploymentDependentResource.class),
+        @Dependent(type = PodPoolServiceDependentResource.class)
 })
 public class PodPoolReconciler implements Reconciler<PodPool>, Cleaner<PodPool> {
 
@@ -43,23 +44,24 @@ public class PodPoolReconciler implements Reconciler<PodPool>, Cleaner<PodPool> 
         }
         cleanupOrphanPods(resource, context);
         var deployment = deploy.get();
-        var orphanPods = PodPoolResourceUtils.listSpecializedPods(resource, context.getClient());
         var podPoolStatus = new PodPoolStatus();
         podPoolStatus.setDeploymentName(PodPoolResourceUtils.getPodPoolDeploymentName(resource));
         podPoolStatus.setGenericPodSelectors(PodPoolResourceUtils.computeGenericPodSelectors(resource));
         podPoolStatus.setAvailablePods(deployment.getStatus().getAvailableReplicas());
-        podPoolStatus.setOrphanPods(orphanPods.size());
+        podPoolStatus.setHeadlessServiceName(PodPoolResourceUtils.computePodPoolServiceName(resource));
         var podPoolUpdate = new PodPool();
         podPoolUpdate.setStatus(podPoolStatus);
         podPoolUpdate.getMetadata().setName(resource.getMetadata().getName());
         podPoolUpdate.getMetadata().setNamespace(resource.getMetadata().getNamespace());
         return UpdateControl.patchStatus(podPoolUpdate)
-                .rescheduleAfter(5, TimeUnit.SECONDS);
+                .rescheduleAfter(10, TimeUnit.SECONDS);
     }
+
 
     private static final long TTL_IN_SECONDS_FOR_SPECIALIZED_POD = 60 * 60 * 24;
     private void cleanupOrphanPods(PodPool resource, Context<PodPool> context) {
         var specializedPods = PodPoolResourceUtils.listSpecializedPods(resource, context.getClient());
+        var deletedCount = 0;
         for (var pod : specializedPods) {
             try {
                 var creationTime = Instant.parse(pod.getMetadata().getCreationTimestamp());
@@ -67,11 +69,11 @@ public class PodPoolReconciler implements Reconciler<PodPool>, Cleaner<PodPool> 
                 if (isOrphan) {
                     log.debug("Found orphan pod for PodPool {}: {}", resource.getMetadata().getName(), pod.getMetadata().getName());
                     Preconditions.checkState(ResourceUtils.deleteResource(context.getClient(), pod.getMetadata().getNamespace(), pod.getMetadata().getName(), Pod.class), "Should have pod %s deleted", pod.getMetadata().getName());
+                    deletedCount++;
                 }
             } catch (Exception e) {
                 log.error("Exception occurred during checking specialized pod {}: {}", pod, e.getMessage(), e);
             }
-
         }
     }
 }

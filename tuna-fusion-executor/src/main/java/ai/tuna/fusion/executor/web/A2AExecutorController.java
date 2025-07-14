@@ -3,11 +3,10 @@ package ai.tuna.fusion.executor.web;
 import ai.tuna.fusion.executor.driver.podpool.FunctionPodManager;
 import ai.tuna.fusion.executor.driver.podpool.impl.FunctionPodDisposalException;
 import ai.tuna.fusion.executor.driver.podpool.impl.FunctionPodOperationException;
+import ai.tuna.fusion.metadata.crd.ResourceUtils;
 import ai.tuna.fusion.metadata.crd.agent.AgentEnvironmentSpec;
 import ai.tuna.fusion.metadata.informer.AgentResources;
 import ai.tuna.fusion.metadata.informer.PodPoolResources;
-import io.fabric8.kubernetes.api.model.Pod;
-import io.fabric8.kubernetes.api.model.Service;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.gateway.webflux.ProxyExchange;
 import org.springframework.http.ResponseEntity;
@@ -38,7 +37,7 @@ public class A2AExecutorController {
         this.agentResources = agentResources;
     }
 
-    @RequestMapping("/agent/{namespace}/{agentCatalogueName}/{agentDeploymentName}/**")
+    @RequestMapping("/a2a/{namespace}/{agentCatalogueName}/{agentDeploymentName}/**")
     public Mono<ResponseEntity<byte[]>> forward(
             @PathVariable String namespace,
             @PathVariable String agentCatalogueName,
@@ -55,9 +54,9 @@ public class A2AExecutorController {
 
         var pod = functionPodManager.specializePod(podFunction, podPool);
         String requestUri = proxy.path();
-        String matchedPathPrefix = "/agents/" + namespace + "/" + agentCatalogueName + "/" + agentDeploymentName;
+        String matchedPathPrefix = "/a2a/" + namespace + "/" + agentCatalogueName + "/" + agentDeploymentName;
         String trailingPath = requestUri.substring(requestUri.indexOf(matchedPathPrefix) + matchedPathPrefix.length());
-        var uri = getPodUri(pod, headlessSvc, trailingPath);
+        var uri = ResourceUtils.getPodUri(pod, headlessSvc, trailingPath);
         log.debug("Forward request to Pod: {}", uri);
         return proxy.uri(trailingPath).forward().doFinally(signalType -> {
             try {
@@ -67,18 +66,5 @@ public class A2AExecutorController {
             }
         });
     }
-
-    @SuppressWarnings("HttpUrlsUsage")
-    private static final String POD_HTTP_URL = "http://%s.%s.%s.svc.cluster.local:%s/%s";
-    private String getPodUri(Pod pod, Service service, String subPath) {
-        return String.format(POD_HTTP_URL,
-                pod.getMetadata().getName(),
-                service.getMetadata().getName(),
-                pod.getMetadata().getNamespace(),
-                pod.getSpec().getContainers().getFirst().getPorts().getFirst().getContainerPort(),
-                subPath);
-    }
-
-
 
 }

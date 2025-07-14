@@ -10,7 +10,6 @@ public class AgentDeploymentStatus {
     @Data
     public static class PodFunctionInfo {
         private String functionName;
-        private String externalUrl;
     }
 
     @Data

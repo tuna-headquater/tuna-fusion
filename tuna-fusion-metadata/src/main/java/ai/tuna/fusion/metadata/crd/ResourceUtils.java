@@ -1,6 +1,8 @@
 package ai.tuna.fusion.metadata.crd;
 
 import io.fabric8.kubernetes.api.model.HasMetadata;
+import io.fabric8.kubernetes.api.model.Pod;
+import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.informers.SharedIndexInformer;
 import io.fabric8.kubernetes.client.informers.cache.Cache;
@@ -30,5 +32,15 @@ public class ResourceUtils {
         return Optional.ofNullable(informer.getStore().getByKey(Cache.namespaceKeyFunc(ns, name)));
     }
 
+    @SuppressWarnings("HttpUrlsUsage")
+    private static final String POD_HTTP_URL = "http://%s.%s.%s.svc.cluster.local/%s";
+    public static String getPodUri(Pod pod, Service service, String subPath) {
+        return String.format(POD_HTTP_URL,
+                pod.getMetadata().getName(),
+                service.getMetadata().getName(),
+                pod.getMetadata().getNamespace(),
+                subPath
+        );
+    }
 
 }

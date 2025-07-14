@@ -31,8 +31,6 @@ import static ai.tuna.fusion.metadata.crd.podpool.PodPool.*;
 @Component
 public class FunctionPodResolverImpl implements FunctionPodManager {
 
-    private static final long RESYNC_PERIOD = 10 * 60 * 1000;
-
     private final WebClient webClient;
     private final KubernetesClient kubernetesClient;
     private final PodPoolResources podPoolResources;
@@ -42,7 +40,6 @@ public class FunctionPodResolverImpl implements FunctionPodManager {
         this.podPoolResources = podPoolResources;
         this.webClient = WebClient.create();
         this.kubernetesClient = kubernetesClient;
-
     }
 
     @Override
@@ -51,13 +48,14 @@ public class FunctionPodResolverImpl implements FunctionPodManager {
         var deployArchivePath = Optional.ofNullable(function.getStatus())
                 .map(PodFunctionStatus::getEffectiveBuild)
                 .map(PodFunctionStatus.BuildInfo::getStatus)
-                .map(PodFunctionBuildStatus::getDeployArchivePath).orElseThrow(()-> FunctionPodOperationException.of(podPool, function, "No effective build found for pod function " + function.getMetadata().getName()));
+                .map(PodFunctionBuildStatus::getDeployArchiveSubPath).orElseThrow(()-> FunctionPodOperationException.of(podPool, function, "No effective build found for pod function " + function.getMetadata().getName()));
         var request = PodSpecializeRequest.builder()
                 .filepath(deployArchivePath)
                 .functionName(function.getSpec().getEntrypoint())
                 .build();
+        var headlessService = podPoolResources.queryPodPoolService(podPool.getMetadata().getNamespace(), podPool.getMetadata().getName()).orElseThrow();
         var responseSpec = webClient.post()
-                .uri("/specialize")
+                .uri(ResourceUtils.getPodUri(pod, headlessService, "/specialize"))
                 .bodyValue(request)
                 .retrieve();
         var response = responseSpec.toEntity(String.class)

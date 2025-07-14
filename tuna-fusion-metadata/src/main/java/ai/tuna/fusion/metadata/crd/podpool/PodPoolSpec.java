@@ -15,8 +15,6 @@ public class PodPoolSpec {
     private String builderImage;
     @Required
     private int poolSize = 3;
-    @Required
-    private String archivePvcCapacity = "10Gi";
     private PodSpec runtimePodSpec;
     private String runtimePodServiceAccountName;
     private String builderPodServiceAccountName;

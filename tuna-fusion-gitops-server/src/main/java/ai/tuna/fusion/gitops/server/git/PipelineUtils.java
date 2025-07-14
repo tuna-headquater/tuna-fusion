@@ -1,7 +1,6 @@
 package ai.tuna.fusion.gitops.server.git;
 
 import ai.tuna.fusion.metadata.crd.agent.AgentDeployment;
-import ai.tuna.fusion.metadata.crd.agent.AgentEnvironment;
 import ai.tuna.fusion.metadata.crd.podpool.PodFunction;
 import ai.tuna.fusion.metadata.crd.podpool.PodFunctionBuild;
 import ai.tuna.fusion.metadata.crd.podpool.PodFunctionBuildSpec;
@@ -58,7 +57,7 @@ public class PipelineUtils {
             String sourceArchivePath) {
         PodFunctionBuild podFunctionBuild = new PodFunctionBuild();
         PodFunctionBuildSpec spec = new PodFunctionBuildSpec();
-        spec.setSourceArchivePath(sourceArchivePath);
+        spec.setSourceArchiveSubPath(sourceArchivePath);
         podFunctionBuild.setSpec(spec);
 
         podFunctionBuild.getMetadata().setName("%s-build-%s".formatted(agentDeployment.getMetadata().getName(), Instant.now().getEpochSecond()));

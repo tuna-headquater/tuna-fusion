@@ -60,8 +60,8 @@ public class PodFunctionBuildReconciler implements Reconciler<PodFunctionBuild>,
             var podFunctionBuildPatch = new PodFunctionBuild();
             podFunctionBuildPatch.getMetadata().setName(resource.getMetadata().getName());
             podFunctionBuildPatch.getMetadata().setNamespace(resource.getMetadata().getNamespace());
-
             var status = new PodFunctionBuildStatus();
+            status.setDeployArchiveSubPath(PodPoolResourceUtils.computeDeployArchiveSubPath(resource));
             podFunctionBuildPatch.setStatus(status);
             if(Optional.ofNullable(jobStatus.getSucceeded()).orElse(0) >= jobResource.getSpec().getCompletions()) {
                 status.setPhase(Succeeded);

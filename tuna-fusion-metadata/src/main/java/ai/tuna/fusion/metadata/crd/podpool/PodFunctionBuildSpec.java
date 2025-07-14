@@ -1,17 +1,15 @@
 package ai.tuna.fusion.metadata.crd.podpool;
 
-import lombok.*;
+import io.fabric8.generator.annotation.Required;
+import io.fabric8.kubernetes.api.model.PodSpec;
+import lombok.Data;
 
 /**
  * @author robinqu
  */
 @Data
 public class PodFunctionBuildSpec {
-    private String sourceArchivePath;
-
-
-//    private String serviceAccountName;
-//    private String builderImage;
-//    private String buildScript;
-//    private String archivePvcName;
+    @Required
+    private String sourceArchiveSubPath;
+    private PodSpec overrideJobPodSpec;
 }

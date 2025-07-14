@@ -73,30 +73,17 @@ public class AgentResourceUtils {
     }
 
 
-    public static String routeUrl(AgentDeployment agentDeployment) {
-        var substitutor = new StringSubstitutor(Map.of(
-                "namespace", agentDeployment.getMetadata().getNamespace(),
-                "agentCatalogueName", AgentResourceUtils.getReferenceAgentCatalogueName(agentDeployment),
-                "agentDeploymentName", agentDeployment.getMetadata().getName(),
-                "agentEnvironmentName", agentDeployment.getSpec().getEnvironmentName()
-        ));
-        var urlTemplate = agentDeployment.getSpec().getAgentCard().getUrl();
-        if (!urlTemplate.startsWith("/")) {
-            urlTemplate = "/" + urlTemplate;
-        }
-        return substitutor.replace(urlTemplate);
-    }
-
-
-    private static final String AGENT_URL_TEMPLATE = "${endpointProtocol}://${endpointHost}${routeUrl}";
+    private static final String AGENT_EXECUTOR_URL_TEMPLATE = "${endpointProtocol}://${endpointHost}/${namespace}/${agentCatalogueName}/${agentDeploymentName}";
     public static  String agentExternalUrl(AgentDeployment agentDeployment, AgentEnvironment agentEnvironment) {
         var endpoint = agentEnvironment.getSpec().getDriver().getPodPoolSpec().getEndpoint();
         var substitutor = new StringSubstitutor(Map.of(
                 "endpointProtocol", endpoint.getProtocol(),
                 "endpointHost", endpoint.getExternalHost(),
-                "routeUrl", routeUrl(agentDeployment)
+                "namespace", agentDeployment.getMetadata().getNamespace(),
+                "agentCatalogueName", AgentResourceUtils.getReferenceAgentCatalogueName(agentDeployment),
+                "agentDeploymentName", agentDeployment.getMetadata().getName()
         ));
-        return substitutor.replace(AGENT_URL_TEMPLATE);
+        return substitutor.replace(AGENT_EXECUTOR_URL_TEMPLATE);
     }
 
 

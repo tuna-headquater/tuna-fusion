@@ -15,8 +15,5 @@ public class PodFunctionSpec {
     private List<String> initCommands;
 
     @Required
-    private String routePrefix;
-
-    @Required
     private String entrypoint;
 }

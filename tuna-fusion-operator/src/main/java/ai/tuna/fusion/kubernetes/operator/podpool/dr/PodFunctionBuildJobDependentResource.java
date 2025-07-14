@@ -4,8 +4,10 @@ import ai.tuna.fusion.kubernetes.operator.podpool.PodPoolResourceUtils;
 import ai.tuna.fusion.kubernetes.operator.podpool.reconciler.PodFunctionBuildReconciler;
 import ai.tuna.fusion.metadata.crd.podpool.PodFunctionBuild;
 import ai.tuna.fusion.metadata.crd.podpool.PodFunctionBuildStatus;
+import ai.tuna.fusion.metadata.crd.podpool.PodPool;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.fabric8.kubernetes.api.model.EnvVar;
+import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.batch.v1.Job;
 import io.fabric8.kubernetes.api.model.batch.v1.JobBuilder;
 import io.javaoperatorsdk.operator.api.config.informer.Informer;
@@ -47,6 +49,14 @@ public class PodFunctionBuildJobDependentResource extends CRUDKubernetesDependen
                 .withName(jobName(primary))
                 .withNamespace(primary.getMetadata().getNamespace())
                 .addToLabels(PodFunctionBuildReconciler.SELECTOR, "true")
+                .addNewOwnerReference()
+                .withUid(primary.getMetadata().getUid())
+                .withApiVersion(HasMetadata.getApiVersion(PodFunctionBuild.class))
+                .withName(primary.getMetadata().getName())
+                .withKind(HasMetadata.getKind(PodFunctionBuild.class))
+                .withController(true)
+                .withBlockOwnerDeletion(false)
+                .endOwnerReference()
                 .endMetadata()
                 .withNewSpec()
                 .withTtlSecondsAfterFinished(60*60)
@@ -72,8 +82,9 @@ public class PodFunctionBuildJobDependentResource extends CRUDKubernetesDependen
                 .withCommand("sh", "/workspace/build.sh")
                 .addToEnv(
                         new EnvVar("AGENT_CARD_JSON_PATH", "/workspace/agent_card.json", null),
-                        new EnvVar("SOURCE_ARCHIVE_PATH", primary.getSpec().getSourceArchivePath(), null),
-                        new EnvVar("DEPLOY_ARCHIVE_PATH", primary.getSpec().getSourceArchivePath(), null),
+                        new EnvVar("ARCHIVE_ROOT_PATH", "/archive", null),
+                        new EnvVar("SOURCE_ARCHIVE_SUBPATH", primary.getSpec().getSourceArchiveSubPath(), null),
+                        new EnvVar("DEPLOY_ARCHIVE_SUBPATH", PodPoolResourceUtils.computeDeployArchiveSubPath(primary), null),
                         new EnvVar("FUNCTION_NAME", podFunction.getMetadata().getName(), null),
                         new EnvVar("POD_POOL", podPool.getMetadata().getName(), null),
                         new EnvVar("NAMESPACE", primary.getMetadata().getNamespace(), null)
@@ -109,9 +120,6 @@ public class PodFunctionBuildJobDependentResource extends CRUDKubernetesDependen
                 .endSpec()
                 .build();
     }
-
-
-
 
     private String jobName(PodFunctionBuild primary) {
         return String.format("build-%s", primary.getMetadata().getName());

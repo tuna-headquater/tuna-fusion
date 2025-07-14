@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.EnumNaming;
 import io.fabric8.generator.annotation.Required;
 import io.fabric8.generator.annotation.Size;
+import io.fabric8.generator.annotation.ValidationRule;
 import lombok.*;
 
 import java.util.List;
@@ -149,14 +150,7 @@ public class AgentCard {
     @Required
     private String description;
 
-    /**
-     * Definition of this field differs from that in A2A specification. As agent URL is dynamically generated, the complete URL cannot be determined at the time of writing AgentDeploymentCR.
-     * So it's designed to contain a relative URL template which can be used to generate the complete URL.
-     * Possible variables: agentCatalogName, agentDeploymentName, agentEnvironmentName, namespace
-     */
-    @Required
-    @Builder.Default
-    private String url = "/{namespace}/{agentCatalogueName}/{agentDeploymentName}";
+    private String url;
 
     private String iconUrl;
 

@@ -7,6 +7,7 @@ import ai.tuna.fusion.metadata.crd.podpool.PodFunctionBuild;
 import ai.tuna.fusion.metadata.crd.podpool.PodPool;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.Pod;
+import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import org.apache.commons.lang3.StringUtils;
@@ -59,6 +60,10 @@ public class PodPoolResourceUtils {
         );
     }
 
+    public static Map<String, String> computeServiceLabels(PodPool resource) {
+        return computeDeployLabels(resource);
+    }
+
     public static Optional<Deployment> getPodPoolDeployment(PodPool resource, KubernetesClient kubernetesClient) {
         return Optional.ofNullable(kubernetesClient.resources(Deployment.class)
                 .inNamespace(resource.getMetadata().getNamespace())
@@ -93,7 +98,6 @@ public class PodPoolResourceUtils {
         return AgentResourceUtils.getReferencedResourceName(build, PodFunction.class);
     }
 
-
     public static boolean isJobTerminalPhase(String phase) {
         return StringUtils.equals("Succeeded", phase) || StringUtils.equals("Failed", phase);
     }
@@ -102,6 +106,19 @@ public class PodPoolResourceUtils {
         return client.pods().inNamespace(ns)
                 .withName(podName)
                 .getLog(true);
+    }
+
+    public static String computePodPoolServiceName(PodPool res
+    ) {
+        return res.getMetadata().getName() + "-service";
+    }
+
+    public static String computeDeployArchiveSubPath(PodFunctionBuild resource) {
+        return "/deployments/" + resource.getMetadata().getUid();
+    }
+
+    public static String computeSourceArchiveSubPath(PodFunctionBuild resource) {
+        return "/sources/" + resource.getMetadata().getUid();
     }
 
 }

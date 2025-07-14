@@ -4,10 +4,7 @@ import ai.tuna.fusion.kubernetes.operator.podpool.PodPoolResourceUtils;
 import ai.tuna.fusion.kubernetes.operator.podpool.reconciler.PodPoolReconciler;
 import ai.tuna.fusion.metadata.crd.agent.AgentEnvironment;
 import ai.tuna.fusion.metadata.crd.podpool.PodPool;
-import io.fabric8.kubernetes.api.model.HasMetadata;
-import io.fabric8.kubernetes.api.model.PodSpec;
-import io.fabric8.kubernetes.api.model.VolumeBuilder;
-import io.fabric8.kubernetes.api.model.VolumeMountBuilder;
+import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
 import io.javaoperatorsdk.operator.api.config.informer.Informer;
@@ -17,6 +14,7 @@ import io.javaoperatorsdk.operator.processing.dependent.kubernetes.KubernetesDep
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
+import java.util.Arrays;
 import java.util.Optional;
 
 import static ai.tuna.fusion.kubernetes.operator.podpool.PodPoolResourceUtils.computeGenericPodSelectors;
@@ -45,26 +43,47 @@ public class PodPoolDeploymentDependentResource extends CRUDKubernetesDependentR
         }
 
         podSpec.getVolumes().add(new VolumeBuilder()
-                .withName("archive")
+                .withName("archive-volume")
                 .withNewPersistentVolumeClaim()
                 .withClaimName(PodPoolResourceUtils.getArchivePvcName(primary))
                 .endPersistentVolumeClaim()
                 .build());
-        podSpec.getContainers().getFirst().getVolumeMounts().add(new VolumeMountBuilder()
-                .withName("archive")
+
+        var container = podSpec.getContainers().getFirst();
+        container.getVolumeMounts().add(new VolumeMountBuilder()
+                .withName("archive-volume")
                 .withSubPath(primary.getMetadata().getName())
                 .withMountPath("/archive")
                 .build());
+        // clear ports for safety reasons
+        container.getPorts().clear();
+        // add http port
+        container.getPorts().add(new ContainerPortBuilder()
+                        .withContainerPort(PodPool.DEFAULT_RUNTIME_SERVICE_PORT)
+                        .withName("http")
+                        .withProtocol("TCP")
+                .build());
+        container.getEnv().addAll(Arrays.asList(
+                new EnvVarBuilder()
+                        .withName("RUNTIME_SERVICE_PORT")
+                        .withValue(String.valueOf(PodPool.DEFAULT_RUNTIME_SERVICE_PORT))
+                        .build(),
+                new EnvVarBuilder()
+                        .withName("ARCHIVE_ROOT_PATH")
+                        .withValue("/archive")
+                        .build()
+        ));
 
         return new DeploymentBuilder()
                 .withNewMetadata()
+                .addToLabels(PodPoolReconciler.SELECTOR, "true")
                 .withName(getPodPoolDeploymentName(primary))
                 .withNamespace(primary.getMetadata().getNamespace())
                 .addNewOwnerReference()
-                .withName(primary.getMetadata().getName())
-                .withKind(HasMetadata.getKind(AgentEnvironment.class))
-                .withApiVersion(HasMetadata.getApiVersion(AgentEnvironment.class))
                 .withUid(primary.getMetadata().getUid())
+                .withApiVersion(HasMetadata.getApiVersion(PodPool.class))
+                .withName(primary.getMetadata().getName())
+                .withKind(HasMetadata.getKind(PodPool.class))
                 .withController(true)
                 .withBlockOwnerDeletion(false)
                 .endOwnerReference()

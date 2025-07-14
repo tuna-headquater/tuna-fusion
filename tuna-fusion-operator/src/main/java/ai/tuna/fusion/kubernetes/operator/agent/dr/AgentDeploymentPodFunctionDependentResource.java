@@ -55,7 +55,7 @@ public class AgentDeploymentPodFunctionDependentResource extends CRUDKubernetesD
         podFunction.getMetadata().setNamespace(primary.getMetadata().getNamespace());
         var podFunctionSpec = new PodFunctionSpec();
         podFunction.setSpec(podFunctionSpec);
-        podFunctionSpec.setRoutePrefix(AgentResourceUtils.routeUrl(primary));
+//        podFunctionSpec.setRoutePrefix(AgentResourceUtils.routeUrl(primary));
         podFunctionSpec.setEntrypoint(primary.getSpec().getEntrypoint());
         podFunctionSpec.setInitCommands(renderInitContainerScript(primary, agentEnvironment));
         return podFunction;
