@@ -2,7 +2,6 @@ package ai.tuna.fusion.executor.driver.podpool.impl;
 
 import ai.tuna.fusion.metadata.crd.podpool.PodFunction;
 import ai.tuna.fusion.metadata.crd.podpool.PodPool;
-import io.fabric8.kubernetes.api.model.Pod;
 import lombok.Getter;
 
 /**

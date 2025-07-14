@@ -33,7 +33,7 @@ public class CustomRepositoryResolver implements RepositoryResolver<HttpServletR
     }
 
     @Override
-    public Repository open(HttpServletRequest req, String name) throws RepositoryNotFoundException, ServiceNotAuthorizedException, ServiceNotEnabledException, ServiceMayNotContinueException {
+    public Repository open(HttpServletRequest req, String name) throws RepositoryNotFoundException, ServiceNotEnabledException {
         if (isUnreasonableName(name)) {
             throw new RepositoryNotFoundException(name);
         }

@@ -28,12 +28,12 @@ public class AgentEnvironmentReconciler implements Reconciler<AgentEnvironment>,
     public static final String SELECTOR = "managed-by-agent-environment-reconciler";
 
     @Override
-    public DeleteControl cleanup(AgentEnvironment resource, Context<AgentEnvironment> context) throws Exception {
+    public DeleteControl cleanup(AgentEnvironment resource, Context<AgentEnvironment> context) {
         return DeleteControl.defaultDelete();
     }
 
     @Override
-    public UpdateControl<AgentEnvironment> reconcile(AgentEnvironment resource, Context<AgentEnvironment> context) throws Exception {
+    public UpdateControl<AgentEnvironment> reconcile(AgentEnvironment resource, Context<AgentEnvironment> context) {
         if (resource.getSpec().getDriver().getType() != AgentEnvironmentSpec.DriverType.PodPool) {
             throw new IllegalArgumentException("Only PodPool is supported now");
         }

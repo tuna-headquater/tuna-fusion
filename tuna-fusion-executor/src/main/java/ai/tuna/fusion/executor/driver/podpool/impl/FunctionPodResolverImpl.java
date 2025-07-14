@@ -7,14 +7,12 @@ import ai.tuna.fusion.metadata.crd.podpool.PodFunctionBuildStatus;
 import ai.tuna.fusion.metadata.crd.podpool.PodFunctionStatus;
 import ai.tuna.fusion.metadata.crd.podpool.PodPool;
 import ai.tuna.fusion.metadata.informer.PodPoolResources;
-import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.dsl.base.PatchContext;
 import io.fabric8.kubernetes.client.dsl.base.PatchType;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -22,7 +20,8 @@ import org.springframework.web.reactive.function.client.WebClient;
 import java.time.Duration;
 import java.util.Optional;
 
-import static ai.tuna.fusion.metadata.crd.podpool.PodPool.*;
+import static ai.tuna.fusion.metadata.crd.podpool.PodPool.GENERIC_POD_LABEL_NAME;
+import static ai.tuna.fusion.metadata.crd.podpool.PodPool.SPECIALIZED_POD_LABEL_VALUE;
 
 /**
  * @author robinqu

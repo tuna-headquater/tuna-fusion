@@ -1,6 +1,5 @@
 package ai.tuna.fusion.metadata.crd.podpool;
 
-import io.fabric8.generator.annotation.Required;
 import lombok.Data;
 
 /**

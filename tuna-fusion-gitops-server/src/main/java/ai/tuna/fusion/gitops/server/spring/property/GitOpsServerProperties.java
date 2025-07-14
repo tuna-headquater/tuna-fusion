@@ -3,7 +3,6 @@ package ai.tuna.fusion.gitops.server.spring.property;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;

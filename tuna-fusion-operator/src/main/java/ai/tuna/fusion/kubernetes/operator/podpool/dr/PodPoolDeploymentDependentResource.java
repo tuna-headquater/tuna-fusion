@@ -44,7 +44,7 @@ public class PodPoolDeploymentDependentResource extends CRUDKubernetesDependentR
         podSpec.getVolumes().add(new VolumeBuilder()
                 .withName("archive-volume")
                 .withNewPersistentVolumeClaim()
-                .withClaimName(PodPoolResourceUtils.getArchivePvcName(primary))
+                .withClaimName(primary.getSpec().getArchivePvcName())
                 .endPersistentVolumeClaim()
                 .build());
 

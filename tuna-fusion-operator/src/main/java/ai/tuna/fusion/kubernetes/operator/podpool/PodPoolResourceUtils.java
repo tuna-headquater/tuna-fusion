@@ -26,10 +26,6 @@ public class PodPoolResourceUtils {
         return resource.getMetadata().getName() + "-deploy";
     }
 
-    public static String getArchivePvcName(PodPool resource) {
-        return resource.getMetadata().getName() + "-archive-pvc";
-    }
-
 
     public static Map<String, String> computeGenericPodSelectors(PodPool resource) {
         return Map.of(

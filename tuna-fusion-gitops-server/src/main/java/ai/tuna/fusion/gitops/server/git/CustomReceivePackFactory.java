@@ -42,7 +42,7 @@ public class CustomReceivePackFactory implements ReceivePackFactory<HttpServletR
     }
 
     @Override
-    public ReceivePack create(HttpServletRequest req, Repository db) throws ServiceNotEnabledException, ServiceNotAuthorizedException {
+    public ReceivePack create(HttpServletRequest req, Repository db) throws ServiceNotEnabledException {
         GitRequestContextUtil.initializeRequestAttributes(kubernetesClient, req);
         var agentDeployment = GitRequestContextUtil.getAgentDeployment().orElseThrow(()-> new ServiceNotEnabledException("AgentDeployment is not associated with this Git repository URL."));
         var agentCatalogue = GitRequestContextUtil.getAgentCatalogue().orElseThrow(()-> new ServiceNotEnabledException("AgentCatalogue is associated with this Git repository URL."));
@@ -76,8 +76,7 @@ public class CustomReceivePackFactory implements ReceivePackFactory<HttpServletR
             logInfo(receivePack, "📦 Snapshot for repository is created successfully: %s", destinationPath);
 
             var functionBuild = PipelineUtils.createAgentFunctionBuild(kubernetesClient, agentDeployment, podFunction, sourceArchiveSubPath);
-
-            logInfo(receivePack, "💾 AgentBuild CR is created successfully: %s", functionBuild.getMetadata().getName());
+            logInfo(receivePack, "💾 FunctionBuild CR is created successfully: %s", functionBuild.getMetadata().getName());
 
             var podInfo = PipelineUtils.waitForJobPod(kubernetesClient, functionBuild.getMetadata().getName(), functionBuild.getMetadata().getNamespace());
             logInfo(receivePack, "⚒️ Job pod is created successfully: %s", podInfo.getPodName());
@@ -88,14 +87,14 @@ public class CustomReceivePackFactory implements ReceivePackFactory<HttpServletR
                     line -> logInfo(receivePack, line)
             );
 
-            var finalPhase = PipelineUtils.getAgentBuild(kubernetesClient, functionBuild.getMetadata().getNamespace(), functionBuild.getMetadata().getName())
+            var finalPhase = PipelineUtils.getFunctionBuild(kubernetesClient, functionBuild.getMetadata().getNamespace(), functionBuild.getMetadata().getName())
                     .map(PodFunctionBuild::getStatus)
                     .map(PodFunctionBuildStatus::getPhase)
-                    .orElseThrow(()-> new ResourceNotFoundException("AgentBuild is not found: name=%s,ns=%s".formatted(functionBuild.getMetadata().getName(), functionBuild.getMetadata().getNamespace())));
+                    .orElseThrow(()-> new ResourceNotFoundException("FunctionBuild is not found: name=%s,ns=%s".formatted(functionBuild.getMetadata().getName(), functionBuild.getMetadata().getNamespace())));
             if (finalPhase == PodFunctionBuildStatus.Phase.Succeeded) {
-                logInfo(receivePack, "✅ AgentBuild CR is completed successfully");
+                logInfo(receivePack, "✅ FunctionBuild CR is completed successfully");
             } else {
-                throw new RuntimeException("AgentBuild is in Failed Phase. Please check logs.");
+                throw new RuntimeException("FunctionBuild is in Failed Phase. Please check logs.");
             }
         } catch (Exception e) {
             logError(receivePack, e, "❌ Exception occurred: %s", e.getMessage());

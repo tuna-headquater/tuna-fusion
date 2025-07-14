@@ -20,19 +20,16 @@ import org.eclipse.jgit.transport.ReceivePack;
 import org.eclipse.jgit.treewalk.TreeWalk;
 
 import java.io.*;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.util.Collection;
-import java.util.Date;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
-import java.util.zip.ZipOutputStream;
 
 /**
  * @author robinqu
@@ -43,7 +40,7 @@ public class PipelineUtils {
             new SimpleDateFormat("yyyyMMdd-HHmmss");
 
 
-    public static Optional<PodFunctionBuild> getAgentBuild(KubernetesClient client, String ns, String name) {
+    public static Optional<PodFunctionBuild> getFunctionBuild(KubernetesClient client, String ns, String name) {
         return Optional.ofNullable(client.resources(PodFunctionBuild.class)
                 .inNamespace(ns)
                 .withName(name)
@@ -148,8 +145,63 @@ public class PipelineUtils {
     }
 
 
+    /**
+     * Create snapshot for repository contained by `receivePack` with updates from `commands`. `defaultBranch` limits the branches to be considered.
+     */
     public static void saveRepoToDirectory(Path destinationPath, ReceivePack receivePack, Collection<ReceiveCommand> commands, String defaultBranch) throws IOException {
+        Repository repo = receivePack.getRepository();
+        log.info("Creating repository snapshot at: {}", destinationPath.toString());
 
+        try (RevWalk revWalk = new RevWalk(repo)) {
+            var filteredCommands = commands.stream()
+                    .filter(cmd -> cmd.getType() == ReceiveCommand.Type.UPDATE || cmd.getType() == ReceiveCommand.Type.CREATE)
+                    .filter(cmd -> StringUtils.equals(cmd.getRefName(), defaultBranch))
+                    .filter(cmd -> !cmd.getNewId().equals(ObjectId.zeroId()))
+                    .toList();
+
+            if (filteredCommands.isEmpty()) {
+                throw new IllegalStateException("No valid commands for default branch found");
+            }
+            log.info("{} commands selected for repo {}", filteredCommands.size(), repo.getDirectory());
+
+            // Use the first valid command's commit
+            ReceiveCommand cmd = filteredCommands.getFirst();
+            ObjectId commitId = cmd.getNewId();
+            RevCommit commit = revWalk.parseCommit(commitId);
+            RevTree tree = commit.getTree();
+            log.debug("Using tree from commit: {}", commitId.getName());
+
+            // Create a new TreeWalk to traverse the repository tree
+            try (TreeWalk treeWalk = new TreeWalk(repo)) {
+                treeWalk.setRecursive(true);
+                treeWalk.addTree(tree);
+
+                while (treeWalk.next()) {
+                    String path = treeWalk.getPathString();
+                    if (path.startsWith(".git")) {
+                        continue; // Skip .git directory
+                    }
+
+                    receivePack.sendMessage("Processing: " + path);
+                    ObjectId objectId = treeWalk.getObjectId(0);
+                    try (InputStream in = repo.open(objectId).openStream()) {
+                        // Create target file path
+                        Path targetFile = destinationPath.resolve(path);
+                        // Ensure parent directories exist
+                        if (targetFile.getParent() != null && !Files.exists(targetFile.getParent())) {
+                            Files.createDirectories(targetFile.getParent());
+                        }
+                        // Write file content
+                        Files.copy(in, targetFile);
+                    }
+                }
+                log.debug("Finished processing {} entries", treeWalk.getPathString());
+            }
+        } catch (Exception e) {
+            log.error("Error creating repository snapshot", e);
+            throw e;
+        }
     }
+
 
 }

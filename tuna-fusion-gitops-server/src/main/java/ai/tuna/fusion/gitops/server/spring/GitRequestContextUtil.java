@@ -21,9 +21,9 @@ public class GitRequestContextUtil {
 
     public record URLParams (String namespace, String agentCatalogueName, String agentDeploymentName) {}
 
-    public static String AgentEnvironmentName = "ai.tuna.fusion.gitops.server.agent-environment";
-    public static String AgentCatalogueName = "ai.tuna.fusion.gitops.server.agent-catalogue";
-    public static String AgentDeploymentName = "ai.tuna.fusion.gitops.server.agent-deployment";
+    public static final String AgentEnvironmentName = "ai.tuna.fusion.gitops.server.agent-environment";
+    public static final String AgentCatalogueName = "ai.tuna.fusion.gitops.server.agent-catalogue";
+    public static final String AgentDeploymentName = "ai.tuna.fusion.gitops.server.agent-deployment";
 
     public static Optional<AgentEnvironment> getAgentEnvironment() {
         return Optional.ofNullable(
