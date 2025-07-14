@@ -1,9 +1,7 @@
 package ai.tuna.fusion.executor.web;
 
 import ai.tuna.fusion.executor.driver.podpool.FunctionPodManager;
-import ai.tuna.fusion.executor.driver.podpool.impl.FunctionPodDisposalException;
 import ai.tuna.fusion.executor.driver.podpool.impl.FunctionPodOperationException;
-import ai.tuna.fusion.metadata.crd.ResourceUtils;
 import ai.tuna.fusion.metadata.crd.agent.AgentEnvironmentSpec;
 import ai.tuna.fusion.metadata.informer.AgentResources;
 import ai.tuna.fusion.metadata.informer.PodPoolResources;
@@ -52,19 +50,12 @@ public class A2AExecutorController {
         var headlessSvc = podPoolResources.queryPodPoolService(namespace, podPool.getStatus().getHeadlessServiceName()).orElseThrow();
         var podFunction = podPoolResources.queryPodFunction(namespace, agentDeployment.getStatus().getFunction().getFunctionName()).orElseThrow();
 
-        var pod = functionPodManager.specializePod(podFunction, podPool);
         String requestUri = proxy.path();
         String matchedPathPrefix = "/a2a/" + namespace + "/" + agentCatalogueName + "/" + agentDeploymentName;
         String trailingPath = requestUri.substring(requestUri.indexOf(matchedPathPrefix) + matchedPathPrefix.length());
-        var uri = ResourceUtils.getPodUri(pod, headlessSvc, trailingPath);
-        log.debug("Forward request to Pod: {}", uri);
-        return proxy.uri(trailingPath).forward().doFinally(signalType -> {
-            try {
-                functionPodManager.disposePod(pod);
-            } catch (FunctionPodDisposalException e) {
-                log.warn("Failed to dispose pod", e);
-            }
-        });
+        return HttpProxyUtils.forward(functionPodManager, podFunction, podPool, headlessSvc, proxy, trailingPath);
+
+
     }
 
 }

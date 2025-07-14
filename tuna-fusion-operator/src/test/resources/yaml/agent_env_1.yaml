@@ -15,9 +15,11 @@ spec:
         sleep 120
       builderImage: busybox:latest
       poolSize: 3
+      runtimeImage: busybox:latest
       runtimePodSpec:
         containers:
           - image: busybox:latest
+            name: busybox
             command:
               - top
 

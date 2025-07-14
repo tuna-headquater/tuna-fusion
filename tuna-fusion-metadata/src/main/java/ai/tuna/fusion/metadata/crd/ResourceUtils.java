@@ -1,11 +1,13 @@
 package ai.tuna.fusion.metadata.crd;
 
 import io.fabric8.kubernetes.api.model.HasMetadata;
+import io.fabric8.kubernetes.api.model.OwnerReference;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.informers.SharedIndexInformer;
 import io.fabric8.kubernetes.client.informers.cache.Cache;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.Optional;
 
@@ -41,6 +43,13 @@ public class ResourceUtils {
                 pod.getMetadata().getNamespace(),
                 subPath
         );
+    }
+
+    public static <ChildResource extends HasMetadata, OwnerResource extends HasMetadata> Optional<String> getMatchedOwnerReferenceResourceName(ChildResource resource, Class<OwnerResource> ownerClass) {
+        return resource.getMetadata().getOwnerReferences()
+                .stream().filter(ownerReference -> StringUtils.equals(ownerReference.getKind(), HasMetadata.getKind(ownerClass)) && StringUtils.equals(ownerReference.getApiVersion(), HasMetadata.getApiVersion(ownerClass)))
+                .map(OwnerReference::getName)
+                .findAny();
     }
 
 }
