@@ -1,5 +1,6 @@
 package ai.tuna.fusion.gitops.server.git;
 
+import ai.tuna.fusion.gitops.server.git.pipeline.impl.AgentFunctionBuildPodInitScript;
 import ai.tuna.fusion.metadata.crd.agent.AgentDeployment;
 import ai.tuna.fusion.metadata.crd.agent.AgentEnvironment;
 import ai.tuna.fusion.metadata.crd.podpool.PodFunction;
@@ -11,37 +12,20 @@ import io.fabric8.kubernetes.api.model.OwnerReference;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.text.StringSubstitutor;
-import org.eclipse.jgit.lib.ObjectId;
-import org.eclipse.jgit.lib.Repository;
-import org.eclipse.jgit.revwalk.RevCommit;
-import org.eclipse.jgit.revwalk.RevTree;
-import org.eclipse.jgit.revwalk.RevWalk;
-import org.eclipse.jgit.transport.ReceiveCommand;
-import org.eclipse.jgit.transport.ReceivePack;
-import org.eclipse.jgit.treewalk.TreeWalk;
 
 import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.text.SimpleDateFormat;
 import java.time.Instant;
-import java.util.*;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
-import java.util.zip.ZipOutputStream;
 
 /**
  * @author robinqu
  */
 @Slf4j
 public class PipelineUtils {
-
-
     public static Optional<PodFunctionBuild> getFunctionBuild(KubernetesClient client, String ns, String name) {
         return Optional.ofNullable(client.resources(PodFunctionBuild.class)
                 .inNamespace(ns)
@@ -52,13 +36,15 @@ public class PipelineUtils {
     public static PodFunctionBuild createAgentFunctionBuild(
             KubernetesClient kubernetesClient,
             AgentDeployment agentDeployment,
+            AgentEnvironment agentEnvironment,
             PodFunction podFunction,
             PodFunctionBuildSpec.SourceArchive sourceArchive) {
         PodFunctionBuild podFunctionBuild = new PodFunctionBuild();
         PodFunctionBuildSpec spec = new PodFunctionBuildSpec();
+        var script = new AgentFunctionBuildPodInitScript(agentDeployment, agentEnvironment, sourceArchive);
+        spec.setInitContainerCommands(script.render());
         spec.setSourceArchive(sourceArchive);
         podFunctionBuild.setSpec(spec);
-
         podFunctionBuild.getMetadata().setName("%s-build-%s".formatted(agentDeployment.getMetadata().getName(), Instant.now().getEpochSecond()));
         podFunctionBuild.getMetadata().setNamespace(agentDeployment.getMetadata().getNamespace());
         OwnerReference ownerReference = new OwnerReference(

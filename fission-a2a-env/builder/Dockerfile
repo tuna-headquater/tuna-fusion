@@ -1,9 +1,9 @@
-ARG BUILDER_IMAGE=fission/builder
 ARG PYTHON_VERSION=3.13.5-bullseye
+ARG PYPI_INDEX=https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple
 FROM ${BUILDER_IMAGE} as builder
+COPY --from=ghcr.io/astral-sh/uv:0.7.12 /uv /uvx /usr/local/bin/
 FROM python:${PYTHON_VERSION}
-COPY --from=builder /builder /builder
-
-ADD build.sh /usr/local/bin/build
-RUN chmod +x /usr/local/bin/build
-EXPOSE 8001
+ENV PYPI_INDEX=${PYPI_INDEX}
+WORKDIR /builder
+ADD *.py /builder/
+RUN uv pip install -r requirements.txt -i ${PYPI_INDEX}

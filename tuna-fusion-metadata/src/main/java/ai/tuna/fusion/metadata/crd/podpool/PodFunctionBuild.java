@@ -26,6 +26,7 @@ public class PodFunctionBuild extends CustomResource<PodFunctionBuildSpec, PodFu
     public static final String BUILD_SCRIPT_FILENAME = "build.sh";
     public static final String AGENT_CARD_FILENAME = "agent_card.json";
     public static final String A2A_RUNTIME_FILENAME = "a2a_runtime.json";
+    public static final String SOURCE_ARCHIVE_MANIFEST = "source_archive.json";
 
 
 

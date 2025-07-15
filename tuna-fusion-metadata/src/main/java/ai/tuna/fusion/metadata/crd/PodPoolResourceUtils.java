@@ -111,4 +111,8 @@ public class PodPoolResourceUtils {
         return PodFunctionBuild.ARCHIVE_ROOT_PATH.resolve("deployments").resolve(resource.getMetadata().getUid()).toString();
     }
 
+    public static String computeSourceArchivePath(PodFunctionBuild resource) {
+        return PodFunctionBuild.ARCHIVE_ROOT_PATH.resolve("sources").resolve(resource.getMetadata().getUid()).toString();
+    }
+
 }
