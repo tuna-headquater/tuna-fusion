@@ -18,6 +18,9 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
 
+import static ai.tuna.fusion.metadata.crd.podpool.PodFunctionBuild.A2A_RUNTIME_FILENAME;
+import static ai.tuna.fusion.metadata.crd.podpool.PodFunctionBuild.AGENT_CARD_FILENAME;
+
 
 /**
  * @author robinqu
@@ -43,7 +46,8 @@ public class PodFunctionBuildJobDependentResource extends CRUDKubernetesDependen
         log.debug("Creating Job DR for build {}", primary.getMetadata());
         var podFunction = PodPoolResourceUtils.getReferencedPodFunction(primary, context.getClient()).orElseThrow();
         var podPool = PodPoolResourceUtils.getReferencedPodPool(podFunction, context.getClient()).orElseThrow();
-
+        var archivePath = PodFunctionBuild.ARCHIVE_ROOT_PATH.toString();
+        var workspacePath = PodFunctionBuild.WORKSPACE_ROOT_PATH.toString();
         return new JobBuilder()
                 .withNewMetadata()
                 .withName(jobName(primary))
@@ -83,9 +87,9 @@ public class PodFunctionBuildJobDependentResource extends CRUDKubernetesDependen
                 .withImage(podPool.getSpec().getBuilderImage())
                 .withCommand("sh", PodFunctionBuild.WORKSPACE_ROOT_PATH.resolve(PodFunctionBuild.BUILD_SCRIPT_FILENAME).toString())
                 .addToEnv(
-                        new EnvVar("AGENT_CARD_JSON_PATH", PodFunctionBuild.WORKSPACE_ROOT_PATH.resolve("agent_card.json").toString(), null),
-                        new EnvVar("A2A_RUNTIME_JSON_PATH", PodFunctionBuild.WORKSPACE_ROOT_PATH.resolve("a2a_runtime.json").toString(), null),
-                        new EnvVar("ARCHIVE_ROOT_PATH", PodFunctionBuild.ARCHIVE_ROOT_PATH.toString(), null),
+                        new EnvVar("AGENT_CARD_JSON_PATH", PodFunctionBuild.WORKSPACE_ROOT_PATH.resolve(AGENT_CARD_FILENAME).toString(), null),
+                        new EnvVar("A2A_RUNTIME_JSON_PATH", PodFunctionBuild.WORKSPACE_ROOT_PATH.resolve(A2A_RUNTIME_FILENAME).toString(), null),
+                        new EnvVar("ARCHIVE_ROOT_PATH", archivePath, null),
                         new EnvVar("DEPLOY_ARCHIVE_PATH", PodPoolResourceUtils.computeDeployArchivePath(primary), null),
                         new EnvVar("FUNCTION_NAME", podFunction.getMetadata().getName(), null),
                         new EnvVar("POD_POOL", podPool.getMetadata().getName(), null),
@@ -93,14 +97,14 @@ public class PodFunctionBuildJobDependentResource extends CRUDKubernetesDependen
                 )
                 // mount source archive
                 .addNewVolumeMount()
-                .withMountPath("/archive")
+                .withMountPath(archivePath)
                 .withName("archive-volume")
                 // scope to build folder of current build
                 .withSubPath(primary.getMetadata().getName())
                 .endVolumeMount()
                 // mount build script
                 .addNewVolumeMount()
-                .withMountPath("/workspace")
+                .withMountPath(workspacePath)
                 .withName("builder-script-volume")
                 .endVolumeMount()
                 .endContainer()

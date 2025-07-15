@@ -35,7 +35,7 @@ public class GitServerConfig {
 
     private SourceArchiveHandler sourceArchiveHandler(GitOpsServerProperties properties) {
         return switch (properties.getSourceArchiveHandler().getType()) {
-            case ZipArchiveOnLocalHttpServer -> new LocalHttpZipArchiveSourceHandler(properties.getSourceArchiveHandler().getZipArchiveOnLocalHttpServer().getZipRepositoryRoot());
+            case ZipArchiveOnLocalHttpServer -> new LocalHttpZipArchiveSourceHandler(properties.getSourceArchiveHandler().getZipArchiveOnLocalHttpServer());
             case FolderOnFilesystem -> new FolderSourceArchiveHandler(properties.getSourceArchiveHandler().getFolderOnFilesystem().getLocalSourceArchiveRootPath());
             case null, default -> throw new IllegalArgumentException("Invalid SourceArchiveHandler type");
         };

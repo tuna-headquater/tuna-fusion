@@ -11,3 +11,9 @@ logging:
     ai.tuna.fusion: debug
     root: info
 
+gitops:
+  source-archive-handler:
+    type: ZipArchiveOnLocalHttpServer
+    zip-archive-on-local-http-server:
+      zip-repository-root: /tmp
+      http-server-url-template: "http://gitops-server.svc.local.cluster/source_archives/${fileId}"

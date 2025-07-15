@@ -2,6 +2,7 @@ package ai.tuna.fusion.gitops.server.git.pipeline.impl;
 
 import ai.tuna.fusion.gitops.server.git.PipelineUtils;
 import ai.tuna.fusion.gitops.server.git.pipeline.SourceArchiveHandler;
+import ai.tuna.fusion.gitops.server.spring.property.GitOpsServerProperties;
 import ai.tuna.fusion.metadata.crd.podpool.PodFunction;
 import ai.tuna.fusion.metadata.crd.podpool.PodFunctionBuildSpec;
 import lombok.extern.slf4j.Slf4j;
@@ -21,6 +22,7 @@ import java.security.NoSuchAlgorithmException;
 import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.Date;
+import java.util.UUID;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -30,21 +32,23 @@ import java.util.zip.ZipOutputStream;
 @Slf4j
 public class LocalHttpZipArchiveSourceHandler implements SourceArchiveHandler {
 
-    private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyyMMdd-HHmmss");
-
-
     private final Path zipRepositoryRoot;
+    private final String httpServerUrlTemplate;
 
-    public LocalHttpZipArchiveSourceHandler(Path zipRepositoryRoot) {
-        this.zipRepositoryRoot = zipRepositoryRoot;
+    public LocalHttpZipArchiveSourceHandler(GitOpsServerProperties.SourceArchiveHandlerProperties.ZipArchiveOnLocalHttpServerProperties properties) {
+        this.zipRepositoryRoot = properties.getZipRepositoryRoot();
+        this.httpServerUrlTemplate = properties.getHttpServerUrlTemplate();
+    }
+
+    private String getZipUrl(String fileId) {
+        return httpServerUrlTemplate.replace("${fileId}", fileId);
     }
 
     @Override
     public PodFunctionBuildSpec.SourceArchive createSourceArchive(ReceivePack receivePack, Collection<ReceiveCommand> commands, String defaultBranch) throws IOException {
         Repository repo = receivePack.getRepository();
-        String timestamp = DATE_FORMAT.format(new Date());
-        String zipName = "repo-snapshot-" + timestamp + ".zip";
-        File zipFile = zipRepositoryRoot.resolve(zipName).toFile();
+        var fileId = UUID.randomUUID().toString();
+        File zipFile = zipRepositoryRoot.resolve(fileId + ".zip").toFile();
         log.info("Creating Zip archive: {}", zipFile.getAbsolutePath());
 
         try (RevWalk revWalk = new RevWalk(repo); ZipOutputStream zos = new ZipOutputStream(new BufferedOutputStream(new FileOutputStream(zipFile)))) {
@@ -78,15 +82,15 @@ public class LocalHttpZipArchiveSourceHandler implements SourceArchiveHandler {
         }
 
         var sourceArchive = new PodFunctionBuildSpec.SourceArchive();
-        var zipSource = new PodFunction.FilesystemZipSource();
-        zipSource.setPath(zipFile.getAbsolutePath());
+        var zipSource = new PodFunction.HttpZipSource();
+        zipSource.setUrl(getZipUrl(fileId));
         try {
             var sha256 = PipelineUtils.getSha256Checksum(zipFile.getAbsolutePath());
             zipSource.setSha256Checksum(sha256);
         } catch (NoSuchAlgorithmException e) {
             throw new IOException(e);
         }
-        sourceArchive.setFilesystemZipSource(zipSource);
+        sourceArchive.setHttpZipSource(zipSource);
         return sourceArchive;
     }
 
