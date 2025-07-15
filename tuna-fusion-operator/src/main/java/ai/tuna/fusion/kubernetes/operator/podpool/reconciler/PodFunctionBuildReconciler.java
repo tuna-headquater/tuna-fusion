@@ -57,11 +57,14 @@ public class PodFunctionBuildReconciler implements Reconciler<PodFunctionBuild>,
             podFunctionBuildPatch.getMetadata().setName(resource.getMetadata().getName());
             podFunctionBuildPatch.getMetadata().setNamespace(resource.getMetadata().getNamespace());
             var status = new PodFunctionBuildStatus();
-            // Only FilesystemFolderSource is supported, so we can compute the status beforehand.
-            var deployArchive = new PodFunctionBuildStatus.DeployArchive();
-            var folderSource = new PodFunction.FilesystemFolderSource();
-            folderSource.setPath(PodPoolResourceUtils.computeDeployArchivePath(resource));
-            deployArchive.setFilesystemFolderSource(folderSource);
+
+            // deployArchive field is updated by builder script
+//            // Only FilesystemFolderSource is supported, so we can compute the status beforehand.
+//            var deployArchive = new PodFunctionBuildStatus.DeployArchive();
+//            var folderSource = new PodFunction.FilesystemFolderSource();
+//            folderSource.setPath(PodPoolResourceUtils.computeDeployArchivePath(resource));
+//            deployArchive.setFilesystemFolderSource(folderSource);
+//            status.setDeployArchive(deployArchive);
             podFunctionBuildPatch.setStatus(status);
             if(Optional.ofNullable(jobStatus.getSucceeded()).orElse(0) >= jobResource.getSpec().getCompletions()) {
                 status.setPhase(Succeeded);

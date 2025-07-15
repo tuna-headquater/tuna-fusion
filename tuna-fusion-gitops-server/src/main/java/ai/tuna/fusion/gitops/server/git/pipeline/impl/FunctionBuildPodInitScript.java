@@ -43,9 +43,7 @@ public class FunctionBuildPodInitScript extends BaseInitScript {
         var content =  """
                 #!/bin/sh
                 set -ex
-                echo $SOURCE_ARCHIVE_PATH
-                echo $DEPLOY_ARCHIVE_PATH
-                echo $PYPI_INDEX
+                env
                 
                 uv run pre_build
                 

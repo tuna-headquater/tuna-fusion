@@ -89,11 +89,13 @@ public class PodFunctionBuildJobDependentResource extends CRUDKubernetesDependen
                 .addToEnv(
                         new EnvVar("AGENT_CARD_JSON_PATH", PodFunctionBuild.WORKSPACE_ROOT_PATH.resolve(AGENT_CARD_FILENAME).toString(), null),
                         new EnvVar("A2A_RUNTIME_JSON_PATH", PodFunctionBuild.WORKSPACE_ROOT_PATH.resolve(A2A_RUNTIME_FILENAME).toString(), null),
+                        new EnvVar("SOURCE_ARCHIVE_MANIFEST_PATH", PodFunctionBuild.WORKSPACE_ROOT_PATH.resolve(PodFunctionBuild.SOURCE_ARCHIVE_MANIFEST).toString(), null),
                         new EnvVar("ARCHIVE_ROOT_PATH", archivePath, null),
                         new EnvVar("DEPLOY_ARCHIVE_PATH", PodPoolResourceUtils.computeDeployArchivePath(primary), null),
                         new EnvVar("SOURCE_ARCHIVE_PATH", PodPoolResourceUtils.computeSourceArchivePath(primary), null),
                         new EnvVar("FUNCTION_NAME", podFunction.getMetadata().getName(), null),
                         new EnvVar("POD_POOL", podPool.getMetadata().getName(), null),
+                        new EnvVar("FUNCTION_BUILD_NAME", primary.getMetadata().getName(), null),
                         new EnvVar("NAMESPACE", primary.getMetadata().getNamespace(), null)
                 )
                 // mount source archive
