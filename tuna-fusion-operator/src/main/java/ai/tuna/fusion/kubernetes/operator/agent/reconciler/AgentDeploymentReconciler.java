@@ -1,6 +1,6 @@
 package ai.tuna.fusion.kubernetes.operator.agent.reconciler;
 
-import ai.tuna.fusion.kubernetes.operator.agent.AgentResourceUtils;
+import ai.tuna.fusion.metadata.crd.AgentResourceUtils;
 import ai.tuna.fusion.kubernetes.operator.agent.dr.AgentDeploymentPodFunctionDependentResource;
 import ai.tuna.fusion.metadata.crd.agent.AgentDeployment;
 import ai.tuna.fusion.metadata.crd.agent.AgentDeploymentStatus;

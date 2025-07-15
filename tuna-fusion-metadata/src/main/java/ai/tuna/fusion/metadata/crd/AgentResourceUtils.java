@@ -1,4 +1,4 @@
-package ai.tuna.fusion.kubernetes.operator.agent;
+package ai.tuna.fusion.metadata.crd;
 
 import ai.tuna.fusion.metadata.crd.podpool.PodFunctionBuild;
 import ai.tuna.fusion.metadata.crd.agent.AgentCatalogue;

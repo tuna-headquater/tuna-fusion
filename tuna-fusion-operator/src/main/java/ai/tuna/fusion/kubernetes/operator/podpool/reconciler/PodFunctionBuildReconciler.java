@@ -1,6 +1,6 @@
 package ai.tuna.fusion.kubernetes.operator.podpool.reconciler;
 
-import ai.tuna.fusion.kubernetes.operator.podpool.PodPoolResourceUtils;
+import ai.tuna.fusion.metadata.crd.PodPoolResourceUtils;
 import ai.tuna.fusion.kubernetes.operator.podpool.dr.PodFunctionBuildJobDependentResource;
 import ai.tuna.fusion.metadata.crd.podpool.PodFunction;
 import ai.tuna.fusion.metadata.crd.podpool.PodFunctionBuild;
@@ -53,13 +53,15 @@ public class PodFunctionBuildReconciler implements Reconciler<PodFunctionBuild>,
             );
             var jobStatus = fullJob.getStatus();
             log.info("Job(namespace={},name={}) has already been created: ready={}, failed={}, active={}, succeeded={}", fullJob.getMetadata().getNamespace(), fullJob.getMetadata().getName(), jobStatus.getReady(), jobStatus.getFailed(), jobStatus.getActive(), jobStatus.getSucceeded());
-
-
             var podFunctionBuildPatch = new PodFunctionBuild();
             podFunctionBuildPatch.getMetadata().setName(resource.getMetadata().getName());
             podFunctionBuildPatch.getMetadata().setNamespace(resource.getMetadata().getNamespace());
             var status = new PodFunctionBuildStatus();
-            status.setDeployArchiveSubPath(PodPoolResourceUtils.computeDeployArchiveSubPath(resource));
+            // Only FilesystemFolderSource is supported, so we can compute the status beforehand.
+            var deployArchive = new PodFunctionBuildStatus.DeployArchive();
+            var folderSource = new PodFunction.FilesystemFolderSource();
+            folderSource.setPath(PodPoolResourceUtils.computeDeployArchivePath(resource));
+            deployArchive.setFilesystemFolderSource(folderSource);
             podFunctionBuildPatch.setStatus(status);
             if(Optional.ofNullable(jobStatus.getSucceeded()).orElse(0) >= jobResource.getSpec().getCompletions()) {
                 status.setPhase(Succeeded);

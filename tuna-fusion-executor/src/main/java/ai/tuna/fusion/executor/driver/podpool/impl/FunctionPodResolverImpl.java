@@ -47,7 +47,10 @@ public class FunctionPodResolverImpl implements FunctionPodManager {
         var deployArchivePath = Optional.ofNullable(function.getStatus())
                 .map(PodFunctionStatus::getEffectiveBuild)
                 .map(PodFunctionStatus.BuildInfo::getStatus)
-                .map(PodFunctionBuildStatus::getDeployArchiveSubPath).orElseThrow(()-> FunctionPodOperationException.of(podPool, function, "No effective build found for pod function " + function.getMetadata().getName()));
+                .map(PodFunctionBuildStatus::getDeployArchive)
+                .map(PodFunctionBuildStatus.DeployArchive::getFilesystemFolderSource)
+                .map(PodFunction.FilesystemFolderSource::getPath)
+                .orElseThrow(()-> FunctionPodOperationException.of(podPool, function, "No effective build found for pod function " + function.getMetadata().getName()));
         var request = PodSpecializeRequest.builder()
                 .filepath(deployArchivePath)
                 .functionName(function.getSpec().getEntrypoint())
@@ -90,7 +93,6 @@ public class FunctionPodResolverImpl implements FunctionPodManager {
         }
         throw FunctionPodOperationException.of(podPool, function, "No pod found for pod pool " + poolKey);
     }
-
 
     @Override
     public void disposePod(Pod pod) throws FunctionPodDisposalException {

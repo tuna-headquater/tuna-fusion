@@ -1,6 +1,5 @@
-package ai.tuna.fusion.kubernetes.operator.podpool;
+package ai.tuna.fusion.metadata.crd;
 
-import ai.tuna.fusion.kubernetes.operator.agent.AgentResourceUtils;
 import ai.tuna.fusion.metadata.crd.agent.AgentEnvironment;
 import ai.tuna.fusion.metadata.crd.podpool.PodFunction;
 import ai.tuna.fusion.metadata.crd.podpool.PodFunctionBuild;
@@ -108,12 +107,8 @@ public class PodPoolResourceUtils {
         return res.getMetadata().getName() + "-service";
     }
 
-    public static String computeDeployArchiveSubPath(PodFunctionBuild resource) {
-        return "/deployments/" + resource.getMetadata().getUid();
-    }
-
-    public static String computeSourceArchiveSubPath(PodFunctionBuild resource) {
-        return "/sources/" + resource.getMetadata().getUid();
+    public static String computeDeployArchivePath(PodFunctionBuild resource) {
+        return PodFunctionBuild.ARCHIVE_ROOT_PATH.resolve("deployments").resolve(resource.getMetadata().getUid()).toString();
     }
 
 }

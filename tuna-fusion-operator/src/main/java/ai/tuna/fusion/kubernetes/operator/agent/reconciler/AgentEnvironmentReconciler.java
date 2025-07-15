@@ -1,7 +1,7 @@
 package ai.tuna.fusion.kubernetes.operator.agent.reconciler;
 
 import ai.tuna.fusion.kubernetes.operator.agent.dr.AgentEnvironmentPodPoolDependentResource;
-import ai.tuna.fusion.kubernetes.operator.podpool.PodPoolResourceUtils;
+import ai.tuna.fusion.metadata.crd.PodPoolResourceUtils;
 import ai.tuna.fusion.metadata.crd.agent.AgentEnvironment;
 import ai.tuna.fusion.metadata.crd.agent.AgentEnvironmentSpec;
 import ai.tuna.fusion.metadata.crd.agent.AgentEnvironmentStatus;

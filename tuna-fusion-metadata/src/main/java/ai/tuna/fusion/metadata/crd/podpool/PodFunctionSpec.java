@@ -12,8 +12,5 @@ import java.util.List;
 public class PodFunctionSpec {
 
     @Required
-    private List<String> initCommands;
-
-    @Required
     private String entrypoint;
 }

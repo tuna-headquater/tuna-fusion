@@ -1,7 +1,8 @@
 package ai.tuna.fusion.kubernetes.operator.podpool.dr;
 
-import ai.tuna.fusion.kubernetes.operator.podpool.PodPoolResourceUtils;
+import ai.tuna.fusion.metadata.crd.PodPoolResourceUtils;
 import ai.tuna.fusion.kubernetes.operator.podpool.reconciler.PodPoolReconciler;
+import ai.tuna.fusion.metadata.crd.podpool.PodFunctionBuild;
 import ai.tuna.fusion.metadata.crd.podpool.PodPool;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
@@ -15,8 +16,8 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Arrays;
 import java.util.Optional;
 
-import static ai.tuna.fusion.kubernetes.operator.podpool.PodPoolResourceUtils.computeGenericPodSelectors;
-import static ai.tuna.fusion.kubernetes.operator.podpool.PodPoolResourceUtils.getPodPoolDeploymentName;
+import static ai.tuna.fusion.metadata.crd.PodPoolResourceUtils.computeGenericPodSelectors;
+import static ai.tuna.fusion.metadata.crd.PodPoolResourceUtils.getPodPoolDeploymentName;
 
 /**
  * @author robinqu
@@ -44,7 +45,7 @@ public class PodPoolDeploymentDependentResource extends CRUDKubernetesDependentR
         container.getVolumeMounts().add(new VolumeMountBuilder()
                 .withName("archive-volume")
                 .withSubPath(primary.getMetadata().getName())
-                .withMountPath("/archive")
+                .withMountPath(PodFunctionBuild.ARCHIVE_ROOT_PATH.toString())
                 .build());
         // clear ports for safety reasons
         container.getPorts().clear();
@@ -61,7 +62,7 @@ public class PodPoolDeploymentDependentResource extends CRUDKubernetesDependentR
                         .build(),
                 new EnvVarBuilder()
                         .withName("ARCHIVE_ROOT_PATH")
-                        .withValue("/archive")
+                        .withValue(PodFunctionBuild.ARCHIVE_ROOT_PATH.toString())
                         .build()
         ));
 

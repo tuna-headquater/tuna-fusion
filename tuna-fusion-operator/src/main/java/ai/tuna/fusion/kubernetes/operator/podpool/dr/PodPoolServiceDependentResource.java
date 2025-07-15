@@ -1,6 +1,6 @@
 package ai.tuna.fusion.kubernetes.operator.podpool.dr;
 
-import ai.tuna.fusion.kubernetes.operator.podpool.PodPoolResourceUtils;
+import ai.tuna.fusion.metadata.crd.PodPoolResourceUtils;
 import ai.tuna.fusion.kubernetes.operator.podpool.reconciler.PodPoolReconciler;
 import ai.tuna.fusion.metadata.crd.podpool.PodPool;
 import io.fabric8.kubernetes.api.model.HasMetadata;
@@ -13,7 +13,7 @@ import io.javaoperatorsdk.operator.processing.dependent.kubernetes.CRUDKubernete
 import io.javaoperatorsdk.operator.processing.dependent.kubernetes.KubernetesDependent;
 import lombok.extern.slf4j.Slf4j;
 
-import static ai.tuna.fusion.kubernetes.operator.podpool.PodPoolResourceUtils.computeServiceLabels;
+import static ai.tuna.fusion.metadata.crd.PodPoolResourceUtils.computeServiceLabels;
 
 /**
  * @author robinqu

@@ -14,7 +14,6 @@ import java.nio.file.Path;
 @Data
 public class GitOpsServerProperties {
     private Path reposRootPath;
-    private Path sourceArchiveRootPath;
 
     {
         try {
@@ -25,6 +24,31 @@ public class GitOpsServerProperties {
     }
 
     private String defaultBranch = "refs/heads/master";
+
+    @Data
+    public static class SourceArchiveHandlerProperties {
+        public enum Type {
+            ZipArchiveOnLocalHttpServer,
+            ZipArchiveOnS3,
+            FolderOnFilesystem,
+            ZipArchiveOnFilesystem
+        }
+        private Type type;
+
+        @Data
+        public static class ZipArchiveOnLocalHttpServerProperties {
+            private Path zipRepositoryRoot;
+        }
+        private ZipArchiveOnLocalHttpServerProperties zipArchiveOnLocalHttpServer;
+
+        @Data
+        public static class FolderOnFilesystemProperties {
+            private Path localSourceArchiveRootPath;
+        }
+        private FolderOnFilesystemProperties folderOnFilesystem;
+    }
+    private SourceArchiveHandlerProperties sourceArchiveHandler;
+
 
     @Data
     public static class S3Properties {

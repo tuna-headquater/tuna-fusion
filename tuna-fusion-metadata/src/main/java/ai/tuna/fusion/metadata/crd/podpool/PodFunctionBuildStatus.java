@@ -8,7 +8,11 @@ import lombok.Data;
 @Data
 public class PodFunctionBuildStatus {
 
-    private String deployArchiveSubPath;
+    @Data
+    public static class DeployArchive {
+        private PodFunction.FilesystemFolderSource filesystemFolderSource;
+    }
+    private DeployArchive deployArchive;
 
     public enum Phase {
         Pending,

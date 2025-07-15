@@ -1,5 +1,6 @@
 package ai.tuna.fusion.gitops.server.git;
 
+import ai.tuna.fusion.gitops.server.git.pipeline.SourceArchiveHandler;
 import ai.tuna.fusion.gitops.server.spring.GitRequestContextUtil;
 import ai.tuna.fusion.metadata.crd.agent.AgentCatalogue;
 import ai.tuna.fusion.metadata.crd.agent.AgentDeployment;
@@ -34,11 +35,11 @@ public class CustomReceivePackFactory implements ReceivePackFactory<HttpServletR
 
     private final KubernetesClient kubernetesClient;
 
-    private final Path sourceArchiveRootPath;
+    private final SourceArchiveHandler sourceArchiveHandler;
 
-    public CustomReceivePackFactory(KubernetesClient kubernetesClient, Path sourceArchiveRootPath) {
+    public CustomReceivePackFactory(KubernetesClient kubernetesClient, SourceArchiveHandler sourceArchiveHandler) {
         this.kubernetesClient = kubernetesClient;
-        this.sourceArchiveRootPath = sourceArchiveRootPath;
+        this.sourceArchiveHandler = sourceArchiveHandler;
     }
 
     @Override
@@ -69,13 +70,10 @@ public class CustomReceivePackFactory implements ReceivePackFactory<HttpServletR
                 throw new RuntimeException("Current build is running for this AgentDeployment: " + podFunction.getStatus().getCurrentBuild().getName());
             }
 
-            var sourceArchiveSubPath = Paths.get(agentEnvironment.getMetadata().getName(), agentDeployment.getMetadata().getName(), UUID.randomUUID().toString()).toString();
-            var destinationPath = sourceArchiveRootPath.resolve(sourceArchiveSubPath);
+            var sourceArchive = sourceArchiveHandler.createSourceArchive(receivePack, commands, agentDeployment.getSpec().getGit().getWatchedBranchName());
+            logInfo(receivePack, "📦 SourceArchive for repository is created successfully: %s", sourceArchive);
 
-            PipelineUtils.saveRepoToDirectory(destinationPath, receivePack, commands, agentDeployment.getSpec().getGit().getWatchedBranchName());
-            logInfo(receivePack, "📦 Snapshot for repository is created successfully: %s", destinationPath);
-
-            var functionBuild = PipelineUtils.createAgentFunctionBuild(kubernetesClient, agentDeployment, podFunction, sourceArchiveSubPath);
+            var functionBuild = PipelineUtils.createAgentFunctionBuild(kubernetesClient, agentDeployment, podFunction, sourceArchive);
             logInfo(receivePack, "💾 FunctionBuild CR is created successfully: %s", functionBuild.getMetadata().getName());
 
             var podInfo = PipelineUtils.waitForJobPod(kubernetesClient, functionBuild.getMetadata().getName(), functionBuild.getMetadata().getNamespace());

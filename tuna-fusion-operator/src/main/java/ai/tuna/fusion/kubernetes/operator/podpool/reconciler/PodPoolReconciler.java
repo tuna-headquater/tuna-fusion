@@ -1,6 +1,6 @@
 package ai.tuna.fusion.kubernetes.operator.podpool.reconciler;
 
-import ai.tuna.fusion.kubernetes.operator.podpool.PodPoolResourceUtils;
+import ai.tuna.fusion.metadata.crd.PodPoolResourceUtils;
 import ai.tuna.fusion.kubernetes.operator.podpool.dr.PodPoolDeploymentDependentResource;
 import ai.tuna.fusion.kubernetes.operator.podpool.dr.PodPoolServiceDependentResource;
 import ai.tuna.fusion.metadata.crd.ResourceUtils;

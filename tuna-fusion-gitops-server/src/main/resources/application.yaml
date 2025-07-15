@@ -11,5 +11,3 @@ logging:
     ai.tuna.fusion: debug
     root: info
 
-
-

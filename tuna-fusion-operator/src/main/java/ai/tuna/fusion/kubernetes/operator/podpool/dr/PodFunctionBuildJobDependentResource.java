@@ -1,7 +1,7 @@
 package ai.tuna.fusion.kubernetes.operator.podpool.dr;
 
-import ai.tuna.fusion.kubernetes.operator.podpool.PodPoolResourceUtils;
 import ai.tuna.fusion.kubernetes.operator.podpool.reconciler.PodFunctionBuildReconciler;
+import ai.tuna.fusion.metadata.crd.PodPoolResourceUtils;
 import ai.tuna.fusion.metadata.crd.podpool.PodFunctionBuild;
 import ai.tuna.fusion.metadata.crd.podpool.PodFunctionBuildStatus;
 import io.fabric8.kubernetes.api.model.EnvVar;
@@ -25,6 +25,8 @@ import java.util.Optional;
 @KubernetesDependent(informer = @Informer(labelSelector = PodFunctionBuildReconciler.SELECTOR))
 @Slf4j
 public class PodFunctionBuildJobDependentResource extends CRUDKubernetesDependentResource<Job, PodFunctionBuild> {
+
+
 
     public static class IsJobRequiredCondition implements Condition<Job, PodFunctionBuild> {
         @Override
@@ -72,17 +74,19 @@ public class PodFunctionBuildJobDependentResource extends CRUDKubernetesDependen
                 .addNewInitContainer()
                 .withName("builder-init-container")
                 .withImage("busybox:latest")
-                .addAllToCommand(podFunction.getSpec().getInitCommands())
+                .withNewLifecycle()
+                .endLifecycle()
+                .addAllToCommand(primary.getSpec().getInitContainerCommands())
                 .endInitContainer()
                 .addNewContainer()
                 .withName("build-container")
                 .withImage(podPool.getSpec().getBuilderImage())
-                .withCommand("sh", "/workspace/build.sh")
+                .withCommand("sh", PodFunctionBuild.WORKSPACE_ROOT_PATH.resolve(PodFunctionBuild.BUILD_SCRIPT_FILENAME).toString())
                 .addToEnv(
-                        new EnvVar("AGENT_CARD_JSON_PATH", "/workspace/agent_card.json", null),
-                        new EnvVar("ARCHIVE_ROOT_PATH", "/archive", null),
-                        new EnvVar("SOURCE_ARCHIVE_SUBPATH", primary.getSpec().getSourceArchiveSubPath(), null),
-                        new EnvVar("DEPLOY_ARCHIVE_SUBPATH", PodPoolResourceUtils.computeDeployArchiveSubPath(primary), null),
+                        new EnvVar("AGENT_CARD_JSON_PATH", PodFunctionBuild.WORKSPACE_ROOT_PATH.resolve("agent_card.json").toString(), null),
+                        new EnvVar("A2A_RUNTIME_JSON_PATH", PodFunctionBuild.WORKSPACE_ROOT_PATH.resolve("a2a_runtime.json").toString(), null),
+                        new EnvVar("ARCHIVE_ROOT_PATH", PodFunctionBuild.ARCHIVE_ROOT_PATH.toString(), null),
+                        new EnvVar("DEPLOY_ARCHIVE_PATH", PodPoolResourceUtils.computeDeployArchivePath(primary), null),
                         new EnvVar("FUNCTION_NAME", podFunction.getMetadata().getName(), null),
                         new EnvVar("POD_POOL", podPool.getMetadata().getName(), null),
                         new EnvVar("NAMESPACE", primary.getMetadata().getNamespace(), null)

@@ -2,6 +2,9 @@ package ai.tuna.fusion.gitops.server.spring.config;
 
 import ai.tuna.fusion.gitops.server.git.CustomReceivePackFactory;
 import ai.tuna.fusion.gitops.server.git.CustomRepositoryResolver;
+import ai.tuna.fusion.gitops.server.git.pipeline.SourceArchiveHandler;
+import ai.tuna.fusion.gitops.server.git.pipeline.impl.FolderSourceArchiveHandler;
+import ai.tuna.fusion.gitops.server.git.pipeline.impl.LocalHttpZipArchiveSourceHandler;
 import ai.tuna.fusion.gitops.server.spring.property.GitOpsServerProperties;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import lombok.extern.slf4j.Slf4j;
@@ -27,7 +30,15 @@ public class GitServerConfig {
 
     @Bean
     public CustomReceivePackFactory customReceivePackFactory(KubernetesClient kubernetesClient, GitOpsServerProperties properties) {
-        return new CustomReceivePackFactory(kubernetesClient, properties.getSourceArchiveRootPath());
+        return new CustomReceivePackFactory(kubernetesClient, sourceArchiveHandler(properties));
+    }
+
+    private SourceArchiveHandler sourceArchiveHandler(GitOpsServerProperties properties) {
+        return switch (properties.getSourceArchiveHandler().getType()) {
+            case ZipArchiveOnLocalHttpServer -> new LocalHttpZipArchiveSourceHandler(properties.getSourceArchiveHandler().getZipArchiveOnLocalHttpServer().getZipRepositoryRoot());
+            case FolderOnFilesystem -> new FolderSourceArchiveHandler(properties.getSourceArchiveHandler().getFolderOnFilesystem().getLocalSourceArchiveRootPath());
+            case null, default -> throw new IllegalArgumentException("Invalid SourceArchiveHandler type");
+        };
     }
 
     @Bean
