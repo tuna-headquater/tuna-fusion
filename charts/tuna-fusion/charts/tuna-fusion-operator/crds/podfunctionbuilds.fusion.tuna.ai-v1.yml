@@ -14,6 +14,10 @@ spec:
   scope: "Namespaced"
   versions:
   - additionalPrinterColumns:
+    - jsonPath: ".spec.podFunctionName"
+      name: "PodFunction"
+      priority: 0
+      type: "string"
     - jsonPath: ".status.jobPod.podName"
       name: "JobPodName"
       priority: 0
@@ -28,15 +32,65 @@ spec:
         properties:
           spec:
             properties:
-              sourceArchiveSubPath:
+              additionalFileAssets:
+                items:
+                  properties:
+                    content:
+                      type: "string"
+                    envName:
+                      type: "string"
+                    executable:
+                      type: "boolean"
+                    fileName:
+                      type: "string"
+                  type: "object"
+                type: "array"
+              environmentOverrides:
+                properties:
+                  buildScript:
+                    type: "string"
+                  builderImage:
+                    type: "string"
+                  serviceAccountName:
+                    type: "string"
+                type: "object"
+              podFunctionName:
                 type: "string"
+              sourceArchive:
+                properties:
+                  filesystemFolderSource:
+                    properties:
+                      path:
+                        type: "string"
+                    type: "object"
+                  filesystemZipSource:
+                    properties:
+                      path:
+                        type: "string"
+                      sha256Checksum:
+                        type: "string"
+                    type: "object"
+                  httpZipSource:
+                    properties:
+                      sha256Checksum:
+                        type: "string"
+                      url:
+                        type: "string"
+                    type: "object"
+                type: "object"
             required:
-            - "sourceArchiveSubPath"
+            - "sourceArchive"
             type: "object"
           status:
             properties:
-              deployArchiveSubPath:
-                type: "string"
+              deployArchive:
+                properties:
+                  filesystemFolderSource:
+                    properties:
+                      path:
+                        type: "string"
+                    type: "object"
+                type: "object"
               jobPod:
                 properties:
                   logs:

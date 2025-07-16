@@ -13,4 +13,9 @@ public class PodFunctionSpec {
 
     @Required
     private String entrypoint;
+
+    private List<PodFunction.FileAsset> fileAssets;
+
+    @Required
+    private String podPoolName;
 }

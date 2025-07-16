@@ -30,13 +30,24 @@ spec:
             properties:
               entrypoint:
                 type: "string"
-              initCommands:
+              fileAssets:
                 items:
-                  type: "string"
+                  properties:
+                    content:
+                      type: "string"
+                    envName:
+                      type: "string"
+                    executable:
+                      type: "boolean"
+                    fileName:
+                      type: "string"
+                  type: "object"
                 type: "array"
+              podPoolName:
+                type: "string"
             required:
             - "entrypoint"
-            - "initCommands"
+            - "podPoolName"
             type: "object"
           status:
             properties:
@@ -48,8 +59,14 @@ spec:
                     type: "integer"
                   status:
                     properties:
-                      deployArchiveSubPath:
-                        type: "string"
+                      deployArchive:
+                        properties:
+                          filesystemFolderSource:
+                            properties:
+                              path:
+                                type: "string"
+                            type: "object"
+                        type: "object"
                       jobPod:
                         properties:
                           logs:
@@ -77,8 +94,14 @@ spec:
                     type: "integer"
                   status:
                     properties:
-                      deployArchiveSubPath:
-                        type: "string"
+                      deployArchive:
+                        properties:
+                          filesystemFolderSource:
+                            properties:
+                              path:
+                                type: "string"
+                            type: "object"
+                        type: "object"
                       jobPod:
                         properties:
                           logs:

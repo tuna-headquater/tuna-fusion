@@ -1,0 +1,30 @@
+apiVersion: fusion.tuna.ai/v1
+kind: PodPool
+metadata:
+  name: test-pool-1
+spec:
+  archivePvcName: podpool-test-pvc-1
+  buildScript: |-
+      set -e
+      set -x
+      env
+    
+      cat $SOURCE_ARCHIVE_JSON_PATH
+      ZIP_URL=$(jq -r ".filesystemZipSource.path" $SOURCE_ARCHIVE_JSON_PATH)
+      echo "ZIP_URL: ${ZIP_URL}"
+      wget -O /tmp/src.zip "$ZIP_URL"
+    
+      echo "Unzip source archive"
+      unzip -d $SOURCE_ARCHIVE_PATH /tmp/src.zip
+    
+      echo "Copy source to deploy"
+      cp -r $SOURCE_ARCHIVE_PATH $DEPLOY_ARCHIVE_PATH
+    
+      echo "Install deps"
+      if [ -f $SOURCE_ARCHIVE_JSON_PATH/requirements.txt ]; then
+        uv pip install -i https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple -r $SOURCE_ARCHIVE_PATH/requirements.txt --target $DEPLOY_ARCHIVE_PATH
+      fi
+    
+      echo "Done!"
+  builderImage: robinqu/fusion-a2a-python-builder-env
+  poolSize: 3

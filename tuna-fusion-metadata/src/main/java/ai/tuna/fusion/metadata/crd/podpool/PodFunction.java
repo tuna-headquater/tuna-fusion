@@ -6,7 +6,9 @@ import io.fabric8.kubernetes.client.CustomResource;
 import io.fabric8.kubernetes.model.annotation.Group;
 import io.fabric8.kubernetes.model.annotation.ShortNames;
 import io.fabric8.kubernetes.model.annotation.Version;
+import lombok.Builder;
 import lombok.Data;
+import lombok.Getter;
 
 /**
  * @author robinqu
@@ -33,4 +35,15 @@ public class PodFunction extends CustomResource<PodFunctionSpec, PodFunctionStat
     public static class FilesystemFolderSource {
         private String path;
     }
+
+    @Getter
+    @Builder(toBuilder = true)
+    public static class FileAsset {
+        @Builder.Default
+        private boolean executable = false;
+        private String content;
+        private String fileName;
+        private String envName;
+    }
+
 }

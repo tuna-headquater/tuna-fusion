@@ -1,0 +1,7 @@
+apiVersion: fusion.tuna.ai/v1
+kind: PodFunction
+metadata:
+  name: test-function-1
+spec:
+  entrypoint: main.handler
+  podPoolName: test-pool-1

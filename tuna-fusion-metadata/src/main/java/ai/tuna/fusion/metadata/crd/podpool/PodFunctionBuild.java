@@ -17,6 +17,7 @@ import java.nio.file.Path;
 @Version("v1")
 @ShortNames({"pfb"})
 @AdditionalPrinterColumns({
+        @AdditionalPrinterColumn(name = "PodFunction", jsonPath = ".spec.podFunctionName"),
         @AdditionalPrinterColumn(name = "Phase", jsonPath = ".status.phase"),
         @AdditionalPrinterColumn(name = "JobPodName", jsonPath = ".status.jobPod.podName"),
 })

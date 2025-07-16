@@ -1,8 +1,6 @@
 package ai.tuna.fusion.gitops.server.git;
 
-import ai.tuna.fusion.gitops.server.git.pipeline.impl.AgentFunctionBuildPodInitScript;
 import ai.tuna.fusion.metadata.crd.agent.AgentDeployment;
-import ai.tuna.fusion.metadata.crd.agent.AgentEnvironment;
 import ai.tuna.fusion.metadata.crd.podpool.PodFunction;
 import ai.tuna.fusion.metadata.crd.podpool.PodFunctionBuild;
 import ai.tuna.fusion.metadata.crd.podpool.PodFunctionBuildSpec;
@@ -36,14 +34,12 @@ public class PipelineUtils {
     public static PodFunctionBuild createAgentFunctionBuild(
             KubernetesClient kubernetesClient,
             AgentDeployment agentDeployment,
-            AgentEnvironment agentEnvironment,
             PodFunction podFunction,
             PodFunctionBuildSpec.SourceArchive sourceArchive) {
         PodFunctionBuild podFunctionBuild = new PodFunctionBuild();
         PodFunctionBuildSpec spec = new PodFunctionBuildSpec();
-        var script = new AgentFunctionBuildPodInitScript(agentDeployment, agentEnvironment, sourceArchive);
-        spec.setInitContainerCommands(script.render());
         spec.setSourceArchive(sourceArchive);
+        spec.setPodFunctionName(podFunction.getMetadata().getName());
         podFunctionBuild.setSpec(spec);
         podFunctionBuild.getMetadata().setName("%s-build-%s".formatted(agentDeployment.getMetadata().getName(), Instant.now().getEpochSecond()));
         podFunctionBuild.getMetadata().setNamespace(agentDeployment.getMetadata().getNamespace());

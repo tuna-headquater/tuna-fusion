@@ -73,7 +73,7 @@ public class CustomReceivePackFactory implements ReceivePackFactory<HttpServletR
             var sourceArchive = sourceArchiveHandler.createSourceArchive(receivePack, commands, agentDeployment.getSpec().getGit().getWatchedBranchName());
             logInfo(receivePack, "📦 SourceArchive for repository is created successfully: %s", sourceArchive);
 
-            var functionBuild = PipelineUtils.createAgentFunctionBuild(kubernetesClient, agentDeployment, agentEnvironment, podFunction, sourceArchive);
+            var functionBuild = PipelineUtils.createAgentFunctionBuild(kubernetesClient, agentDeployment, podFunction, sourceArchive);
             logInfo(receivePack, "💾 FunctionBuild CR is created successfully: %s", functionBuild.getMetadata().getName());
 
             var podInfo = PipelineUtils.waitForJobPod(kubernetesClient, functionBuild.getMetadata().getName(), functionBuild.getMetadata().getNamespace());

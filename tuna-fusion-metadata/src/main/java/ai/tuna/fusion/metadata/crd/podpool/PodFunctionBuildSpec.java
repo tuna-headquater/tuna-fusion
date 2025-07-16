@@ -21,7 +21,13 @@ public class PodFunctionBuildSpec {
     @Required
     private SourceArchive sourceArchive;
 
-    @Required
-    private List<String> initContainerCommands;
-//    private PodSpec overrideJobPodSpec;
+    @Data
+    public static class EnvironmentOverrides {
+        private String buildScript;
+        private String builderImage;
+        private String serviceAccountName;
+    }
+    private EnvironmentOverrides environmentOverrides;
+    private List<PodFunction.FileAsset> additionalFileAssets;
+    private String podFunctionName;
 }
