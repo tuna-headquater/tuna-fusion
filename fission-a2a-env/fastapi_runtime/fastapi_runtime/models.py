@@ -4,7 +4,6 @@ from typing import Optional
 from pydantic import BaseModel, ConfigDict
 from pydantic.alias_generators import to_camel
 
-
 SHARED_MODEL_CONFIG = ConfigDict(
     alias_generator=to_camel,
     validate_by_alias=True,

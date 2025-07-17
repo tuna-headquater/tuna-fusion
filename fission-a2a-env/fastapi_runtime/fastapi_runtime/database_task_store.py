@@ -1,5 +1,4 @@
 import json
-import json
 import logging
 
 from a2a.server.tasks.task_store import TaskStore

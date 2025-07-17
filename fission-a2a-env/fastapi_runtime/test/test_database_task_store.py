@@ -8,7 +8,7 @@ import pytest_asyncio
 from a2a.types import Task
 from sqlalchemy import text
 
-from a2a_runtime.database_task_store import DatabaseTaskStore
+from runtime.a2a_runtime.database_task_store import DatabaseTaskStore
 
 
 logger = logging.getLogger(__name__)

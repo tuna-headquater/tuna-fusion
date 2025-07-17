@@ -90,9 +90,9 @@ public class PodFunctionBuildJobDependentResource extends CRUDKubernetesDependen
                 .addNewContainer()
                 .withName("build-container")
                 .withImage(builderImage)
-                .withCommand("sh", PodFunctionBuild.WORKSPACE_ROOT_PATH.resolve(PodFunctionBuild.BUILD_SCRIPT_FILENAME).toString())
                 .addAllToEnv(initCommand.renderFileAssetsEnvVars())
                 .addToEnv(
+                        new EnvVar("WORKSPACE_ROOT_PATH", workspacePath, null),
                         new EnvVar("ARCHIVE_ROOT_PATH", archivePath, null),
                         new EnvVar("DEPLOY_ARCHIVE_PATH", PodPoolResourceUtils.computeDeployArchivePath(primary), null),
                         new EnvVar("SOURCE_ARCHIVE_PATH", PodPoolResourceUtils.computeSourceArchivePath(primary), null),

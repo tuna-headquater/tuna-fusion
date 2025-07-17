@@ -6,7 +6,7 @@ spec:
   podFunctionName: test-function-1
   sourceArchive:
     httpZipSource:
-      url: https://github.com/tuna-headquarter/tuna-fusion-agent-hello-world/archive/refs/heads/main.zip
+      url: https://gist.github.com/RobinQu/f8f755f8bb0807ad564662c637175d23/archive/d30897eca61595f9292e2780f32de9f46ac0674a.zip
   environmentOverrides:
     buildScript: |-
       set -e

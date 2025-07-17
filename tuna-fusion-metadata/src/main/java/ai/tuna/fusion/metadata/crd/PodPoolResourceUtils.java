@@ -20,11 +20,9 @@ import static ai.tuna.fusion.metadata.crd.podpool.PodPool.*;
  * @author robinqu
  */
 public class PodPoolResourceUtils {
-
     public static String getPodPoolDeploymentName(PodPool resource) {
         return resource.getMetadata().getName() + "-deploy";
     }
-
 
     public static Map<String, String> computeGenericPodSelectors(PodPool resource) {
         return Map.of(
@@ -109,6 +107,10 @@ public class PodPoolResourceUtils {
 
     public static String computeDeployArchivePath(PodFunctionBuild resource) {
         return PodFunctionBuild.ARCHIVE_ROOT_PATH.resolve("deployments").resolve(resource.getMetadata().getUid()).toString();
+    }
+
+    public static String computeDeployFileAssetPath(String buildUid, PodFunction.FileAsset fileAsset) {
+        return PodFunctionBuild.ARCHIVE_ROOT_PATH.resolve("deployments").resolve(buildUid).resolve(fileAsset.getFileName()).toString();
     }
 
     public static String computeSourceArchivePath(PodFunctionBuild resource) {

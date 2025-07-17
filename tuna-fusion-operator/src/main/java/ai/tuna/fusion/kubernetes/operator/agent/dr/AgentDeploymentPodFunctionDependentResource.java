@@ -61,6 +61,7 @@ public class AgentDeploymentPodFunctionDependentResource extends CRUDKubernetesD
         var agentCard = originalAgentCard.toBuilder().url(AgentResourceUtils.agentExternalUrl(agentDeployment, agentEnvironment)).build();
         return PodFunction.FileAsset.builder()
                 .executable(false)
+                .targetDirectory(PodFunction.TargetDirectory.DEPLOY_ARCHIVE)
                 .fileName(AGENT_CARD_FILENAME)
                 .content(objectMapper.writeValueAsString(agentCard))
                 .build();
@@ -78,6 +79,7 @@ public class AgentDeploymentPodFunctionDependentResource extends CRUDKubernetesD
                     .ifPresent(sql -> sql.setTaskStoreTableName("tuna-fusion-%s-tasks".formatted(agentDeployment.getMetadata().getName())));
         }
         return PodFunction.FileAsset.builder()
+                .targetDirectory(PodFunction.TargetDirectory.DEPLOY_ARCHIVE)
                 .content(objectMapper.writeValueAsString(a2a))
                 .fileName(A2A_RUNTIME_FILENAME)
                 .executable(false)

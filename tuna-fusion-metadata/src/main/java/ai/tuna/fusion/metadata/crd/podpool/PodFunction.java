@@ -36,9 +36,23 @@ public class PodFunction extends CustomResource<PodFunctionSpec, PodFunctionStat
         private String path;
     }
 
+    public enum TargetDirectory {
+        /**
+         * Workspace folder is in temp storage which will be discarded after each build
+         */
+        WORKSPACE,
+
+        /**
+         * Deployment folder is persisted and will be mounted on runtime Pod.
+         */
+        DEPLOY_ARCHIVE
+    }
+
     @Getter
     @Builder(toBuilder = true)
     public static class FileAsset {
+        @Builder.Default
+        private TargetDirectory targetDirectory = TargetDirectory.DEPLOY_ARCHIVE;
         @Builder.Default
         private boolean executable = false;
         private String content;

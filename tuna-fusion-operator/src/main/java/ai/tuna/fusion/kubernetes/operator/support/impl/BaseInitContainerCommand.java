@@ -2,7 +2,6 @@ package ai.tuna.fusion.kubernetes.operator.support.impl;
 
 import ai.tuna.fusion.kubernetes.operator.support.InitContainerCommand;
 import ai.tuna.fusion.metadata.crd.podpool.PodFunction;
-import ai.tuna.fusion.metadata.crd.podpool.PodFunctionBuild;
 import io.fabric8.kubernetes.api.model.EnvVar;
 import io.fabric8.kubernetes.api.model.EnvVarBuilder;
 
@@ -28,21 +27,25 @@ public abstract class BaseInitContainerCommand implements InitContainerCommand {
 
     @Override
     public List<String> renderInitCommand() {
-        var script = fileAssets.entrySet().stream().map(entry -> {
-            var line = "echo -e '%s' > %s".formatted(entry.getValue().getContent(), entry.getKey());
-            if (entry.getValue().isExecutable()) {
-                line += " && chmod +x %s".formatted(entry.getKey());
+        var script = fileAssets.values().stream().map(fileAsset -> {
+            var filePath = pathForFileAsset(fileAsset);
+            var line = "echo -e '%s' > %s".formatted(fileAsset.getContent(), filePath);
+            if (fileAsset.isExecutable()) {
+                line += " && chmod +x %s".formatted(filePath);
             }
             return line;
         }).collect(Collectors.joining(" && "));
         return Arrays.asList("sh", "-c", script);
     }
 
+    protected abstract String pathForFileAsset(PodFunction.FileAsset fileAsset);
+
+
     @Override
     public List<EnvVar> renderFileAssetsEnvVars() {
         return fileAssets.values().stream().map(s -> new EnvVarBuilder()
                 .withName(convertToEnvName(s))
-                .withValue(PodFunctionBuild.WORKSPACE_ROOT_PATH.resolve(s.getFileName()).toString())
+                .withValue(pathForFileAsset(s))
                 .build()
         ).toList();
     }

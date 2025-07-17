@@ -3,5 +3,5 @@ kind: PodFunction
 metadata:
   name: test-function-1
 spec:
-  entrypoint: main.handler
+  entrypoint: hello.main
   podPoolName: test-pool-1

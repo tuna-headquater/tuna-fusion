@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+import asyncio
 import importlib
 import json
 import logging
@@ -16,21 +16,10 @@ from fastapi import FastAPI, Request, Response
 from redis.asyncio import Redis
 from starlette.applications import Starlette
 
-from a2a_runtime.database_task_store import DatabaseTaskStore
-from a2a_runtime.models import A2ARuntimeConfig
-from a2a_runtime.redis_queue_manager import RedisQueueManager
+from fastapi_runtime.database_task_store import DatabaseTaskStore
+from fastapi_runtime.models import A2ARuntimeConfig
+from fastapi_runtime.redis_queue_manager import RedisQueueManager
 
-USERFUNCVOL = os.environ.get("USERFUNCVOL", "/userfunc")
-
-
-def store_specialize_info(state):
-    json.dump(state, open(os.path.join(USERFUNCVOL, "state.json"), "w"))
-
-def check_specialize_info_exists():
-    return os.path.exists(os.path.join(USERFUNCVOL, "state.json"))
-
-def read_specialize_info():
-    return json.load(open(os.path.join(USERFUNCVOL, "state.json")))
 
 def import_src(path):
     return importlib.machinery.SourceFileLoader("mod", path).load_module()
@@ -96,22 +85,17 @@ class FuncApp(FastAPI):
         super().__init__(title="tuna-fusion A2A Server")
         self.fastapi_app = FastAPI()
         # init the class members
-        self.agent_app: Optional[A2AApplication] = None
+        self._agent_app: Optional[A2AApplication] = None
+        self._web_app: Optional[Any] = None
         self.logger = logging.getLogger()
         self.ch = logging.StreamHandler(sys.stdout)
-
         self.logger.setLevel(loglevel)
         self.ch.setLevel(loglevel)
         self.ch.setFormatter(
             logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
         )
         self.logger.addHandler(self.ch)
-
-        if check_specialize_info_exists():
-            self.logger.info('Found state.json')
-            specialize_info = read_specialize_info()
-            self.agent_app = self._load_v2(specialize_info)
-            self.logger.info('Loaded user function {}'.format(specialize_info))
+        self._mutex = asyncio.Lock()
 
     def build_json_rpc_app(self, executor_factory: Callable[[], AgentExecutor], file_root: str) -> JSONRPCApplication:
         agent_executor = None
@@ -137,40 +121,54 @@ class FuncApp(FastAPI):
 
         return A2AApplication(agent_executor=agent_executor, agent_card=agent_card, runtime_config=runtime_config)
 
-    async def load(self):
-        self.logger.info("/specialize called")
-        # load user function from code path
-        agent_executor_factory = import_src("/userfunc/user").main
-        self.agent_app = self.build_json_rpc_app(agent_executor_factory, "/userfunc/user")
-        return ""
-
-    async def loadv2(self, request: Request):
+    async def load(self, request: Request):
         specialize_info = await request.json()
-        if check_specialize_info_exists():
-            self.logger.warning("Found state.json, overwriting")
-        agent_executor_factory = self._load_v2(specialize_info)
-        self.agent_app = self.build_json_rpc_app(agent_executor_factory, specialize_info.get("filepath"))
-        store_specialize_info(specialize_info)
+        fn = self._load(specialize_info)
+        app_type = specialize_info.get('app_type', 'agent_app')
+        async with self._mutex:
+            if app_type == 'agent_app':
+                self._agent_app = self.build_json_rpc_app(fn, specialize_info.get("filepath"))
+            if app_type == "web_app":
+                self._web_app = fn
         return ""
 
-    async def healthz(self):
+    async def health(self):
         return "", Response(status_code=200)
 
     async def agent_task_call(self, request: Request):
-        if self.agent_app is None:
+        if self._agent_app is None:
             self.logger.error("agent_app is None")
             return Response(status_code=500)
-        self.logger.info(self.agent_app)
-        return await self.agent_app.handle_requests(request)
+        self.logger.info(self._agent_app)
+        return await self._agent_app.handle_requests(request)
+
+    async def dispatch(self, request: Request):
+        try:
+            if self._agent_app:
+                if request.url.path == "/":
+                    return await self.agent_task_call(request)
+                else:
+                    return await self.agent_card_call(request)
+            elif self._web_app:
+                if asyncio.iscoroutinefunction(self._web_app):
+                    return await self._web_app(request)
+                else:
+                    return self._web_app(request)
+            else:
+                return Response(status_code=400, content="No agent or web app configured")
+        finally:
+            async with self._mutex:
+                self._agent_app = None
+                self._web_app = None
 
     async def agent_card_call(self, request: Request):
-        if self.agent_app is None:
+        if self._agent_app is None:
             self.logger.error("agent_app is None")
             return Response(status_code=500)
-        self.logger.info(self.agent_app)
-        return await self.agent_app.get_agent_card(request)
+        self.logger.info(self._agent_app)
+        return await self._agent_app.get_agent_card(request)
 
-    def _load_v2(self, specialize_info):
+    def _load(self, specialize_info):
         filepath = specialize_info['filepath']
         handler = specialize_info['functionName']
         self.logger.info(

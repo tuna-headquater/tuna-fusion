@@ -13,6 +13,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
+import static ai.tuna.fusion.metadata.crd.PodPoolResourceUtils.computeDeployFileAssetPath;
+
 /**
  * @author robinqu
  */
@@ -38,7 +40,7 @@ public class FunctionBuildPodInitContainerCommand extends BaseInitContainerComma
 
     @Override
     void configureFileAssets(Map<String, PodFunction.FileAsset> fileAssets) {
-        fileAssets.put(PodFunctionBuild.BUILD_SCRIPT_FILENAME, renderBuildScript());
+        fileAssets.put(PodFunctionBuild.BUILD_SOURCE_SCRIPT_FILENAME, renderBuildScript());
         fileAssets.put(PodFunctionBuild.SOURCE_ARCHIVE_MANIFEST, renderSourceArchiveJson());
         Optional.ofNullable(podFunction.getSpec().getFileAssets())
                 .ifPresent(assets -> assets.forEach(fileAsset -> fileAssets.put(fileAsset.getFileName(), fileAsset)));
@@ -50,14 +52,24 @@ public class FunctionBuildPodInitContainerCommand extends BaseInitContainerComma
     private PodFunction.FileAsset renderSourceArchiveJson() {
         return PodFunction.FileAsset.builder()
                 .fileName(PodFunctionBuild.SOURCE_ARCHIVE_MANIFEST)
+                .targetDirectory(PodFunction.TargetDirectory.WORKSPACE)
                 .content(objectMapper.writeValueAsString(podFunctionBuild.getSpec().getSourceArchive()))
                 .executable(false)
                 .build();
     }
 
+    @Override
+    protected String pathForFileAsset(PodFunction.FileAsset fileAsset) {
+        return switch(fileAsset.getTargetDirectory()) {
+            case WORKSPACE -> PodFunctionBuild.WORKSPACE_ROOT_PATH.resolve(fileAsset.getFileName()).toString();
+            case DEPLOY_ARCHIVE -> computeDeployFileAssetPath(podFunctionBuild.getMetadata().getUid(), fileAsset);
+        };
+    }
+
     private PodFunction.FileAsset renderBuildScript() {
         return PodFunction.FileAsset.builder()
-                .fileName(PodFunctionBuild.BUILD_SCRIPT_FILENAME)
+                .fileName(PodFunctionBuild.BUILD_SOURCE_SCRIPT_FILENAME)
+                .targetDirectory(PodFunction.TargetDirectory.WORKSPACE)
                 .content(
                         Optional.ofNullable(podFunctionBuild.getSpec().getEnvironmentOverrides())
                         .map(PodFunctionBuildSpec.EnvironmentOverrides::getBuildScript)
