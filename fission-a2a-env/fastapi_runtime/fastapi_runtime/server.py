@@ -143,7 +143,7 @@ class FuncApp(FastAPI):
         return await self._agent_app.handle_requests(request)
 
     async def dispatch(self, request: Request):
-        try:
+        async with self._mutex:
             if self._agent_app:
                 if request.url.path == "/":
                     return await self.agent_task_call(request)
@@ -156,10 +156,6 @@ class FuncApp(FastAPI):
                     return self._web_app(request)
             else:
                 return Response(status_code=400, content="No agent or web app configured")
-        finally:
-            async with self._mutex:
-                self._agent_app = None
-                self._web_app = None
 
     async def agent_card_call(self, request: Request):
         if self._agent_app is None:

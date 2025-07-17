@@ -9,7 +9,7 @@ docker buildx build --push --platform linux/amd64,linux/arm64 -t robinqu/fusion-
 
 ## Local test
 
-`hello_world` example 
+### `hello_world` example 
 
 ```shell
 # run runtime server
@@ -23,7 +23,19 @@ curl localhost:8888/
 ``` 
 
 
-## Test dependencies
+### A2A examples
+
+#### Example 1: A2A runtime with default in-memory configurations
+
+```shell
+RUNTIME_SERVICE_PORT=8888 uv run -m fastapi_runtime
+
+curl -XPOST localhost:8888/specialize -d "{\"functionName\": \"app.handle\", \"filepath\": \"$PWD/samples/hello_world\", \"app_type\": \"agent_app\"}"
+
+uv run $PWD/samples/hello_world/test_client.py
+```
+
+#### Example 2: With custom runtime configurations
 
 ```shell
 $ docker run -d \

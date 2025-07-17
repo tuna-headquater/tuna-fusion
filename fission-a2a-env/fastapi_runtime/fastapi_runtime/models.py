@@ -50,7 +50,7 @@ class QueueManager(BaseModel):
 class TaskStore(BaseModel):
     model_config = SHARED_MODEL_CONFIG
     provider: Optional[TaskStoreProvider] = None
-    sql: SQLConfig
+    sql: Optional[SQLConfig] = None
 
 
 class A2ARuntimeConfig(BaseModel):

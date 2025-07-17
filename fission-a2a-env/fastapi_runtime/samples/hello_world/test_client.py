@@ -1,3 +1,4 @@
+import asyncio
 import logging
 from typing import Any
 from uuid import uuid4
@@ -12,6 +13,8 @@ from a2a.types import (
     SendStreamingMessageRequest,
 )
 
+logger = logging.getLogger(__name__)
+
 
 @pytest.mark.asyncio
 async def test_client_send_message_streaming() -> None:
@@ -24,7 +27,7 @@ async def test_client_send_message_streaming() -> None:
 
     # --8<-- [start:A2ACardResolver]
 
-    base_url = 'http://router.tuna-fission.svc.cluster.local/fission-function/tuna-fission/test-deploy-3'
+    base_url = 'http://localhost:8888'
 
     async with httpx.AsyncClient() as httpx_client:
         # Initialize A2ACardResolver
@@ -95,3 +98,7 @@ async def test_client_send_message_streaming() -> None:
             print(chunk.model_dump(mode='json', exclude_none=True))
         # --8<-- [end:send_message_streaming]
 
+
+
+if __name__ == '__main__':
+    asyncio.run(test_client_send_message_streaming())
