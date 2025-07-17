@@ -18,4 +18,12 @@ public class PodFunctionSpec {
 
     @Required
     private String podPoolName;
+
+    public enum AppType {
+        WebApp,
+        AgentApp
+    }
+    @Required
+    private AppType appType = AppType.AgentApp;
+
 }

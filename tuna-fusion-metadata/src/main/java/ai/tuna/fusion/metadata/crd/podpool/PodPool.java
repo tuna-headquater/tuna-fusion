@@ -19,6 +19,6 @@ public class PodPool extends CustomResource<PodPoolSpec, PodPoolStatus> implemen
     public static final String GENERIC_POD_LABEL_NAME = "fusion.tuna.ai/is-generic-pod";
     public static final String SPECIALIZED_POD_LABEL_VALUE = "fusion.tuna.ai/is-specialized-pod";
     public static final String MANAGED_POD_POOL_LABEL_NAME = "fusion.tuna.ai/managed-by-pod-pool";
-    public static final int DEFAULT_RUNTIME_SERVICE_PORT = 8080;
+    public static final int DEFAULT_RUNTIME_SERVICE_PORT = 8888;
 
 }

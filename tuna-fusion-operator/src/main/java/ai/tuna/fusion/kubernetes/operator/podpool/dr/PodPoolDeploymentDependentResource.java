@@ -28,6 +28,7 @@ public class PodPoolDeploymentDependentResource extends CRUDKubernetesDependentR
 
     @Override
     protected Deployment desired(PodPool primary, Context<PodPool> context) {
+        log.debug("Configure Deployment for PodPool: {}/{}", primary.getMetadata().getNamespace(), primary.getMetadata().getName());
         var selectorLabels = computeGenericPodSelectors(primary);
         var deployLabels = PodPoolResourceUtils.computeDeployLabels(primary);
         var poolSize = primary.getSpec().getPoolSize();
@@ -102,6 +103,28 @@ public class PodPoolDeploymentDependentResource extends CRUDKubernetesDependentR
                 .addNewContainer()
                 .withName(podPool.getMetadata().getName() + "-container")
                 .withImage(podPool.getSpec().getRuntimeImage())
+                .withNewReadinessProbe()
+                .withInitialDelaySeconds(1)
+                .withPeriodSeconds(5)
+                .withNewHttpGet()
+                .withNewPort()
+                .withValue(PodPool.DEFAULT_RUNTIME_SERVICE_PORT)
+                .endPort()
+                .withScheme("HTTP")
+                .withPath("/health")
+                .endHttpGet()
+                .endReadinessProbe()
+                .withNewLivenessProbe()
+                .withInitialDelaySeconds(3)
+                .withPeriodSeconds(10)
+                .withNewHttpGet()
+                .withNewPort()
+                .withValue(PodPool.DEFAULT_RUNTIME_SERVICE_PORT)
+                .endPort()
+                .withScheme("HTTP")
+                .withPath("/health")
+                .endHttpGet()
+                .endLivenessProbe()
                 .endContainer()
                 .build();
     }

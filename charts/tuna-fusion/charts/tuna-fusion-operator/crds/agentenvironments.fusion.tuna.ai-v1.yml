@@ -2931,9 +2931,9 @@ spec:
                         type: "object"
                     required:
                     - "archivePvcName"
-                    - "buildScript"
                     - "builderImage"
                     - "poolSize"
+                    - "runtimeImage"
                     type: "object"
                     x-kubernetes-validations:
                     - rule: "has(self.runtimePodSpec) || has(self.runtimeImage)"

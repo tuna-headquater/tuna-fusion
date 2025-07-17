@@ -2,10 +2,7 @@ package ai.tuna.fusion.executor.driver.podpool.impl;
 
 import ai.tuna.fusion.executor.driver.podpool.FunctionPodManager;
 import ai.tuna.fusion.metadata.crd.ResourceUtils;
-import ai.tuna.fusion.metadata.crd.podpool.PodFunction;
-import ai.tuna.fusion.metadata.crd.podpool.PodFunctionBuildStatus;
-import ai.tuna.fusion.metadata.crd.podpool.PodFunctionStatus;
-import ai.tuna.fusion.metadata.crd.podpool.PodPool;
+import ai.tuna.fusion.metadata.crd.podpool.*;
 import ai.tuna.fusion.metadata.informer.PodPoolResources;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.client.KubernetesClient;
@@ -54,6 +51,7 @@ public class FunctionPodResolverImpl implements FunctionPodManager {
         var request = PodSpecializeRequest.builder()
                 .filepath(deployArchivePath)
                 .functionName(function.getSpec().getEntrypoint())
+                .appType(function.getSpec().getAppType())
                 .build();
         var headlessService = podPoolResources.queryPodPoolService(podPool.getMetadata().getNamespace(), podPool.getMetadata().getName()).orElseThrow();
         var responseSpec = webClient.post()

@@ -5,10 +5,7 @@ import ai.tuna.fusion.metadata.crd.podpool.PodFunction;
 import io.fabric8.kubernetes.api.model.EnvVar;
 import io.fabric8.kubernetes.api.model.EnvVarBuilder;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -20,14 +17,13 @@ public abstract class BaseInitContainerCommand implements InitContainerCommand {
 
     public BaseInitContainerCommand(Map<String, PodFunction.FileAsset> fileAssets) {
         this.fileAssets = fileAssets;
-        configureFileAssets(this.fileAssets);
     }
 
     abstract void configureFileAssets(Map<String, PodFunction.FileAsset> fileAssets);
 
     @Override
     public List<String> renderInitCommand() {
-        var script = fileAssets.values().stream().map(fileAsset -> {
+        var script = generateFileAssets().values().stream().map(fileAsset -> {
             var filePath = pathForFileAsset(fileAsset);
             var line = "echo -e '%s' > %s".formatted(fileAsset.getContent(), filePath);
             if (fileAsset.isExecutable()) {
@@ -41,9 +37,15 @@ public abstract class BaseInitContainerCommand implements InitContainerCommand {
     protected abstract String pathForFileAsset(PodFunction.FileAsset fileAsset);
 
 
+    private Map<String, PodFunction.FileAsset> generateFileAssets() {
+        var copiedFileAssets = new HashMap<>(fileAssets);
+        configureFileAssets(copiedFileAssets);
+        return copiedFileAssets;
+    }
+
     @Override
     public List<EnvVar> renderFileAssetsEnvVars() {
-        return fileAssets.values().stream().map(s -> new EnvVarBuilder()
+        return generateFileAssets().values().stream().map(s -> new EnvVarBuilder()
                 .withName(convertToEnvName(s))
                 .withValue(pathForFileAsset(s))
                 .build()

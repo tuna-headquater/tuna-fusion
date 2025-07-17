@@ -83,7 +83,7 @@ public class PodFunctionBuildReconciler implements Reconciler<PodFunctionBuild>,
             log.info("JobPodInfo: {}", jobPodInfo);
             if (PodPoolResourceUtils.isJobTerminalPhase(jobPodInfo.getPodPhase())) {
                 jobPodInfo.setLogs(
-                        PodPoolResourceUtils.getPodLog(context.getClient(), jobPodInfo.getPodName(), jobPodInfo.getPodName())
+                        PodPoolResourceUtils.getPodLog(context.getClient(), resource.getMetadata().getNamespace(), jobPodInfo.getPodName())
                 );
             }
 
@@ -127,7 +127,7 @@ public class PodFunctionBuildReconciler implements Reconciler<PodFunctionBuild>,
                     .patch(PatchContext.of(PatchType.SERVER_SIDE_APPLY), patchPodFunction);
 
             // update PodFunctionBuild
-            return UpdateControl.patchResource(podFunctionBuildPatch);
+            return UpdateControl.patchResourceAndStatus(podFunctionBuildPatch);
         }
         log.debug("Job is not created or already finished for PodFunctionBuild: {}", resource.getMetadata().getName());
         return UpdateControl.noUpdate();

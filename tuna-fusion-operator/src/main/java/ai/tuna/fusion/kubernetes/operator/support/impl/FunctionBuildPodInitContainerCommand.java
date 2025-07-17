@@ -40,7 +40,9 @@ public class FunctionBuildPodInitContainerCommand extends BaseInitContainerComma
 
     @Override
     void configureFileAssets(Map<String, PodFunction.FileAsset> fileAssets) {
-        fileAssets.put(PodFunctionBuild.BUILD_SOURCE_SCRIPT_FILENAME, renderBuildScript());
+        renderBuildScript().ifPresent(buildScript -> {
+            fileAssets.put(PodFunctionBuild.BUILD_SOURCE_SCRIPT_FILENAME, buildScript);
+        });
         fileAssets.put(PodFunctionBuild.SOURCE_ARCHIVE_MANIFEST, renderSourceArchiveJson());
         Optional.ofNullable(podFunction.getSpec().getFileAssets())
                 .ifPresent(assets -> assets.forEach(fileAsset -> fileAssets.put(fileAsset.getFileName(), fileAsset)));
@@ -66,17 +68,19 @@ public class FunctionBuildPodInitContainerCommand extends BaseInitContainerComma
         };
     }
 
-    private PodFunction.FileAsset renderBuildScript() {
-        return PodFunction.FileAsset.builder()
-                .fileName(PodFunctionBuild.BUILD_SOURCE_SCRIPT_FILENAME)
-                .targetDirectory(PodFunction.TargetDirectory.WORKSPACE)
-                .content(
-                        Optional.ofNullable(podFunctionBuild.getSpec().getEnvironmentOverrides())
-                        .map(PodFunctionBuildSpec.EnvironmentOverrides::getBuildScript)
-                        .orElse(podPool.getSpec().getBuildScript())
-                )
-                .executable(true)
-                .build();
+    private Optional<PodFunction.FileAsset> renderBuildScript() {
+        var buildScript = Optional.ofNullable(podFunctionBuild.getSpec().getEnvironmentOverrides())
+                .map(PodFunctionBuildSpec.EnvironmentOverrides::getBuildScript)
+                .orElse(podPool.getSpec().getBuildScript());
+        return Optional.ofNullable(buildScript)
+                .map(s -> {
+                    return PodFunction.FileAsset.builder()
+                            .fileName(PodFunctionBuild.BUILD_SOURCE_SCRIPT_FILENAME)
+                            .targetDirectory(PodFunction.TargetDirectory.WORKSPACE)
+                            .content(s)
+                            .executable(true)
+                            .build();
+                });
     }
 
 }

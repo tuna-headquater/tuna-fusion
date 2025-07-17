@@ -12,7 +12,7 @@ except:
     LOG_LEVEL = logging.INFO
 
 
-RUNTIME_PORT = int(os.environ.get("RUNTIME_PORT", "8888"))
+RUNTIME_PORT = int(os.environ.get("RUNTIME_SERVICE_PORT", "8888"))
 
 def main():
     app = FuncApp()

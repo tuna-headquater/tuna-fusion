@@ -43,6 +43,11 @@ spec:
                       type: "boolean"
                     fileName:
                       type: "string"
+                    targetDirectory:
+                      enum:
+                      - "DEPLOY_ARCHIVE"
+                      - "WORKSPACE"
+                      type: "string"
                   type: "object"
                 type: "array"
               environmentOverrides:

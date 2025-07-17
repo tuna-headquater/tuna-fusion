@@ -6,6 +6,7 @@ echo "Run pre_build.py"
 uv run -m fusion_builder.pre_build
 
 echo "Copy source to deploy"
+mkdir -p "$DEPLOY_ARCHIVE_PATH"
 cp -r "$SOURCE_ARCHIVE_PATH"/* "$DEPLOY_ARCHIVE_PATH"/
 
 

@@ -28,6 +28,11 @@ spec:
         properties:
           spec:
             properties:
+              appType:
+                enum:
+                - "AgentApp"
+                - "WebApp"
+                type: "string"
               entrypoint:
                 type: "string"
               fileAssets:
@@ -41,11 +46,17 @@ spec:
                       type: "boolean"
                     fileName:
                       type: "string"
+                    targetDirectory:
+                      enum:
+                      - "DEPLOY_ARCHIVE"
+                      - "WORKSPACE"
+                      type: "string"
                   type: "object"
                 type: "array"
               podPoolName:
                 type: "string"
             required:
+            - "appType"
             - "entrypoint"
             - "podPoolName"
             type: "object"

@@ -12,7 +12,7 @@ async def update_function_build(
         function_build_name: str,
         namespace: str,
         deploy_archive_path: str,
-        function_build_crd_group="ai.tuna.fusion",
+        function_build_crd_group="fusion.tuna.ai",
         function_build_crd_version="v1",
         function_build_kind="PodFunctionBuild",
         function_build_plural="podfunctionbuilds"
@@ -34,7 +34,6 @@ async def update_function_build(
         name=function_build_name,
         namespace=namespace,
         group=function_build_crd_group,
-        kind=function_build_kind,
         version=function_build_crd_version,
         plural=function_build_plural,
         body=body
@@ -47,7 +46,7 @@ if __name__ == "__main__":
     if skip_update:
         logging.info("post-build is skipped. Exit now...")
         exit(0)
-    config.load_kube_config()
+    config.load_config()
     asyncio.run(update_function_build(
         function_build_name=os.getenv("FUNCTION_BUILD_NAME"),
         namespace=os.getenv("NAMESPACE"),

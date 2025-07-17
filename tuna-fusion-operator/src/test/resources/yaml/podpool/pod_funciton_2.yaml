@@ -1,0 +1,46 @@
+apiVersion: fusion.tuna.ai/v1
+kind: PodFunction
+metadata:
+  name: test-function-1
+spec:
+  entrypoint: hello.main
+  podPoolName: test-pool-1
+  appType: AgentApp
+  fileAssets:
+    - fileName: a2a_runtime.json
+      executable: false
+      targetDirectory: DEPLOY_ARCHIVE
+      content: |-
+        {
+          "queueManager": {
+            "provider": "InMemory"
+          },
+          "taskStore": {
+            "provider": "InMemory"
+          }
+        }
+    - fileName: agent_card.json
+      content: |-
+        {
+          "name": "Hello World Agent",
+          "description": "A simple agent that returns a hello world.",
+          "url": "http://localhost:8888/",
+          "version": "1.0.0",
+          "capabilities": {
+            "streaming": true
+          },
+          "supportsAuthenticatedExtendedCard": false,
+          "skills": [
+            {
+              "id": "say_hello",
+              "name":  "Returns a SUPER Hello World",
+              "description": "A more enthusiastic greeting, only for authenticated users.",
+              "tags": ["hello world", "super", "extended"],
+              "examples": ["super hi", "give me a super hello"]
+            }
+          ],
+          "defaultInputModes": ["application/json", "text/plain"],
+          "defaultOutputModes": ["application/json", "image/png"]
+        }
+      executable: false
+      targetDirectory: DEPLOY_ARCHIVE

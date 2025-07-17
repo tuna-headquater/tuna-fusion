@@ -2,38 +2,14 @@ apiVersion: fusion.tuna.ai/v1
 kind: PodFunctionBuild
 metadata:
   name: test-pod-function-build-1
+  ownerReferences:
+    - apiVersion: fusion.tuna.ai/v1
+      kind: PodFunction
+      name: test-function-1
+      uid: f82e69a8-f328-4c65-beee-c7d14b1ecbf5
 spec:
   podFunctionName: test-function-1
   sourceArchive:
     httpZipSource:
-      url: https://gist.github.com/RobinQu/f8f755f8bb0807ad564662c637175d23/archive/d30897eca61595f9292e2780f32de9f46ac0674a.zip
-  environmentOverrides:
-    buildScript: |-
-      set -e
-      set -x
-      env
-      
-      cat $SOURCE_ARCHIVE_JSON_PATH
-      ZIP_URL=$(jq -r ".filesystemZipSource.path" $SOURCE_ARCHIVE_JSON_PATH)
-      echo "ZIP_URL: ${ZIP_URL}"
-      wget -O /tmp/src.zip "$ZIP_URL"
-    
-      echo "Unzip source archive"
-      unzip -d $SOURCE_ARCHIVE_PATH /tmp/src.zip
-      
-      echo "Copy source to deploy"
-      cp -r $SOURCE_ARCHIVE_PATH $DEPLOY_ARCHIVE_PATH
-      
-      echo "Install deps"
-      if [ -f $SOURCE_ARCHIVE_JSON_PATH/requirements.txt ]; then
-        uv pip install -i https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple -r $SOURCE_ARCHIVE_PATH/requirements.txt --target $DEPLOY_ARCHIVE_PATH
-      fi
-      
-      echo "Done!"
-      
-      
-
-
-
-
-
+      url: https://gist.github.com/RobinQu/f8f755f8bb0807ad564662c637175d23/archive/e82defc2b563fbc9f36b49a94cc3b8b80e5be689.zip
+      sha256Checksum: 5aa97e2c44e86a9993ba3f4a450847b8c6912439bb83b1e1037ac9a5408df65f

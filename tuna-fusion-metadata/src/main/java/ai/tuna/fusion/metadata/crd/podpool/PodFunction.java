@@ -1,6 +1,7 @@
 package ai.tuna.fusion.metadata.crd.podpool;
 
 import io.fabric8.crd.generator.annotation.AdditionalPrinterColumn;
+import io.fabric8.generator.annotation.Required;
 import io.fabric8.kubernetes.api.model.Namespaced;
 import io.fabric8.kubernetes.client.CustomResource;
 import io.fabric8.kubernetes.model.annotation.Group;
@@ -52,11 +53,19 @@ public class PodFunction extends CustomResource<PodFunctionSpec, PodFunctionStat
     @Builder(toBuilder = true)
     public static class FileAsset {
         @Builder.Default
+        @Required
         private TargetDirectory targetDirectory = TargetDirectory.DEPLOY_ARCHIVE;
+
         @Builder.Default
+        @Required
         private boolean executable = false;
+
+        @Required
         private String content;
+
+        @Required
         private String fileName;
+
         private String envName;
     }
 

@@ -1,10 +1,8 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: archive-pvc
-  namespace: tuna-fusion
+  name: podpool-test-pvc-1
 spec:
-  storageClassName: standard
   accessModes:
     - ReadWriteMany
   volumeMode: Filesystem

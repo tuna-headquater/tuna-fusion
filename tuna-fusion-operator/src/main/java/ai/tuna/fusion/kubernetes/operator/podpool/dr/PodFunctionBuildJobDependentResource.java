@@ -39,9 +39,9 @@ public class PodFunctionBuildJobDependentResource extends CRUDKubernetesDependen
 
     @Override
     protected Job desired(PodFunctionBuild primary, Context<PodFunctionBuild> context) {
-        log.debug("Creating Job DR for build {}", primary.getMetadata());
-        var podFunction = PodPoolResourceUtils.getReferencedPodFunction(primary, context.getClient()).orElseThrow();
-        var podPool = PodPoolResourceUtils.getReferencedPodPool(podFunction, context.getClient()).orElseThrow();
+        log.debug("Resolving Job DR for build {}", primary.getMetadata());
+        var podFunction = PodPoolResourceUtils.getReferencedPodFunction(primary, context.getClient()).orElseThrow(()-> new IllegalArgumentException("PodFunction not found for PodFunctionBuild " + primary.getMetadata().getName()));
+        var podPool = PodPoolResourceUtils.getReferencedPodPool(podFunction, context.getClient()).orElseThrow(()-> new IllegalArgumentException("PodPool not found for PodFunction " + podFunction.getMetadata().getName()));
         var archivePath = PodFunctionBuild.ARCHIVE_ROOT_PATH.toString();
         var workspacePath = PodFunctionBuild.WORKSPACE_ROOT_PATH.toString();
         var builderImage = Optional.ofNullable(primary.getSpec().getEnvironmentOverrides())
@@ -75,6 +75,7 @@ public class PodFunctionBuildJobDependentResource extends CRUDKubernetesDependen
                 .withActiveDeadlineSeconds(60 * 10L)
                 .withNewTemplate()
                 .withNewMetadata()
+                .withGenerateName(primary.getMetadata().getName() + "-")
                 .withNamespace(primary.getMetadata().getNamespace())
                 .endMetadata()
                 .withNewSpec()
@@ -83,9 +84,18 @@ public class PodFunctionBuildJobDependentResource extends CRUDKubernetesDependen
                 .addNewInitContainer()
                 .withName("builder-init-container")
                 .withImage("busybox:latest")
-                .withNewLifecycle()
-                .endLifecycle()
                 .addAllToCommand(initCommand.renderInitCommand())
+                .addNewVolumeMount()
+                .withMountPath(archivePath)
+                .withName("archive-volume")
+                // scope to build folder of current build
+                .withSubPath(primary.getMetadata().getName())
+                .endVolumeMount()
+                // mount build script
+                .addNewVolumeMount()
+                .withMountPath(workspacePath)
+                .withName("builder-script-volume")
+                .endVolumeMount()
                 .endInitContainer()
                 .addNewContainer()
                 .withName("build-container")
