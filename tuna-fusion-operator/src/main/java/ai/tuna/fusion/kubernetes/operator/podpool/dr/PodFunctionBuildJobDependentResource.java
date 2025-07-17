@@ -99,6 +99,7 @@ public class PodFunctionBuildJobDependentResource extends CRUDKubernetesDependen
                         new EnvVar("FUNCTION_NAME", podFunction.getMetadata().getName(), null),
                         new EnvVar("POD_POOL", podPool.getMetadata().getName(), null),
                         new EnvVar("FUNCTION_BUILD_NAME", primary.getMetadata().getName(), null),
+                        new EnvVar("FUNCTION_BUILD_UID", primary.getMetadata().getUid(), null),
                         new EnvVar("NAMESPACE", primary.getMetadata().getNamespace(), null)
                 )
                 // mount source archive

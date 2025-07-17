@@ -1,3 +1,5 @@
+from typing import Optional
+
 from pydantic import BaseModel
 
 class HttpZipSource(BaseModel):
@@ -15,9 +17,9 @@ class FilesystemFolderSource(BaseModel):
 
 
 class SourceArchive(BaseModel):
-    httpZipSource: HttpZipSource
-    filesystemZipSource: FilesystemZipSource
-    filesystemFolderSource: FilesystemFolderSource
+    httpZipSource: Optional[HttpZipSource] = None
+    filesystemZipSource: Optional[FilesystemZipSource] = None
+    filesystemFolderSource: Optional[FilesystemFolderSource] = None
 
 
 class DeployArchive(BaseModel):

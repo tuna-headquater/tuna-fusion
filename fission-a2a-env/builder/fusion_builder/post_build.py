@@ -1,10 +1,11 @@
 import asyncio
+import logging
 import os
 from pathlib import Path
 
 from kubernetes import config, client
 
-from builder.types import DeployArchive, FilesystemFolderSource
+from fusion_builder.models import DeployArchive, FilesystemFolderSource
 
 
 async def update_function_build(
@@ -16,6 +17,7 @@ async def update_function_build(
         function_build_kind="PodFunctionBuild",
         function_build_plural="podfunctionbuilds"
 ):
+    assert namespace, "should have namespace"
     assert function_build_name, "should have function_build_name"
     assert Path(deploy_archive_path).exists(), "deploy_archive_path should exist"
     api = client.CustomObjectsApi()
@@ -40,9 +42,15 @@ async def update_function_build(
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.DEBUG)
+    skip_update = os.getenv("SKIP_POST_BUILD", "").upper() in ["TRUE", "ON"]
+    if skip_update:
+        logging.info("post-build is skipped. Exit now...")
+        exit(0)
     config.load_kube_config()
     asyncio.run(update_function_build(
         function_build_name=os.getenv("FUNCTION_BUILD_NAME"),
         namespace=os.getenv("NAMESPACE"),
         deploy_archive_path=os.getenv("DEPLOY_ARCHIVE_PATH")
     ))
+
