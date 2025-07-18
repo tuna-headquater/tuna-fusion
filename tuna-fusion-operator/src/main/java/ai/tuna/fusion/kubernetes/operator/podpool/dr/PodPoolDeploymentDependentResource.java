@@ -1,7 +1,6 @@
 package ai.tuna.fusion.kubernetes.operator.podpool.dr;
 
 import ai.tuna.fusion.metadata.crd.PodPoolResourceUtils;
-import ai.tuna.fusion.kubernetes.operator.podpool.reconciler.PodPoolReconciler;
 import ai.tuna.fusion.metadata.crd.podpool.PodFunctionBuild;
 import ai.tuna.fusion.metadata.crd.podpool.PodPool;
 import io.fabric8.kubernetes.api.model.*;
@@ -23,7 +22,7 @@ import static ai.tuna.fusion.metadata.crd.PodPoolResourceUtils.getPodPoolDeploym
  * @author robinqu
  */
 @Slf4j
-@KubernetesDependent(informer = @Informer(labelSelector = PodPoolReconciler.SELECTOR))
+@KubernetesDependent(informer = @Informer(labelSelector = PodPool.DR_SELECTOR))
 public class PodPoolDeploymentDependentResource extends CRUDKubernetesDependentResource<Deployment, PodPool> {
 
     @Override
@@ -69,7 +68,7 @@ public class PodPoolDeploymentDependentResource extends CRUDKubernetesDependentR
 
         return new DeploymentBuilder()
                 .withNewMetadata()
-                .addToLabels(PodPoolReconciler.SELECTOR, "true")
+                .addToLabels(PodPool.DR_SELECTOR, "true")
                 .withName(getPodPoolDeploymentName(primary))
                 .withNamespace(primary.getMetadata().getNamespace())
                 .addNewOwnerReference()

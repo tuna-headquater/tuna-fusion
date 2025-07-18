@@ -8,3 +8,4 @@ spec:
   runtimeImage: robinqu/fusion-a2a-fastapi-runtime:1752747026
   poolSize: 3
   builderPodServiceAccountName: fusion-builder-sa
+  runPerPod: 10

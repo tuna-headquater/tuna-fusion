@@ -51,6 +51,11 @@ spec:
                       - "DEPLOY_ARCHIVE"
                       - "WORKSPACE"
                       type: "string"
+                  required:
+                  - "content"
+                  - "executable"
+                  - "fileName"
+                  - "targetDirectory"
                   type: "object"
                 type: "array"
               podPoolName:
@@ -96,6 +101,8 @@ spec:
                         - "Succeeded"
                         type: "string"
                     type: "object"
+                  uid:
+                    type: "string"
                 type: "object"
               effectiveBuild:
                 properties:
@@ -131,6 +138,8 @@ spec:
                         - "Succeeded"
                         type: "string"
                     type: "object"
+                  uid:
+                    type: "string"
                 type: "object"
             type: "object"
         type: "object"

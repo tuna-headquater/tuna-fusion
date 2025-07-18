@@ -48,6 +48,11 @@ spec:
                       - "DEPLOY_ARCHIVE"
                       - "WORKSPACE"
                       type: "string"
+                  required:
+                  - "content"
+                  - "executable"
+                  - "fileName"
+                  - "targetDirectory"
                   type: "object"
                 type: "array"
               environmentOverrides:

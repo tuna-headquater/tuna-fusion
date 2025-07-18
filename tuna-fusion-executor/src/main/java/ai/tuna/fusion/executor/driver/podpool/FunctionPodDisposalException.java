@@ -1,4 +1,4 @@
-package ai.tuna.fusion.executor.driver.podpool.impl;
+package ai.tuna.fusion.executor.driver.podpool;
 
 import io.fabric8.kubernetes.api.model.Pod;
 import lombok.Getter;
@@ -13,8 +13,6 @@ public class FunctionPodDisposalException extends Exception {
     public static FunctionPodDisposalException of(Pod pod, String message) {
         return new FunctionPodDisposalException(message, pod);
     }
-
-
 
     public FunctionPodDisposalException(Pod pod) {
         this.pod = pod;

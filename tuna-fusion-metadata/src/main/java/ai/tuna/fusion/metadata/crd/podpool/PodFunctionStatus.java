@@ -10,6 +10,7 @@ public class PodFunctionStatus {
     @Data
     public static class BuildInfo {
         private String name;
+        private String uid;
         private long startTimestamp;
         private PodFunctionBuildStatus status;
     }

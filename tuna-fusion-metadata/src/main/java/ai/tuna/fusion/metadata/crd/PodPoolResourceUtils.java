@@ -27,7 +27,8 @@ public class PodPoolResourceUtils {
     public static Map<String, String> computeGenericPodSelectors(PodPool resource) {
         return Map.of(
                 GENERIC_POD_LABEL_NAME, "true",
-                MANAGED_POD_POOL_LABEL_NAME, resource.getMetadata().getName()
+                POD_POOL_NAME_LABEL_NAME, resource.getMetadata().getName(),
+                DR_SELECTOR, "true"
         );
     }
 
@@ -42,13 +43,15 @@ public class PodPoolResourceUtils {
     public static Map<String, String> computeSpecializedPodLabels(PodPool podPool) {
         return Map.of(
                 SPECIALIZED_POD_LABEL_VALUE, "true",
-                MANAGED_POD_POOL_LABEL_NAME, podPool.getMetadata().getName()
+                POD_POOL_NAME_LABEL_NAME, podPool.getMetadata().getName(),
+                DR_SELECTOR, "true"
         );
     }
 
     public static Map<String, String> computeDeployLabels(PodPool resource) {
         return Map.of(
-                MANAGED_POD_POOL_LABEL_NAME, resource.getMetadata().getName()
+                POD_POOL_NAME_LABEL_NAME, resource.getMetadata().getName(),
+                DR_SELECTOR, "true"
         );
     }
 

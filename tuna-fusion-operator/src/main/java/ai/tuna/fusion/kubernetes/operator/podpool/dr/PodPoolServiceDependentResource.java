@@ -1,7 +1,6 @@
 package ai.tuna.fusion.kubernetes.operator.podpool.dr;
 
 import ai.tuna.fusion.metadata.crd.PodPoolResourceUtils;
-import ai.tuna.fusion.kubernetes.operator.podpool.reconciler.PodPoolReconciler;
 import ai.tuna.fusion.metadata.crd.podpool.PodPool;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.IntOrString;
@@ -19,13 +18,13 @@ import static ai.tuna.fusion.metadata.crd.PodPoolResourceUtils.computeServiceLab
  * @author robinqu
  */
 @Slf4j
-@KubernetesDependent(informer = @Informer(labelSelector = PodPoolReconciler.SELECTOR))
+@KubernetesDependent(informer = @Informer(labelSelector = PodPool.DR_SELECTOR))
 public class PodPoolServiceDependentResource extends CRUDKubernetesDependentResource<Service, PodPool> {
     @Override
     protected Service desired(PodPool primary, Context<PodPool> context) {
         return new ServiceBuilder()
                 .withNewMetadata()
-                .addToLabels(PodPoolReconciler.SELECTOR, "true")
+                .addToLabels(PodPool.DR_SELECTOR, "true")
                 .withName(PodPoolResourceUtils.computePodPoolServiceName( primary))
                 .addNewOwnerReference()
                 .withUid(primary.getMetadata().getUid())

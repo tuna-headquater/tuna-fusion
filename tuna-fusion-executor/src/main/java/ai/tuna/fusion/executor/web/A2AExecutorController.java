@@ -1,7 +1,6 @@
 package ai.tuna.fusion.executor.web;
 
 import ai.tuna.fusion.executor.driver.podpool.FunctionPodManager;
-import ai.tuna.fusion.executor.driver.podpool.impl.FunctionPodOperationException;
 import ai.tuna.fusion.metadata.crd.agent.AgentEnvironmentSpec;
 import ai.tuna.fusion.metadata.informer.AgentResources;
 import ai.tuna.fusion.metadata.informer.PodPoolResources;
@@ -40,7 +39,7 @@ public class A2AExecutorController {
             @PathVariable String namespace,
             @PathVariable String agentCatalogueName,
             @PathVariable String agentDeploymentName,
-            ProxyExchange<byte[]> proxy) throws FunctionPodOperationException {
+            ProxyExchange<byte[]> proxy) throws Exception {
         var agentDeployment = agentResources.queryAgentDeployment(namespace, agentDeploymentName).orElseThrow();
         var agentEnvironment = agentResources.queryAgentEnvironment(namespace, agentDeployment.getSpec().getEnvironmentName()).orElseThrow();
         if (agentEnvironment.getSpec().getDriver().getType() != AgentEnvironmentSpec.DriverType.PodPool) {
@@ -53,7 +52,13 @@ public class A2AExecutorController {
         String requestUri = proxy.path();
         String matchedPathPrefix = "/a2a/" + namespace + "/" + agentCatalogueName + "/" + agentDeploymentName;
         String trailingPath = requestUri.substring(requestUri.indexOf(matchedPathPrefix) + matchedPathPrefix.length());
-        return HttpProxyUtils.forward(functionPodManager, podFunction, podPool, headlessSvc, proxy, trailingPath);
+        return HttpProxyUtils.forward(
+                functionPodManager,
+                podFunction,
+                podPool,
+                proxy,
+                trailingPath
+        );
 
 
     }

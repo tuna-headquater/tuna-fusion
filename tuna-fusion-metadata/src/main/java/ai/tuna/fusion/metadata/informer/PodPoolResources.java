@@ -4,9 +4,9 @@ import ai.tuna.fusion.metadata.crd.podpool.PodFunction;
 import ai.tuna.fusion.metadata.crd.podpool.PodPool;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.Service;
+import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.informers.SharedIndexInformer;
 
-import java.util.List;
 import java.util.Optional;
 
 /**
@@ -22,6 +22,6 @@ public interface PodPoolResources {
     Optional<Pod> queryPod(String namespace, String podName);
     Optional<PodFunction> queryPodFunction(String namespace, String podFunctionName);
     Optional<Service> queryPodPoolService(String namespace, String podPoolName);
-    List<Pod> queryGenericPods(String namespace, String podPoolName);
-    List<Pod> querySpecializedPods(String namespace, String podPoolName);
+
+    KubernetesClient getKubernetesClient();
 }

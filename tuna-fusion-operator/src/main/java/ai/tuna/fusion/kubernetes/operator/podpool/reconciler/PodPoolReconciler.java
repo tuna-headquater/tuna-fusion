@@ -29,8 +29,6 @@ import java.util.concurrent.TimeUnit;
 })
 public class PodPoolReconciler implements Reconciler<PodPool>, Cleaner<PodPool> {
 
-    public static final String SELECTOR = "fusion.tuna.ai/managed-by-pp";
-
     @Override
     public DeleteControl cleanup(PodPool resource, Context<PodPool> context)  {
         return DeleteControl.defaultDelete();

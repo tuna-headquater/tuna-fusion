@@ -35,6 +35,8 @@ spec:
               poolSize:
                 minimum: 1.0
                 type: "integer"
+              runPerPod:
+                type: "integer"
               runtimeImage:
                 type: "string"
               runtimePodServiceAccountName:
@@ -2925,6 +2927,7 @@ spec:
             - "archivePvcName"
             - "builderImage"
             - "poolSize"
+            - "runPerPod"
             - "runtimeImage"
             type: "object"
             x-kubernetes-validations:

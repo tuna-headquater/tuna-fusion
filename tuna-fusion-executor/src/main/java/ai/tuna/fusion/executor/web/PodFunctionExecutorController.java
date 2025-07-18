@@ -1,7 +1,6 @@
 package ai.tuna.fusion.executor.web;
 
 import ai.tuna.fusion.executor.driver.podpool.FunctionPodManager;
-import ai.tuna.fusion.executor.driver.podpool.impl.FunctionPodOperationException;
 import ai.tuna.fusion.metadata.crd.ResourceUtils;
 import ai.tuna.fusion.metadata.crd.podpool.PodPool;
 import ai.tuna.fusion.metadata.informer.PodPoolResources;
@@ -31,19 +30,17 @@ public class PodFunctionExecutorController {
     public Mono<ResponseEntity<byte[]>> forward(
             @PathVariable String namespace,
             @PathVariable String functionName,
-            ProxyExchange<byte[]> proxy) throws FunctionPodOperationException
-    {
+            ProxyExchange<byte[]> proxy) throws Exception {
 
         var podFunction = podPoolResources.queryPodFunction(namespace, functionName).orElseThrow();
         var podPool = ResourceUtils.getMatchedOwnerReferenceResourceName(podFunction, PodPool.class)
                 .flatMap(name -> podPoolResources.queryPodPool(namespace, name))
                 .orElseThrow();
-        var headlessSvc = podPoolResources.queryPodPoolService(namespace, podPool.getMetadata().getName()).orElseThrow();
 
         String requestUri = proxy.path();
         String matchedPathPrefix = "/functions/" + namespace + "/" + functionName;
         String trailingPath = requestUri.substring(requestUri.indexOf(matchedPathPrefix) + matchedPathPrefix.length());
-        return HttpProxyUtils.forward(functionPodManager, podFunction, podPool, headlessSvc, proxy, trailingPath);
+        return HttpProxyUtils.forward(functionPodManager, podFunction, podPool, proxy, trailingPath);
     }
 
 }

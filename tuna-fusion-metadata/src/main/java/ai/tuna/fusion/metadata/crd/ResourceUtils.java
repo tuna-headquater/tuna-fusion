@@ -8,6 +8,7 @@ import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.informers.SharedIndexInformer;
 import io.fabric8.kubernetes.client.informers.cache.Cache;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.Optional;
 
@@ -50,6 +51,15 @@ public class ResourceUtils {
                 .stream().filter(ownerReference -> StringUtils.equals(ownerReference.getKind(), HasMetadata.getKind(ownerClass)) && StringUtils.equals(ownerReference.getApiVersion(), HasMetadata.getApiVersion(ownerClass)))
                 .map(OwnerReference::getName)
                 .findAny();
+    }
+
+    public static String computeResourceMetaKey(HasMetadata resource) {
+        return "%s/%s".formatted(resource.getMetadata().getNamespace(), resource.getMetadata().getNamespace());
+    }
+
+    public static Pair<String, String> parseResourceMetaKey(String key) {
+        var split = key.split("/");
+        return Pair.of(split[0], split[1]);
     }
 
 }

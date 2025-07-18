@@ -9,7 +9,6 @@ import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.informers.SharedIndexInformer;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -18,8 +17,8 @@ import java.util.stream.Stream;
  */
 public class DefaultPodPoolResources extends AbstractResourceOperations implements PodPoolResources {
     private final SharedIndexInformer<PodPool> podPoolSharedIndexInformer = createInformer(PodPool.class);
-    private final SharedIndexInformer<Pod> podSharedIndexInformer = createInformer(Pod.class);
-    private final SharedIndexInformer<Service> serviceSharedIndexInformer = createInformer(Service.class);
+    private final SharedIndexInformer<Pod> podSharedIndexInformer = createInformer(Pod.class, PodPool.DR_SELECTOR);
+    private final SharedIndexInformer<Service> serviceSharedIndexInformer = createInformer(Service.class, PodPool.DR_SELECTOR);
     private final SharedIndexInformer<PodFunction> podFunctionSharedIndexInformer = createInformer(PodFunction.class);
 
     public DefaultPodPoolResources(KubernetesClient kubernetesClient) {
@@ -64,16 +63,6 @@ public class DefaultPodPoolResources extends AbstractResourceOperations implemen
     @Override
     public Optional<Service> queryPodPoolService(String namespace, String podPoolName) {
         return ResourceUtils.getResourceFromInformer(serviceSharedIndexInformer, namespace, podPoolName);
-    }
-
-    @Override
-    public List<Pod> queryGenericPods(String namespace, String podPoolName) {
-        return List.of();
-    }
-
-    @Override
-    public List<Pod> querySpecializedPods(String namespace, String podPoolName) {
-        return List.of();
     }
 
     @Override

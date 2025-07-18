@@ -31,6 +31,10 @@ public class PodPoolSpec {
     @Min(1)
     private int poolSize = 3;
 
+    @Required
+    @Min(1)
+    private int runPerPod = 3;
+
     /**
      * The pod spec of the runtime pod.
      */
