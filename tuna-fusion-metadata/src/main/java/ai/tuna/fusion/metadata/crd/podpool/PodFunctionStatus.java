@@ -12,7 +12,7 @@ public class PodFunctionStatus {
         private String name;
         private String uid;
         private long startTimestamp;
-        private PodFunctionBuildStatus status;
+        private PodFunctionBuildStatus.Phase phase;
     }
     private BuildInfo currentBuild;
     private BuildInfo effectiveBuild;

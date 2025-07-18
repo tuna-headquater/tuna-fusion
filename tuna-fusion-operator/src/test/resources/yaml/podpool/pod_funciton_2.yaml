@@ -2,6 +2,11 @@ apiVersion: fusion.tuna.ai/v1
 kind: PodFunction
 metadata:
   name: test-function-1
+  ownerReferences:
+    - apiVersion: fusion.tuna.ai/v1
+      kind: PodPool
+      name: test-pool-1
+      uid: d1ddd191-fa15-4314-b863-bddc8181af5a
 spec:
   entrypoint: hello.main
   podPoolName: test-pool-1

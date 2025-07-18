@@ -2,6 +2,7 @@ package ai.tuna.fusion.metadata.informer.impl;
 
 import ai.tuna.fusion.metadata.crd.ResourceUtils;
 import ai.tuna.fusion.metadata.crd.podpool.PodFunction;
+import ai.tuna.fusion.metadata.crd.podpool.PodFunctionBuild;
 import ai.tuna.fusion.metadata.crd.podpool.PodPool;
 import ai.tuna.fusion.metadata.informer.PodPoolResources;
 import io.fabric8.kubernetes.api.model.Pod;
@@ -20,6 +21,7 @@ public class DefaultPodPoolResources extends AbstractResourceOperations implemen
     private final SharedIndexInformer<Pod> podSharedIndexInformer = createInformer(Pod.class, PodPool.DR_SELECTOR);
     private final SharedIndexInformer<Service> serviceSharedIndexInformer = createInformer(Service.class, PodPool.DR_SELECTOR);
     private final SharedIndexInformer<PodFunction> podFunctionSharedIndexInformer = createInformer(PodFunction.class);
+    private final SharedIndexInformer<PodFunctionBuild> podFunctionBuildSharedIndexInformer = createInformer(PodFunctionBuild.class);
 
     public DefaultPodPoolResources(KubernetesClient kubernetesClient) {
         super(kubernetesClient);
@@ -45,6 +47,12 @@ public class DefaultPodPoolResources extends AbstractResourceOperations implemen
         return podFunctionSharedIndexInformer;
     }
 
+
+    @Override
+    public SharedIndexInformer<PodFunctionBuild> podFunctionBuild() {
+        return podFunctionBuildSharedIndexInformer;
+    }
+
     @Override
     public Optional<PodPool> queryPodPool(String namespace, String podPoolName) {
         return ResourceUtils.getResourceFromInformer(podPoolSharedIndexInformer, namespace, podPoolName);
@@ -63,6 +71,12 @@ public class DefaultPodPoolResources extends AbstractResourceOperations implemen
     @Override
     public Optional<Service> queryPodPoolService(String namespace, String podPoolName) {
         return ResourceUtils.getResourceFromInformer(serviceSharedIndexInformer, namespace, podPoolName);
+    }
+
+
+    @Override
+    public Optional<PodFunctionBuild> queryPodFunctionBuild(String namespace, String podFunctionBuildName) {
+        return ResourceUtils.getResourceFromInformer(podFunctionBuildSharedIndexInformer, namespace, podFunctionBuildName);
     }
 
     @Override

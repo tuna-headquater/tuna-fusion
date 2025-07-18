@@ -74,19 +74,19 @@ public class PodPoolResourceUtils {
     }
 
     public static Optional<PodFunction> getReferencedPodFunction(PodFunctionBuild resource, KubernetesClient kubernetesClient) {
-        var ref = resource.getMetadata().getOwnerReferences().stream()
-                .filter(ownerReference -> StringUtils.equals(ownerReference.getKind(), HasMetadata.getKind(PodFunction.class)))
-                .filter(ownerReference -> StringUtils.equals(ownerReference.getApiVersion(), HasMetadata.getApiVersion(PodFunction.class)))
-                .findFirst();
-
-        return ref.map(ownerReference -> kubernetesClient.resources(PodFunction.class)
+        return Optional.ofNullable(kubernetesClient.resources(PodFunction.class)
                 .inNamespace(resource.getMetadata().getNamespace())
-                .withName(ownerReference.getName())
+                .withName(resource.getSpec().getPodFunctionName())
                 .get());
     }
 
     public static Optional<PodPool> getReferencedPodPool(PodFunction resource, KubernetesClient kubernetesClient) {
-        return AgentResourceUtils.getReferencedResource(kubernetesClient, resource, PodPool.class);
+        return Optional.ofNullable(
+                kubernetesClient.resources(PodPool.class)
+                        .inNamespace(resource.getMetadata().getNamespace())
+                        .withName(resource.getSpec().getPodPoolName())
+                        .get()
+        );
     }
 
     public static Optional<String> getReferencedPodFunctionName(PodFunctionBuild build) {

@@ -71,36 +71,16 @@ spec:
                 properties:
                   name:
                     type: "string"
+                  phase:
+                    enum:
+                    - "Failed"
+                    - "Pending"
+                    - "Running"
+                    - "Scheduled"
+                    - "Succeeded"
+                    type: "string"
                   startTimestamp:
                     type: "integer"
-                  status:
-                    properties:
-                      deployArchive:
-                        properties:
-                          filesystemFolderSource:
-                            properties:
-                              path:
-                                type: "string"
-                            type: "object"
-                        type: "object"
-                      jobPod:
-                        properties:
-                          logs:
-                            type: "string"
-                          podName:
-                            type: "string"
-                          podPhase:
-                            type: "string"
-                        type: "object"
-                      phase:
-                        enum:
-                        - "Failed"
-                        - "Pending"
-                        - "Running"
-                        - "Scheduled"
-                        - "Succeeded"
-                        type: "string"
-                    type: "object"
                   uid:
                     type: "string"
                 type: "object"
@@ -108,36 +88,16 @@ spec:
                 properties:
                   name:
                     type: "string"
+                  phase:
+                    enum:
+                    - "Failed"
+                    - "Pending"
+                    - "Running"
+                    - "Scheduled"
+                    - "Succeeded"
+                    type: "string"
                   startTimestamp:
                     type: "integer"
-                  status:
-                    properties:
-                      deployArchive:
-                        properties:
-                          filesystemFolderSource:
-                            properties:
-                              path:
-                                type: "string"
-                            type: "object"
-                        type: "object"
-                      jobPod:
-                        properties:
-                          logs:
-                            type: "string"
-                          podName:
-                            type: "string"
-                          podPhase:
-                            type: "string"
-                        type: "object"
-                      phase:
-                        enum:
-                        - "Failed"
-                        - "Pending"
-                        - "Running"
-                        - "Scheduled"
-                        - "Succeeded"
-                        type: "string"
-                    type: "object"
                   uid:
                     type: "string"
                 type: "object"

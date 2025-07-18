@@ -2,11 +2,6 @@ apiVersion: fusion.tuna.ai/v1
 kind: PodFunctionBuild
 metadata:
   name: test-pod-function-build-1
-  ownerReferences:
-    - apiVersion: fusion.tuna.ai/v1
-      kind: PodFunction
-      name: test-function-1
-      uid: f82e69a8-f328-4c65-beee-c7d14b1ecbf5
 spec:
   podFunctionName: test-function-1
   sourceArchive:

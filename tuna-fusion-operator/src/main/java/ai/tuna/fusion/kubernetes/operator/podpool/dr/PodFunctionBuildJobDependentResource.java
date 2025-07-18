@@ -10,11 +10,15 @@ import io.fabric8.kubernetes.api.model.EnvVar;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.batch.v1.Job;
 import io.fabric8.kubernetes.api.model.batch.v1.JobBuilder;
+import io.fabric8.kubernetes.api.model.batch.v1.JobStatus;
 import io.javaoperatorsdk.operator.api.config.informer.Informer;
 import io.javaoperatorsdk.operator.api.reconciler.Context;
 import io.javaoperatorsdk.operator.api.reconciler.dependent.DependentResource;
+import io.javaoperatorsdk.operator.api.reconciler.dependent.GarbageCollected;
+import io.javaoperatorsdk.operator.processing.dependent.Creator;
 import io.javaoperatorsdk.operator.processing.dependent.kubernetes.CRUDKubernetesDependentResource;
 import io.javaoperatorsdk.operator.processing.dependent.kubernetes.KubernetesDependent;
+import io.javaoperatorsdk.operator.processing.dependent.kubernetes.KubernetesDependentResource;
 import io.javaoperatorsdk.operator.processing.dependent.workflow.Condition;
 import lombok.extern.slf4j.Slf4j;
 
@@ -26,16 +30,7 @@ import java.util.Optional;
  */
 @KubernetesDependent(informer = @Informer(labelSelector = PodFunctionBuildReconciler.SELECTOR))
 @Slf4j
-public class PodFunctionBuildJobDependentResource extends CRUDKubernetesDependentResource<Job, PodFunctionBuild> {
-    public static class IsJobRequiredCondition implements Condition<Job, PodFunctionBuild> {
-        @Override
-        public boolean isMet(DependentResource<Job, PodFunctionBuild> dependentResource, PodFunctionBuild primary, Context<PodFunctionBuild> context) {
-            var phase = Optional.ofNullable(primary.getStatus())
-                    .map(PodFunctionBuildStatus::getPhase)
-                    .orElse(PodFunctionBuildStatus.Phase.Pending);
-            return phase != PodFunctionBuildStatus.Phase.Failed && phase != PodFunctionBuildStatus.Phase.Succeeded;
-        }
-    }
+public class PodFunctionBuildJobDependentResource extends KubernetesDependentResource<Job, PodFunctionBuild> implements GarbageCollected<PodFunctionBuild>, Creator<Job, PodFunctionBuild> {
 
     @Override
     protected Job desired(PodFunctionBuild primary, Context<PodFunctionBuild> context) {
@@ -68,14 +63,12 @@ public class PodFunctionBuildJobDependentResource extends CRUDKubernetesDependen
                 .endOwnerReference()
                 .endMetadata()
                 .withNewSpec()
-                .withTtlSecondsAfterFinished(60*60)
                 // disallow retry
                 .withBackoffLimit(0)
                 .withCompletions(1)
                 .withActiveDeadlineSeconds(60 * 10L)
                 .withNewTemplate()
                 .withNewMetadata()
-                .withGenerateName(primary.getMetadata().getName() + "-")
                 .withNamespace(primary.getMetadata().getNamespace())
                 .endMetadata()
                 .withNewSpec()

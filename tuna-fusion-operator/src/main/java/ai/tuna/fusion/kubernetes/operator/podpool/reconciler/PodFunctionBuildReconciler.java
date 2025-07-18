@@ -2,12 +2,14 @@ package ai.tuna.fusion.kubernetes.operator.podpool.reconciler;
 
 import ai.tuna.fusion.metadata.crd.PodPoolResourceUtils;
 import ai.tuna.fusion.kubernetes.operator.podpool.dr.PodFunctionBuildJobDependentResource;
+import ai.tuna.fusion.metadata.crd.ResourceUtils;
 import ai.tuna.fusion.metadata.crd.podpool.PodFunction;
 import ai.tuna.fusion.metadata.crd.podpool.PodFunctionBuild;
 import ai.tuna.fusion.metadata.crd.podpool.PodFunctionBuildStatus;
 import ai.tuna.fusion.metadata.crd.podpool.PodFunctionStatus;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.batch.v1.Job;
+import io.fabric8.kubernetes.api.model.batch.v1.JobStatus;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.dsl.base.PatchContext;
 import io.fabric8.kubernetes.client.dsl.base.PatchType;
@@ -30,7 +32,7 @@ import static ai.tuna.fusion.metadata.crd.podpool.PodFunctionBuildStatus.Phase.S
 @Component
 @ControllerConfiguration
 @Workflow(dependents = {
-        @Dependent(type = PodFunctionBuildJobDependentResource.class, reconcilePrecondition = PodFunctionBuildJobDependentResource.IsJobRequiredCondition.class),
+        @Dependent(type = PodFunctionBuildJobDependentResource.class),
 })
 public class PodFunctionBuildReconciler implements Reconciler<PodFunctionBuild>, Cleaner<PodFunctionBuild> {
     public static final String SELECTOR = "fusion.tuna.ai/managed-by-pfb";
@@ -50,21 +52,19 @@ public class PodFunctionBuildReconciler implements Reconciler<PodFunctionBuild>,
                     context.getClient(),
                     jobResource.getMetadata().getName(),
                     jobResource.getMetadata().getNamespace()
-            );
-            var jobStatus = fullJob.getStatus();
+            ).orElseThrow();
+            var jobStatus = Optional.ofNullable(fullJob.getStatus()).orElse(new JobStatus());
             log.info("Job(namespace={},name={}) has already been created: ready={}, failed={}, active={}, succeeded={}", fullJob.getMetadata().getNamespace(), fullJob.getMetadata().getName(), jobStatus.getReady(), jobStatus.getFailed(), jobStatus.getActive(), jobStatus.getSucceeded());
+
+            var podFunction = PodPoolResourceUtils.getReferencedPodFunction(resource, context.getClient()).orElseThrow(()-> new IllegalArgumentException("PodFunction not found for PodFunctionBuild " + resource.getMetadata().getName()));
+
             var podFunctionBuildPatch = new PodFunctionBuild();
             podFunctionBuildPatch.getMetadata().setName(resource.getMetadata().getName());
             podFunctionBuildPatch.getMetadata().setNamespace(resource.getMetadata().getNamespace());
-            var status = new PodFunctionBuildStatus();
+            ResourceUtils.addOwnerReference(podFunctionBuildPatch, resource);
 
+            var status = new PodFunctionBuildStatus();
             // deployArchive field is updated by builder script
-//            // Only FilesystemFolderSource is supported, so we can compute the status beforehand.
-//            var deployArchive = new PodFunctionBuildStatus.DeployArchive();
-//            var folderSource = new PodFunction.FilesystemFolderSource();
-//            folderSource.setPath(PodPoolResourceUtils.computeDeployArchivePath(resource));
-//            deployArchive.setFilesystemFolderSource(folderSource);
-//            status.setDeployArchive(deployArchive);
             podFunctionBuildPatch.setStatus(status);
             if(Optional.ofNullable(jobStatus.getSucceeded()).orElse(0) >= jobResource.getSpec().getCompletions()) {
                 status.setPhase(Succeeded);
@@ -89,47 +89,42 @@ public class PodFunctionBuildReconciler implements Reconciler<PodFunctionBuild>,
 
             // Update PodFunction with build info
             var patchPodFunction = new PodFunction();
+            patchPodFunction.getMetadata().setName(podFunction.getMetadata().getName());
+            patchPodFunction.getMetadata().setNamespace(podFunction.getMetadata().getNamespace());
+            var podFunctionStatus = new PodFunctionStatus();
+            patchPodFunction.setStatus(podFunctionStatus);
+            var buildInfo = new PodFunctionStatus.BuildInfo();
+            buildInfo.setName(resource.getMetadata().getName());
+            buildInfo.setStartTimestamp(Instant.now().getEpochSecond());
+            buildInfo.setPhase(resource.getStatus().getPhase());
+            buildInfo.setUid(resource.getMetadata().getUid());
             switch (podFunctionBuildPatch.getStatus().getPhase()) {
                 case Succeeded -> {
                     log.info("Patching Succeeded PodFunctionBuild: {}", podFunctionBuildPatch.getMetadata().getName());
-                    var podFunctionStatus = new PodFunctionStatus();
-                    var buildInfo = new PodFunctionStatus.BuildInfo();
-                    buildInfo.setName(resource.getMetadata().getName());
-                    buildInfo.setStartTimestamp(Instant.now().getEpochSecond());
                     podFunctionStatus.setCurrentBuild(null);
                     podFunctionStatus.setEffectiveBuild(buildInfo);
-                    patchPodFunction.setStatus(podFunctionStatus);
                 }
                 case Failed -> {
                     log.info("Patching Failed PodFunctionBuild: {}", podFunctionBuildPatch.getMetadata().getName());
-                    var podFunctionStatus = new PodFunctionStatus();
-                    var buildInfo = new PodFunctionStatus.BuildInfo();
-                    buildInfo.setName(resource.getMetadata().getName());
-                    buildInfo.setStartTimestamp(Instant.now().getEpochSecond());
                     podFunctionStatus.setCurrentBuild(null);
                     podFunctionStatus.setEffectiveBuild(null);
-                    patchPodFunction.setStatus(podFunctionStatus);
                 }
                 default -> {
                     log.info("Patching On-going PodFunctionBuild: {}", podFunctionBuildPatch.getMetadata().getName());
-                    var podFunctionStatus = new PodFunctionStatus();
-                    var buildInfo = new PodFunctionStatus.BuildInfo();
-                    buildInfo.setName(resource.getMetadata().getName());
-                    buildInfo.setStartTimestamp(Instant.now().getEpochSecond());
                     podFunctionStatus.setCurrentBuild(buildInfo);
                     podFunctionStatus.setEffectiveBuild(null);
-                    patchPodFunction.setStatus(podFunctionStatus);
                 }
             }
-            context.getClient().resources(PodFunction.class)
-                    .inNamespace(resource.getMetadata().getNamespace())
-                    .withName(PodPoolResourceUtils.getReferencedPodFunctionName(resource).orElseThrow())
-                    .patch(PatchContext.of(PatchType.SERVER_SIDE_APPLY), patchPodFunction);
+            // update PodFunction status
+            var updatedPodFunction = context.getClient()
+                    .resource(patchPodFunction)
+                    .patchStatus();
+            log.info("Updated PodFunction.status {}", updatedPodFunction.getStatus());
 
-            // update PodFunctionBuild
+            // update PodFunctionBuild status
             return UpdateControl.patchResourceAndStatus(podFunctionBuildPatch);
         }
-        log.debug("Job is not created or already finished for PodFunctionBuild: {}", resource.getMetadata().getName());
+        log.debug("Job is not created or already finished for PodFunctionBuild: {}", ResourceUtils.computeResourceMetaKey(resource));
         return UpdateControl.noUpdate();
 
     }
@@ -145,12 +140,12 @@ public class PodFunctionBuildReconciler implements Reconciler<PodFunctionBuild>,
     }
 
 
-    private Job getBuildJob(KubernetesClient client, String jobName, String ns) {
-        return client.batch()
+    private Optional<Job> getBuildJob(KubernetesClient client, String jobName, String ns) {
+        return Optional.ofNullable(client.batch()
                 .v1()
                 .jobs()
                 .inNamespace(ns)
                 .withName(jobName)
-                .get();
+                .get());
     }
 }

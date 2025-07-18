@@ -8,6 +8,10 @@ import ai.tuna.fusion.metadata.crd.podpool.PodPool;
  */
 public interface FunctionPodManager {
 
+    default CountedPodAccess requestAccess(PodFunction function, PodPool podPool) throws FunctionSpecilizationException {
+        return requestAccess(function, podPool, "");
+    }
+
     CountedPodAccess requestAccess(PodFunction function, PodPool podPool, String trailingPath) throws FunctionSpecilizationException;
     
     void disposeAccess(CountedPodAccess countedPodAccess) throws FunctionPodDisposalException;

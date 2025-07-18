@@ -22,11 +22,6 @@ public class DefaultAgentResources extends AbstractResourceOperations implements
     }
 
     @Override
-    public boolean isRunning() {
-        return agentDeploymentSharedIndexInformer.isRunning() && agentEnvironmentSharedIndexInformer.isRunning();
-    }
-
-    @Override
     public SharedIndexInformer<AgentDeployment> agentDeployment() {
         return agentDeploymentSharedIndexInformer;
     }

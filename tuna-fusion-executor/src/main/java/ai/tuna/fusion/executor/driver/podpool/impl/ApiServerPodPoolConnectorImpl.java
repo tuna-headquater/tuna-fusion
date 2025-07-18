@@ -59,6 +59,7 @@ public class ApiServerPodPoolConnectorImpl implements PodPoolConnector, Resource
     public PodAccess requestAccess(PodFunction function, String trailingPath) throws FunctionSpecilizationException {
         var effectiveBuild = Optional.ofNullable(function.getStatus())
                 .map(PodFunctionStatus::getEffectiveBuild)
+                .flatMap(buildInfo -> podPoolResources.queryPodFunctionBuild(podPool.getMetadata().getNamespace(), buildInfo.getName()))
                 .orElseThrow(() -> new FunctionSpecilizationException("Cannot find effectiveBuild", podPool, function));
 
         var pod = poll(Duration.ofSeconds(5))
@@ -86,8 +87,8 @@ public class ApiServerPodPoolConnectorImpl implements PodPoolConnector, Resource
         }
         return PodAccess.builder()
                 .uri(ResourceUtils.getPodUri(pod, headlessService, trailingPath))
-                .functionBuildName(effectiveBuild.getName())
-                .functionBuildUid(effectiveBuild.getUid())
+                .functionBuildName(effectiveBuild.getMetadata().getName())
+                .functionBuildUid(effectiveBuild.getMetadata().getUid())
                 .functionName(function.getMetadata().getName())
                 .podPoolName(podPool.getMetadata().getName())
                 .build();

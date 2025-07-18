@@ -54,12 +54,30 @@ public class ResourceUtils {
     }
 
     public static String computeResourceMetaKey(HasMetadata resource) {
-        return "%s/%s".formatted(resource.getMetadata().getNamespace(), resource.getMetadata().getNamespace());
+        return "%s/%s".formatted(resource.getMetadata().getNamespace(), resource.getMetadata().getName());
     }
 
     public static Pair<String, String> parseResourceMetaKey(String key) {
         var split = key.split("/");
         return Pair.of(split[0], split[1]);
+    }
+
+    public static boolean hasOwnerReference(HasMetadata resource, HasMetadata owner) {
+        return resource.getMetadata().getOwnerReferences()
+                .stream().anyMatch(ownerReference -> StringUtils.equals(ownerReference.getKind(), owner.getKind()) && StringUtils.equals(ownerReference.getApiVersion(), owner.getApiVersion()) && StringUtils.equals(ownerReference.getName(), owner.getMetadata().getName()));
+    }
+
+    public static void addOwnerReference(HasMetadata resource, HasMetadata owner) {
+        if (!hasOwnerReference(resource, owner)) {
+            resource.getMetadata().getOwnerReferences().add(new OwnerReference(
+                    owner.getApiVersion(),
+                    false,
+                    true,
+                    owner.getKind(),
+                    owner.getMetadata().getName(),
+                    owner.getMetadata().getUid()
+            ));
+        }
     }
 
 }

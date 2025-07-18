@@ -6,6 +6,7 @@ import io.fabric8.kubernetes.client.informers.SharedIndexInformer;
 import io.fabric8.kubernetes.client.informers.SharedInformerFactory;
 import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -18,6 +19,7 @@ import java.util.stream.Stream;
 /**
  * @author robinqu
  */
+@Slf4j
 public abstract class AbstractResourceOperations {
 
 //    static final long RESYNC_INTERVAL = 1000 * 60 * 5;
@@ -36,6 +38,7 @@ public abstract class AbstractResourceOperations {
     }
 
     public synchronized Future<Void> start() {
+        log.info("Start {} with {} informers", getClass().getName(), informers.size());
         List<CompletableFuture<Void>> startInformerTasks = new ArrayList<>();
         for (SharedIndexInformer<?> informer : informers) {
             CompletableFuture<Void> future = informer.start().toCompletableFuture();
@@ -45,6 +48,7 @@ public abstract class AbstractResourceOperations {
     }
 
     public synchronized void stop() {
+        log.info("Stop {} with {} informers", getClass().getName(), informers.size());
         informers.forEach(SharedIndexInformer::stop);
     }
 
