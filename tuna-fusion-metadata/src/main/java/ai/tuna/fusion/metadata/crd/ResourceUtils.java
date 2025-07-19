@@ -4,6 +4,7 @@ import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.OwnerReference;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.Service;
+import io.fabric8.kubernetes.api.model.batch.v1.Job;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.informers.SharedIndexInformer;
 import io.fabric8.kubernetes.client.informers.cache.Cache;
@@ -29,6 +30,24 @@ public class ResourceUtils {
                 .inNamespace(namespace)
                 .withName(name)
                 .get();
+    }
+
+
+    public static Optional<Pod> getPod(KubernetesClient client, String ns, String podName) {
+        return Optional.ofNullable(client.pods()
+                .inNamespace(ns)
+                .withName(podName)
+                .get());
+    }
+
+
+    public static Optional<Job> getBatchJob(KubernetesClient client, String jobName, String ns) {
+        return Optional.ofNullable(client.batch()
+                .v1()
+                .jobs()
+                .inNamespace(ns)
+                .withName(jobName)
+                .get());
     }
 
     public static <Resource extends HasMetadata> Optional<Resource> getResourceFromInformer(SharedIndexInformer<Resource> informer, String ns, String name) {

@@ -8,7 +8,6 @@ import io.fabric8.kubernetes.client.KubernetesClientBuilder;
 import io.fabric8.kubernetes.client.dsl.NonDeletingOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,7 +35,10 @@ import java.util.concurrent.TimeUnit;
  */
 @Slf4j
 @SpringBootTest
-@ContextConfiguration(classes = {IntegrationTestApplication.class, IntegrationTest.IntegrationTestConfiguration.class}, initializers = IntegrationTest.TestContextInitializer.class)
+@ContextConfiguration(classes = {
+        IntegrationTestApplication.class,
+        IntegrationTest.IntegrationTestConfiguration.class
+}, initializers = IntegrationTest.TestContextInitializer.class)
 public class IntegrationTest {
 
     public static String TEST_NAMESPACE = "test-" + UUID.randomUUID();

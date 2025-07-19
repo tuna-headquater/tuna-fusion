@@ -7,6 +7,7 @@ import ai.tuna.fusion.metadata.informer.PodPoolResources;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import static ai.tuna.fusion.TestResourceGroups.RESOURCE_GROUP_1;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
@@ -20,24 +21,15 @@ public class PodPoolResourcesIT extends MetadataIntegrationTest {
     @Autowired
     private PodPoolResources podPoolResources;
 
-    private static final ResourceTreeNode RESOURCE_GROUP_1 = ResourceTreeNode.parseYaml("""
-            type: PodFunctionBuild
-            classpath: yaml/podpool/pod_function_build_1.yaml
-            dependencies:
-            - type: PodFunction
-              classpath: yaml/podpool/pod_function_1.yaml
-              dependencies:
-              - type: PodPool
-                classpath: yaml/podpool/podpool_1.yaml
-            """);
-
-
-
     @Test
     public void testResourceQuery() {
         resourceLoader.awaitResourceGroup(RESOURCE_GROUP_1);
         var podPool = podPoolResources.queryPodPool(getTestNamespace(), "test-pool-1");
         assertThat(podPool).isPresent();
+        var fn1 = podPoolResources.queryPodFunction(getTestNamespace(), "test-function-1");
+        assertThat(fn1).isPresent();
+        var build1 = podPoolResources.queryPodFunctionBuild(getTestNamespace(), "test-pod-function-build-1");
+        assertThat(build1).isPresent();
     }
 
 }

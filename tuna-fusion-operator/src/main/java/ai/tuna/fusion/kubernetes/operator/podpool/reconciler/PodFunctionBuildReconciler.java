@@ -49,7 +49,7 @@ public class PodFunctionBuildReconciler implements Reconciler<PodFunctionBuild>,
                 .orElse(null);
 
         if (!Objects.isNull(jobResource)) {
-            var fullJob = getBuildJob(
+            var fullJob = ResourceUtils.getBatchJob(
                     context.getClient(),
                     jobResource.getMetadata().getName(),
                     jobResource.getMetadata().getNamespace()
@@ -155,12 +155,4 @@ public class PodFunctionBuildReconciler implements Reconciler<PodFunctionBuild>,
     }
 
 
-    private Optional<Job> getBuildJob(KubernetesClient client, String jobName, String ns) {
-        return Optional.ofNullable(client.batch()
-                .v1()
-                .jobs()
-                .inNamespace(ns)
-                .withName(jobName)
-                .get());
-    }
 }
