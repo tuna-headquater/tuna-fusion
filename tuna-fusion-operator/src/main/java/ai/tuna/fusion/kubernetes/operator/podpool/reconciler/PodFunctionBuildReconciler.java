@@ -8,6 +8,7 @@ import ai.tuna.fusion.metadata.crd.podpool.PodFunctionBuild;
 import ai.tuna.fusion.metadata.crd.podpool.PodFunctionBuildStatus;
 import ai.tuna.fusion.metadata.crd.podpool.PodFunctionStatus;
 import io.fabric8.kubernetes.api.model.Pod;
+import io.fabric8.kubernetes.api.model.PodStatus;
 import io.fabric8.kubernetes.api.model.batch.v1.Job;
 import io.fabric8.kubernetes.api.model.batch.v1.JobStatus;
 import io.fabric8.kubernetes.client.KubernetesClient;
@@ -75,17 +76,26 @@ public class PodFunctionBuildReconciler implements Reconciler<PodFunctionBuild>,
             } else  {
                 status.setPhase(PodFunctionBuildStatus.Phase.Scheduled);
             }
-            PodFunctionBuildStatus.JobPodInfo jobPodInfo = new PodFunctionBuildStatus.JobPodInfo();
-            status.setJobPod(jobPodInfo);
-            var jobPod = getJobPod(context.getClient(), jobResource.getMetadata().getName(), jobResource.getMetadata().getNamespace());
-            jobPodInfo.setPodName(jobPod.map(pod -> pod.getMetadata().getName()).orElseThrow());
-            jobPodInfo.setPodPhase(jobPod.map(pod -> pod.getStatus().getPhase()).orElseThrow());
-            log.info("JobPodInfo: {}", jobPodInfo);
-            if (PodPoolResourceUtils.isJobTerminalPhase(jobPodInfo.getPodPhase())) {
-                jobPodInfo.setLogs(
-                        PodPoolResourceUtils.getPodLog(context.getClient(), resource.getMetadata().getNamespace(), jobPodInfo.getPodName())
-                );
-            }
+
+            getJobPod(
+                    context.getClient(),
+                    jobResource.getMetadata().getName(),
+                    jobResource.getMetadata().getNamespace()
+            )
+                    .map(Pod::getStatus)
+                    .map(PodStatus::getPhase)
+                    .ifPresent(phase -> {
+                        PodFunctionBuildStatus.JobPodInfo jobPodInfo = new PodFunctionBuildStatus.JobPodInfo();
+                        jobPodInfo.setPodName(jobResource.getMetadata().getName());
+                        jobPodInfo.setPodPhase(phase);
+                        log.info("JobPodInfo: {}", jobPodInfo);
+                        if (PodPoolResourceUtils.isJobTerminalPhase(jobPodInfo.getPodPhase())) {
+                            jobPodInfo.setLogs(
+                                    PodPoolResourceUtils.getPodLog(context.getClient(), resource.getMetadata().getNamespace(), jobPodInfo.getPodName())
+                            );
+                        }
+                        status.setJobPod(jobPodInfo);
+                    });
 
             // Update PodFunction with build info
             var patchPodFunction = new PodFunction();
@@ -96,8 +106,13 @@ public class PodFunctionBuildReconciler implements Reconciler<PodFunctionBuild>,
             var buildInfo = new PodFunctionStatus.BuildInfo();
             buildInfo.setName(resource.getMetadata().getName());
             buildInfo.setStartTimestamp(Instant.now().getEpochSecond());
-            buildInfo.setPhase(resource.getStatus().getPhase());
             buildInfo.setUid(resource.getMetadata().getUid());
+
+            Optional.ofNullable(resource.getStatus())
+                    .map(PodFunctionBuildStatus::getPhase)
+                    .ifPresent(buildInfo::setPhase);
+
+
             switch (podFunctionBuildPatch.getStatus().getPhase()) {
                 case Succeeded -> {
                     log.info("Patching Succeeded PodFunctionBuild: {}", podFunctionBuildPatch.getMetadata().getName());

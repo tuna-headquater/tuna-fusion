@@ -56,20 +56,20 @@ public class ApiServerPodPoolConnectorImpl implements PodPoolConnector, Resource
     }
 
     @Override
-    public PodAccess requestAccess(PodFunction function, String trailingPath) throws FunctionSpecilizationException {
+    public PodAccess requestAccess(PodFunction function, String trailingPath) throws FunctionPodAccessException {
         var effectiveBuild = Optional.ofNullable(function.getStatus())
                 .map(PodFunctionStatus::getEffectiveBuild)
                 .flatMap(buildInfo -> podPoolResources.queryPodFunctionBuild(podPool.getMetadata().getNamespace(), buildInfo.getName()))
-                .orElseThrow(() -> new FunctionSpecilizationException("Cannot find effectiveBuild", podPool, function));
+                .orElseThrow(() -> new FunctionPodAccessException("Cannot find effectiveBuild", podPool, function));
 
         var pod = poll(Duration.ofSeconds(5))
-                .orElseThrow(()-> new FunctionSpecilizationException("Cannot find available Generic Pod", podPool, function));
+                .orElseThrow(()-> new FunctionPodAccessException("Cannot find available Generic Pod", podPool, function));
 
         var deployArchivePath = Optional.ofNullable(effectiveBuild.getStatus())
                 .map(PodFunctionBuildStatus::getDeployArchive)
                 .map(PodFunctionBuildStatus.DeployArchive::getFilesystemFolderSource)
                 .map(PodFunction.FilesystemFolderSource::getPath)
-                .orElseThrow(()-> FunctionSpecilizationException.of(podPool, function, "No effective build found for pod function " + function.getMetadata().getName()));
+                .orElseThrow(()-> FunctionPodAccessException.of(podPool, function, "No effective build found for pod function " + function.getMetadata().getName()));
         var request = PodSpecializeRequest.builder()
                 .filepath(deployArchivePath)
                 .functionName(function.getSpec().getEntrypoint())
@@ -83,7 +83,7 @@ public class ApiServerPodPoolConnectorImpl implements PodPoolConnector, Resource
         var response = responseSpec.toEntity(String.class)
                 .block(Duration.ofSeconds(5));
         if (response == null || response.getStatusCode() != HttpStatusCode.valueOf(200)) {
-            throw FunctionSpecilizationException.of(podPool, function, "Failed to specialize pod function " + function.getMetadata().getName());
+            throw FunctionPodAccessException.of(podPool, function, "Failed to specialize pod function " + function.getMetadata().getName());
         }
         return PodAccess.builder()
                 .uri(ResourceUtils.getPodUri(pod, headlessService, trailingPath))

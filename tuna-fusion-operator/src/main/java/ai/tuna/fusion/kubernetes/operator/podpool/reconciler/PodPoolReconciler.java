@@ -44,7 +44,7 @@ public class PodPoolReconciler implements Reconciler<PodPool>, Cleaner<PodPool> 
         cleanupOrphanPods(resource, context);
         var deployment = deploy.get();
         var podPoolStatus = new PodPoolStatus();
-        podPoolStatus.setDeploymentName(PodPoolResourceUtils.getPodPoolDeploymentName(resource));
+        podPoolStatus.setDeploymentName(PodPoolResourceUtils.computePodPoolDeploymentName(resource));
         podPoolStatus.setGenericPodSelectors(PodPoolResourceUtils.computeGenericPodSelectors(resource));
         podPoolStatus.setAvailablePods(Optional.ofNullable(deployment.getStatus().getAvailableReplicas()).orElse(0));
         podPoolStatus.setHeadlessServiceName(PodPoolResourceUtils.computePodPoolServiceName(resource));

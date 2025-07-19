@@ -3,7 +3,7 @@ kind: PodPool
 metadata:
   name: test-pool-1
 spec:
-  archivePvcName: podpool-test-pvc-1
+  archivePvcName: shared-archive-pvc
   builderImage: robinqu/fusion-a2a-env-builder:1752756455
   runtimeImage: robinqu/fusion-a2a-fastapi-runtime:1752747026
   poolSize: 3

@@ -13,6 +13,7 @@
         <module>tuna-fusion-gitops-server</module>
         <module>tuna-fusion-metadata</module>
         <module>tuna-fusion-executor</module>
+        <module>tuna-fusion-integrationtest</module>
     </modules>
 
     <properties>
@@ -34,6 +35,7 @@
         <operator-starter.version>6.1.0</operator-starter.version>
         <spring-cloud.version>2025.0.0</spring-cloud.version>
         <aws.java.sdk.version>2.31.69</aws.java.sdk.version>
+        <testcontainers.version>1.21.3</testcontainers.version>
     </properties>
 
     <dependencyManagement>
@@ -121,6 +123,21 @@
                 <version>1.0-SNAPSHOT</version>
             </dependency>
             <dependency>
+                <groupId>ai.tuna.fusion</groupId>
+                <artifactId>tuna-fusion-operator</artifactId>
+                <version>1.0-SNAPSHOT</version>
+            </dependency>
+            <dependency>
+                <groupId>ai.tuna.fusion</groupId>
+                <artifactId>tuna-fusion-gitops-server</artifactId>
+                <version>1.0-SNAPSHOT</version>
+            </dependency>
+            <dependency>
+                <groupId>ai.tuna.fusion</groupId>
+                <artifactId>tuna-fusion-executor</artifactId>
+                <version>1.0-SNAPSHOT</version>
+            </dependency>
+            <dependency>
                 <groupId>io.github.vishalmysore</groupId>
                 <artifactId>a2ajava</artifactId>
                 <version>0.1.8.2</version>
@@ -129,6 +146,24 @@
                 <groupId>com.google.guava</groupId>
                 <artifactId>guava</artifactId>
                 <version>33.4.6-jre</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-lang3</artifactId>
+                <version>3.18.0</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.testcontainers</groupId>
+                <artifactId>junit-jupiter</artifactId>
+                <version>${testcontainers.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.testcontainers</groupId>
+                <artifactId>k3s</artifactId>
+                <version>${testcontainers.version}</version>
+                <scope>test</scope>
             </dependency>
         </dependencies>
     </dependencyManagement>

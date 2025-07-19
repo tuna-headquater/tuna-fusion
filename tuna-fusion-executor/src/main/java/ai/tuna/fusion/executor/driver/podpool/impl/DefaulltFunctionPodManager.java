@@ -26,11 +26,11 @@ public class DefaulltFunctionPodManager implements FunctionPodManager, RemovalLi
         this.podAccessCache = CacheBuilder.newBuilder().maximumSize(1000).build();
     }
 
-    private String cacheKey(PodFunction function, PodPool podPool) throws FunctionSpecilizationException {
+    private String cacheKey(PodFunction function, PodPool podPool) throws FunctionPodAccessException {
         return Optional.ofNullable(function.getStatus())
                 .map(PodFunctionStatus::getEffectiveBuild)
                 .map(PodFunctionStatus.BuildInfo::getUid)
-                .orElseThrow(()-> new FunctionSpecilizationException("Cannot find effectiveBuild", podPool, function));
+                .orElseThrow(()-> new FunctionPodAccessException("Cannot find effectiveBuild", podPool, function));
     }
 
     @Override
@@ -45,7 +45,7 @@ public class DefaulltFunctionPodManager implements FunctionPodManager, RemovalLi
     }
 
     @Override
-    public CountedPodAccess requestAccess(PodFunction function, PodPool podPool, String trailingPath) throws FunctionSpecilizationException {
+    public CountedPodAccess requestAccess(PodFunction function, PodPool podPool, String trailingPath) throws FunctionPodAccessException {
         var cacheKey = cacheKey(function, podPool);
         try {
             var access = podAccessCache.get(cacheKey, () -> CountedPodAccess.builder()
@@ -56,10 +56,10 @@ public class DefaulltFunctionPodManager implements FunctionPodManager, RemovalLi
             access.getUsageCount().incrementAndGet();
             return access;
         } catch (ExecutionException e) {
-            if (Objects.nonNull(e.getCause()) && FunctionSpecilizationException.class.isAssignableFrom(e.getCause().getClass())) {
-                throw (FunctionSpecilizationException) e.getCause();
+            if (Objects.nonNull(e.getCause()) && FunctionPodAccessException.class.isAssignableFrom(e.getCause().getClass())) {
+                throw (FunctionPodAccessException) e.getCause();
             }
-            throw new FunctionSpecilizationException("Failed to request access to pod function " + function.getMetadata().getName(), podPool, function);
+            throw new FunctionPodAccessException("Failed to request access to pod function " + function.getMetadata().getName(), podPool, function);
         }
     }
 

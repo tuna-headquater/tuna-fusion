@@ -21,12 +21,6 @@ import java.util.stream.Stream;
  */
 @Slf4j
 public abstract class AbstractResourceOperations {
-
-//    static final long RESYNC_INTERVAL = 1000 * 60 * 5;
-
-//    @Getter(value = AccessLevel.PROTECTED)
-//    private final SharedInformerFactory sharedInformerFactory;
-
     private final List<SharedIndexInformer<?>> informers;
 
     @Getter
@@ -38,6 +32,7 @@ public abstract class AbstractResourceOperations {
     }
 
     public synchronized Future<Void> start() {
+        informers.addAll(createInformers());
         log.info("Start {} with {} informers", getClass().getName(), informers.size());
         List<CompletableFuture<Void>> startInformerTasks = new ArrayList<>();
         for (SharedIndexInformer<?> informer : informers) {
@@ -50,21 +45,23 @@ public abstract class AbstractResourceOperations {
     public synchronized void stop() {
         log.info("Stop {} with {} informers", getClass().getName(), informers.size());
         informers.forEach(SharedIndexInformer::stop);
+        informers.clear();
     }
 
     public boolean isRunning() {
         return informers.stream().allMatch(SharedIndexInformer::isRunning);
     }
 
+    protected abstract List<SharedIndexInformer<?>> createInformers();
+
     protected <T extends HasMetadata> SharedIndexInformer<T> createInformer(Class<T> clazz, String... labels) {
         var labelMap = Stream.of(labels)
                 .collect(Collectors.toMap(label -> label, label -> "true"));
-        var informer = kubernetesClient
+        log.info("Create informer for {} with labels {}", clazz.getSimpleName(), labelMap);
+        return kubernetesClient
                 .resources(clazz)
                 .withLabels(labelMap)
                 .inform();
-        informers.add(informer);
-        return informer;
     }
 
 }

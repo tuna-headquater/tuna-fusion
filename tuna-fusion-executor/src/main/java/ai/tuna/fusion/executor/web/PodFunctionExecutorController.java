@@ -2,7 +2,7 @@ package ai.tuna.fusion.executor.web;
 
 import ai.tuna.fusion.executor.driver.podpool.CountedPodAccess;
 import ai.tuna.fusion.executor.driver.podpool.FunctionPodManager;
-import ai.tuna.fusion.executor.driver.podpool.FunctionSpecilizationException;
+import ai.tuna.fusion.executor.driver.podpool.FunctionPodAccessException;
 import ai.tuna.fusion.executor.web.entity.PagedContent;
 import ai.tuna.fusion.metadata.crd.ResourceUtils;
 import ai.tuna.fusion.metadata.crd.podpool.PodPool;
@@ -10,7 +10,6 @@ import ai.tuna.fusion.metadata.informer.PodPoolResources;
 import org.springframework.cloud.gateway.webflux.ProxyExchange;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.ArrayList;
@@ -42,7 +41,7 @@ public class PodFunctionExecutorController {
                         .orElseThrow();
                 try {
                     list.add(functionPodManager.requestAccess(podFunction, podPool));
-                } catch (FunctionSpecilizationException e) {
+                } catch (FunctionPodAccessException e) {
                     sink.error(e);
                     return;
                 }

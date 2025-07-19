@@ -10,6 +10,7 @@ import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.informers.SharedIndexInformer;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -17,14 +18,30 @@ import java.util.stream.Stream;
  * @author robinqu
  */
 public class DefaultPodPoolResources extends AbstractResourceOperations implements PodPoolResources {
-    private final SharedIndexInformer<PodPool> podPoolSharedIndexInformer = createInformer(PodPool.class);
-    private final SharedIndexInformer<Pod> podSharedIndexInformer = createInformer(Pod.class, PodPool.DR_SELECTOR);
-    private final SharedIndexInformer<Service> serviceSharedIndexInformer = createInformer(Service.class, PodPool.DR_SELECTOR);
-    private final SharedIndexInformer<PodFunction> podFunctionSharedIndexInformer = createInformer(PodFunction.class);
-    private final SharedIndexInformer<PodFunctionBuild> podFunctionBuildSharedIndexInformer = createInformer(PodFunctionBuild.class);
+    private SharedIndexInformer<PodPool> podPoolSharedIndexInformer;
+    private SharedIndexInformer<Pod> podSharedIndexInformer;
+    private SharedIndexInformer<Service> serviceSharedIndexInformer;
+    private SharedIndexInformer<PodFunction> podFunctionSharedIndexInformer;
+    private SharedIndexInformer<PodFunctionBuild> podFunctionBuildSharedIndexInformer;
 
     public DefaultPodPoolResources(KubernetesClient kubernetesClient) {
         super(kubernetesClient);
+    }
+
+    @Override
+    protected List<SharedIndexInformer<?>> createInformers() {
+        this.podPoolSharedIndexInformer = createInformer(PodPool.class);
+        this.podSharedIndexInformer = createInformer(Pod.class, PodPool.DR_SELECTOR);
+        this.serviceSharedIndexInformer = createInformer(Service.class, PodPool.DR_SELECTOR);
+        this.podFunctionSharedIndexInformer = createInformer(PodFunction.class);
+        this.podFunctionBuildSharedIndexInformer = createInformer(PodFunctionBuild.class);
+        return List.of(
+                podPoolSharedIndexInformer,
+                podSharedIndexInformer,
+                serviceSharedIndexInformer,
+                podFunctionSharedIndexInformer,
+                podFunctionBuildSharedIndexInformer
+        );
     }
 
     @Override

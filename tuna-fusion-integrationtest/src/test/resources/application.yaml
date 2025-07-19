@@ -1,0 +1,7 @@
+#logging:
+#  level:
+#    root: debug
+
+integration-test:
+  kubernetes:
+    provider-type: AutoDetect

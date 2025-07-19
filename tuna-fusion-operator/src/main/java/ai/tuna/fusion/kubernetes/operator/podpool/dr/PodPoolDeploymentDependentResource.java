@@ -16,7 +16,7 @@ import java.util.Arrays;
 import java.util.Optional;
 
 import static ai.tuna.fusion.metadata.crd.PodPoolResourceUtils.computeGenericPodSelectors;
-import static ai.tuna.fusion.metadata.crd.PodPoolResourceUtils.getPodPoolDeploymentName;
+import static ai.tuna.fusion.metadata.crd.PodPoolResourceUtils.computePodPoolDeploymentName;
 
 /**
  * @author robinqu
@@ -69,7 +69,7 @@ public class PodPoolDeploymentDependentResource extends CRUDKubernetesDependentR
         return new DeploymentBuilder()
                 .withNewMetadata()
                 .addToLabels(PodPool.DR_SELECTOR, "true")
-                .withName(getPodPoolDeploymentName(primary))
+                .withName(computePodPoolDeploymentName(primary))
                 .withNamespace(primary.getMetadata().getNamespace())
                 .addNewOwnerReference()
                 .withUid(primary.getMetadata().getUid())

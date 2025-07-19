@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: podpool-test-pvc-1
+  name: shared-archive-pvc
 spec:
   accessModes:
     - ReadWriteMany

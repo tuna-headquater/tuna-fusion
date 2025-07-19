@@ -7,6 +7,7 @@ import ai.tuna.fusion.metadata.informer.AgentResources;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.informers.SharedIndexInformer;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -14,11 +15,19 @@ import java.util.Optional;
  */
 public class DefaultAgentResources extends AbstractResourceOperations implements AgentResources {
 
-    private final SharedIndexInformer<AgentDeployment> agentDeploymentSharedIndexInformer = createInformer(AgentDeployment.class);
-    private final SharedIndexInformer<AgentEnvironment> agentEnvironmentSharedIndexInformer = createInformer(AgentEnvironment.class);
+    private SharedIndexInformer<AgentDeployment> agentDeploymentSharedIndexInformer;
+    private SharedIndexInformer<AgentEnvironment> agentEnvironmentSharedIndexInformer;
 
     public DefaultAgentResources(KubernetesClient kubernetesClient) {
         super(kubernetesClient);
+    }
+
+    @Override
+    protected List<SharedIndexInformer<?>> createInformers() {
+        this.agentDeploymentSharedIndexInformer = createInformer(AgentDeployment.class);
+        this.agentEnvironmentSharedIndexInformer = createInformer(AgentEnvironment.class);
+
+        return List.of(agentDeploymentSharedIndexInformer, agentEnvironmentSharedIndexInformer);
     }
 
     @Override
