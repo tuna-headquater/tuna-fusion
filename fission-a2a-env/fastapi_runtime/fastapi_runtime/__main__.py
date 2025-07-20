@@ -3,7 +3,7 @@ import os
 
 import uvicorn
 
-from fastapi_runtime.server import FuncApp
+from fastapi_runtime.func_app import FuncApp
 
 try:
     LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")

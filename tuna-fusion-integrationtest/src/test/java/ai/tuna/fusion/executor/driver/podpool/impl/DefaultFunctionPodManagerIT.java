@@ -13,6 +13,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.reactive.function.client.WebClient;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import static ai.tuna.fusion.TestResourceGroups.RESOURCE_GROUP_1;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -43,12 +46,16 @@ public class DefaultFunctionPodManagerIT extends IntegrationTest {
         var maxCount = podPool.getSpec().getRunPerPod();
         var count = 0;
         Pod selectedPod = null;
+        Set<String> podNamesSet = new HashSet<>();
         while (count++<maxCount) {
             try(var access = functionPodManager.requestAccess(fn1, podPool)) {
                 selectedPod = access.getPodAccess().getSelcetedPod();
                 assertThat(selectedPod).isNotNull();
                 assertThat(access.getUsageCount().intValue()).isEqualTo(count);
                 assertThat(access.getMaxUsageCount()).isEqualTo(maxCount);
+                boolean first = podNamesSet.isEmpty();
+                assertThat(podNamesSet.add(selectedPod.getMetadata().getName()))
+                        .isEqualTo(first);
                 var body = webClient.get().uri(access.getPodAccess().getUri()).retrieve();
                 log.info("body={}", body.bodyToMono(String.class).block());
             }
@@ -62,7 +69,13 @@ public class DefaultFunctionPodManagerIT extends IntegrationTest {
                 .orElse(true);
         assertThat(deleted).isTrue();
 
-
+        // another access would trigger rotation of selected pod
+        try(var access = functionPodManager.requestAccess(fn1, podPool)) {
+            selectedPod = access.getPodAccess().getSelcetedPod();
+            assertThat(selectedPod).isNotNull();
+            assertThat(podNamesSet.add(selectedPod.getMetadata().getName()))
+                    .isTrue();
+        }
     }
 
 

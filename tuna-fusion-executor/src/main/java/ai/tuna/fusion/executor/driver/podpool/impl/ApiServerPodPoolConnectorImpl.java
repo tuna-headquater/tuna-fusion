@@ -1,6 +1,7 @@
 package ai.tuna.fusion.executor.driver.podpool.impl;
 
 import ai.tuna.fusion.executor.driver.podpool.*;
+import ai.tuna.fusion.metadata.crd.PodPoolResourceUtils;
 import ai.tuna.fusion.metadata.crd.ResourceUtils;
 import ai.tuna.fusion.metadata.crd.podpool.PodFunction;
 import ai.tuna.fusion.metadata.crd.podpool.PodFunctionBuildStatus;
@@ -16,6 +17,7 @@ import io.fabric8.kubernetes.client.informers.ResourceEventHandler;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.HttpStatusCode;
+import org.springframework.http.MediaType;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import java.time.Duration;
@@ -65,19 +67,23 @@ public class ApiServerPodPoolConnectorImpl implements PodPoolConnector, Resource
         var pod = poll(Duration.ofSeconds(5))
                 .orElseThrow(()-> new FunctionPodAccessException("Cannot find available Generic Pod", podPool, function));
 
-        var deployArchivePath = Optional.ofNullable(effectiveBuild.getStatus())
+        var deployArchive = Optional.ofNullable(effectiveBuild.getStatus())
                 .map(PodFunctionBuildStatus::getDeployArchive)
-                .map(PodFunctionBuildStatus.DeployArchive::getFilesystemFolderSource)
-                .map(PodFunction.FilesystemFolderSource::getPath)
                 .orElseThrow(()-> FunctionPodAccessException.of(podPool, function, "No effective build found for pod function " + function.getMetadata().getName()));
         var request = PodSpecializeRequest.builder()
-                .filepath(deployArchivePath)
+                .deployArchive(deployArchive)
                 .functionName(function.getSpec().getEntrypoint())
                 .appType(function.getSpec().getAppType())
                 .build();
-        var headlessService = podPoolResources.queryPodPoolService(podPool.getMetadata().getNamespace(), podPool.getMetadata().getName()).orElseThrow();
+        var svcName = PodPoolResourceUtils.computePodPoolServiceName(podPool);
+        var headlessService = podPoolResources.queryPodPoolService(
+                    podPool.getMetadata().getNamespace(),
+                    svcName
+                )
+                .orElseThrow(()-> FunctionPodAccessException.of(podPool, function, "Cannot find PodPool service: " + svcName));
         var responseSpec = webClient.post()
                 .uri(ResourceUtils.getPodUri(pod, headlessService, "/specialize"))
+                .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(request)
                 .retrieve();
         var response = responseSpec.toEntity(String.class)

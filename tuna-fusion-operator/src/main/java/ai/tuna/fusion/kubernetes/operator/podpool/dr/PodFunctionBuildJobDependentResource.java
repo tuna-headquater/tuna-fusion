@@ -79,8 +79,6 @@ public class PodFunctionBuildJobDependentResource extends KubernetesDependentRes
                 .addNewVolumeMount()
                 .withMountPath(archivePath)
                 .withName("archive-volume")
-                // scope to build folder of current build
-                .withSubPath(primary.getMetadata().getName())
                 .endVolumeMount()
                 // mount build script
                 .addNewVolumeMount()
@@ -107,8 +105,6 @@ public class PodFunctionBuildJobDependentResource extends KubernetesDependentRes
                 .addNewVolumeMount()
                 .withMountPath(archivePath)
                 .withName("archive-volume")
-                // scope to build folder of current build
-                .withSubPath(primary.getMetadata().getName())
                 .endVolumeMount()
                 // mount build script
                 .addNewVolumeMount()

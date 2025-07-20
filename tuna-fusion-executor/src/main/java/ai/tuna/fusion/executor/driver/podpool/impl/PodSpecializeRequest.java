@@ -1,5 +1,6 @@
 package ai.tuna.fusion.executor.driver.podpool.impl;
 
+import ai.tuna.fusion.metadata.crd.podpool.PodFunctionBuildStatus;
 import ai.tuna.fusion.metadata.crd.podpool.PodFunctionSpec;
 import lombok.Builder;
 import lombok.Data;
@@ -10,7 +11,7 @@ import lombok.Data;
 @Data
 @Builder
 public class PodSpecializeRequest {
-    private String filepath;
+    private PodFunctionBuildStatus.DeployArchive deployArchive;
     private String functionName;
     private PodFunctionSpec.AppType appType;
 }

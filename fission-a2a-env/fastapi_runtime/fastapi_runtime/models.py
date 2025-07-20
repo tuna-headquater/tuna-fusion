@@ -55,7 +55,25 @@ class TaskStore(BaseModel):
 
 class A2ARuntimeConfig(BaseModel):
     model_config = SHARED_MODEL_CONFIG
-
     queue_manager: QueueManager
     task_store: TaskStore
+
+
+class FilesystemFolderSource(BaseModel):
+    path: str
+
+
+class DeployArchive(BaseModel):
+    filesystemFolderSource: FilesystemFolderSource
+
+
+class AppType(StrEnum):
+    WebApp = "WebApp"
+    AgentApp = "AgentApp"
+
+
+class SpecializeRequest(BaseModel):
+    entrypoint: str
+    deployArchive: DeployArchive
+    appType: AppType
 

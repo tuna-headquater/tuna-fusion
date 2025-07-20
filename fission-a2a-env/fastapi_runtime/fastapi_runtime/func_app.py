@@ -12,12 +12,13 @@ from a2a.server.events.in_memory_queue_manager import InMemoryQueueManager
 from a2a.server.request_handlers import DefaultRequestHandler
 from a2a.server.tasks import InMemoryTaskStore
 from a2a.types import AgentCard
-from fastapi import FastAPI, Request, Response
+from fastapi import FastAPI, Request, Response, HTTPException
+from pydantic import ValidationError
 from redis.asyncio import Redis
 from starlette.applications import Starlette
 
 from fastapi_runtime.database_task_store import DatabaseTaskStore
-from fastapi_runtime.models import A2ARuntimeConfig
+from fastapi_runtime.models import A2ARuntimeConfig, SpecializeRequest, AppType
 from fastapi_runtime.redis_queue_manager import RedisQueueManager
 
 
@@ -123,17 +124,28 @@ class FuncApp(FastAPI):
 
     async def load(self, request: Request):
         specialize_info = await request.json()
-        fn = self._load(specialize_info)
-        app_type = specialize_info.get('app_type', 'agent_app')
-        async with self._mutex:
-            if app_type == 'agent_app':
-                self._agent_app = self.build_json_rpc_app(fn, specialize_info.get("filepath"))
-            if app_type == "web_app":
-                self._web_app = fn
-        return ""
+        try:
+            request = SpecializeRequest.model_validate(specialize_info)
+        except ValidationError as e:
+            raise HTTPException(status_code=400, detail=e.errors())
+
+        handler = request.entrypoint
+        filepath = request.deployArchive.filesystemFolderSource.path
+        self.logger.info("Load app from %s with handler %s", filepath, handler)
+
+        try:
+            fn = self._load(handler, filepath)
+            async with self._mutex:
+                if request.appType is AppType.AgentApp:
+                    self._agent_app = self.build_json_rpc_app(fn, filepath)
+                if request.appType is AppType.WebApp:
+                    self._web_app = fn
+        except Exception as e:
+            self.logger.error(f"Specialization failed: %s", e)
+            raise HTTPException(status_code=500, detail=str(e))
 
     async def health(self):
-        return "", Response(status_code=200)
+        return Response(status_code=200)
 
     async def agent_task_call(self, request: Request):
         if self._agent_app is None:
@@ -164,9 +176,7 @@ class FuncApp(FastAPI):
         self.logger.info(self._agent_app)
         return await self._agent_app.get_agent_card(request)
 
-    def _load(self, specialize_info):
-        filepath = specialize_info['filepath']
-        handler = specialize_info['functionName']
+    def _load(self, handler: str, filepath: str):
         self.logger.info(
             'specialize called with  filepath = "{}"   handler = "{}"'.format(
                 filepath, handler))

@@ -131,7 +131,7 @@ public class PodFunctionBuildReconciler implements Reconciler<PodFunctionBuild>,
             // update PodFunction status
             var updatedPodFunction = context.getClient()
                     .resource(patchPodFunction)
-                    .patchStatus();
+                    .updateStatus();
             log.info("Updated PodFunction.status {}", updatedPodFunction.getStatus());
 
             // update PodFunctionBuild status

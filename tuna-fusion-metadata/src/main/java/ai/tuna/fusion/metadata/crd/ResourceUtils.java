@@ -55,14 +55,11 @@ public class ResourceUtils {
     }
 
     @SuppressWarnings("HttpUrlsUsage")
-    private static final String POD_HTTP_URL = "http://%s.%s.%s.svc.cluster.local/%s";
+    private static final String POD_HTTP_URL = "http://%s:%s%s";
     public static String getPodUri(Pod pod, Service service, String subPath) {
-        return String.format(POD_HTTP_URL,
-                pod.getMetadata().getName(),
-                service.getMetadata().getName(),
-                pod.getMetadata().getNamespace(),
-                subPath
-        );
+        var port = pod.getSpec().getContainers().getFirst().getPorts().getFirst().getContainerPort();
+        var ip = pod.getStatus().getPodIP();
+        return String.format(POD_HTTP_URL, ip, port, subPath);
     }
 
     public static <ChildResource extends HasMetadata, OwnerResource extends HasMetadata> Optional<String> getMatchedOwnerReferenceResourceName(ChildResource resource, Class<OwnerResource> ownerClass) {

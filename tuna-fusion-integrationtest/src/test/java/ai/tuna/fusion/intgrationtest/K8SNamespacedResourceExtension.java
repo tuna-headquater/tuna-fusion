@@ -1,6 +1,7 @@
 package ai.tuna.fusion.intgrationtest;
 
 import ai.tuna.fusion.IntegrationTest;
+import com.google.common.base.Preconditions;
 import io.fabric8.kubernetes.api.model.NamespaceBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import lombok.Getter;
@@ -49,6 +50,7 @@ public class K8SNamespacedResourceExtension implements BeforeEachCallback, After
         log.info("Get kubernetesClient from Spring context");
         var ctx = SpringExtension.getApplicationContext(context);
         kubernetesClient = ctx.getBean(KubernetesClient.class);
+        Preconditions.checkNotNull(kubernetesClient, "should have valid Kubernetes client in application context");
 
         testNamespace = "test-" + UUID.randomUUID();
         log.info("Ensuring namespace...");
