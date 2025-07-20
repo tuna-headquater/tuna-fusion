@@ -31,8 +31,8 @@ public class DefaultPodPoolResources extends AbstractResourceOperations implemen
     @Override
     protected List<SharedIndexInformer<?>> createInformers() {
         this.podPoolSharedIndexInformer = createInformer(PodPool.class);
-        this.podSharedIndexInformer = createInformer(Pod.class, PodPool.DR_SELECTOR);
-        this.serviceSharedIndexInformer = createInformer(Service.class, PodPool.DR_SELECTOR);
+        this.podSharedIndexInformer = createInformer(Pod.class);
+        this.serviceSharedIndexInformer = createInformer(Service.class);
         this.podFunctionSharedIndexInformer = createInformer(PodFunction.class);
         this.podFunctionBuildSharedIndexInformer = createInformer(PodFunctionBuild.class);
         return List.of(

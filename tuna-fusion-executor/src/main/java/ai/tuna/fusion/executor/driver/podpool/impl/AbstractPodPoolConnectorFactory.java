@@ -28,6 +28,7 @@ public abstract class AbstractPodPoolConnectorFactory implements PodPoolConnecto
     public AbstractPodPoolConnectorFactory(PodPoolResources podPoolResources) {
         this.podPoolResources = podPoolResources;
         this.podPoolConnectors = new ConcurrentHashMap<>(128);
+        this.podPoolResources.podPool().addEventHandler(this);
     }
 
     protected abstract PodPoolConnector createPodQueue(PodPool podPool);

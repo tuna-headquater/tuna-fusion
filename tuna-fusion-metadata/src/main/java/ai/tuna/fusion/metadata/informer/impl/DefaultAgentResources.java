@@ -26,7 +26,6 @@ public class DefaultAgentResources extends AbstractResourceOperations implements
     protected List<SharedIndexInformer<?>> createInformers() {
         this.agentDeploymentSharedIndexInformer = createInformer(AgentDeployment.class);
         this.agentEnvironmentSharedIndexInformer = createInformer(AgentEnvironment.class);
-
         return List.of(agentDeploymentSharedIndexInformer, agentEnvironmentSharedIndexInformer);
     }
 
