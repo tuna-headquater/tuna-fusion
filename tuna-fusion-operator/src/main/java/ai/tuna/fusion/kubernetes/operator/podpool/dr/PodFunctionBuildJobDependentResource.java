@@ -5,24 +5,21 @@ import ai.tuna.fusion.kubernetes.operator.support.impl.FunctionBuildPodInitConta
 import ai.tuna.fusion.metadata.crd.PodPoolResourceUtils;
 import ai.tuna.fusion.metadata.crd.podpool.PodFunctionBuild;
 import ai.tuna.fusion.metadata.crd.podpool.PodFunctionBuildSpec;
-import ai.tuna.fusion.metadata.crd.podpool.PodFunctionBuildStatus;
 import io.fabric8.kubernetes.api.model.EnvVar;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.batch.v1.Job;
 import io.fabric8.kubernetes.api.model.batch.v1.JobBuilder;
-import io.fabric8.kubernetes.api.model.batch.v1.JobStatus;
 import io.javaoperatorsdk.operator.api.config.informer.Informer;
 import io.javaoperatorsdk.operator.api.reconciler.Context;
-import io.javaoperatorsdk.operator.api.reconciler.dependent.DependentResource;
 import io.javaoperatorsdk.operator.api.reconciler.dependent.GarbageCollected;
 import io.javaoperatorsdk.operator.processing.dependent.Creator;
-import io.javaoperatorsdk.operator.processing.dependent.kubernetes.CRUDKubernetesDependentResource;
 import io.javaoperatorsdk.operator.processing.dependent.kubernetes.KubernetesDependent;
 import io.javaoperatorsdk.operator.processing.dependent.kubernetes.KubernetesDependentResource;
-import io.javaoperatorsdk.operator.processing.dependent.workflow.Condition;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
+
+import static ai.tuna.fusion.metadata.crd.PodPoolResourceUtils.computeJobName;
 
 
 /**
@@ -34,7 +31,7 @@ public class PodFunctionBuildJobDependentResource extends KubernetesDependentRes
 
     @Override
     protected Job desired(PodFunctionBuild primary, Context<PodFunctionBuild> context) {
-        log.debug("Resolving Job DR for build {}", primary.getMetadata());
+        log.info("Resolving Job DR for build {}", primary.getMetadata());
         var podFunction = PodPoolResourceUtils.getReferencedPodFunction(primary, context.getClient()).orElseThrow(()-> new IllegalArgumentException("PodFunction not found for PodFunctionBuild " + primary.getMetadata().getName()));
         var podPool = PodPoolResourceUtils.getReferencedPodPool(podFunction, context.getClient()).orElseThrow(()-> new IllegalArgumentException("PodPool not found for PodFunction " + podFunction.getMetadata().getName()));
         var archivePath = PodFunctionBuild.ARCHIVE_ROOT_PATH.toString();
@@ -50,7 +47,7 @@ public class PodFunctionBuildJobDependentResource extends KubernetesDependentRes
 
         return new JobBuilder()
                 .withNewMetadata()
-                .withName(jobName(primary))
+                .withName(computeJobName(primary))
                 .withNamespace(primary.getMetadata().getNamespace())
                 .addToLabels(PodFunctionBuildReconciler.SELECTOR, "true")
                 .addNewOwnerReference()
@@ -68,15 +65,16 @@ public class PodFunctionBuildJobDependentResource extends KubernetesDependentRes
                 .withCompletions(1)
                 .withActiveDeadlineSeconds(60 * 10L)
                 .withNewTemplate()
-                .withNewMetadata()
-                .withNamespace(primary.getMetadata().getNamespace())
-                .endMetadata()
+//                .withNewMetadata()
+//                .withName(computeJobPodName(primary))
+//                .withNamespace(primary.getMetadata().getNamespace())
+//                .endMetadata()
                 .withNewSpec()
                 .withServiceAccountName(serviceAccountName)
                 .withRestartPolicy("Never")
                 .addNewInitContainer()
                 .withName("builder-init-container")
-                .withImage("busybox:latest")
+                .withImage("busybox:1.36.1-glibc")
                 .addAllToCommand(initCommand.renderInitCommand())
                 .addNewVolumeMount()
                 .withMountPath(archivePath)
@@ -135,9 +133,5 @@ public class PodFunctionBuildJobDependentResource extends KubernetesDependentRes
                 .endTemplate()
                 .endSpec()
                 .build();
-    }
-
-    private String jobName(PodFunctionBuild primary) {
-        return String.format("build-%s", primary.getMetadata().getName());
     }
 }

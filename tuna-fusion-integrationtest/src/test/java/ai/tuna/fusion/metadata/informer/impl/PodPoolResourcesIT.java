@@ -1,8 +1,7 @@
 package ai.tuna.fusion.metadata.informer.impl;
 
 import ai.tuna.fusion.MetadataIntegrationTest;
-import ai.tuna.fusion.intgrationtest.ResourceTreeNode;
-import ai.tuna.fusion.intgrationtest.TestResourceLoader;
+import ai.tuna.fusion.intgrationtest.TestResourceContext;
 import ai.tuna.fusion.metadata.informer.PodPoolResources;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,19 +15,16 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class PodPoolResourcesIT extends MetadataIntegrationTest {
 
     @Autowired
-    private TestResourceLoader resourceLoader;
-
-    @Autowired
     private PodPoolResources podPoolResources;
 
     @Test
-    public void testResourceQuery() {
-        resourceLoader.awaitResourceGroup(RESOURCE_GROUP_1);
-        var podPool = podPoolResources.queryPodPool(getTestNamespace(), "test-pool-1");
+    public void testResourceQuery(TestResourceContext context) {
+        context.awaitResourceGroup(RESOURCE_GROUP_1);
+        var podPool = podPoolResources.queryPodPool(context.getTargetNamespace(), "test-pool-1");
         assertThat(podPool).isPresent();
-        var fn1 = podPoolResources.queryPodFunction(getTestNamespace(), "test-function-1");
+        var fn1 = podPoolResources.queryPodFunction(context.getTargetNamespace(), "test-function-1");
         assertThat(fn1).isPresent();
-        var build1 = podPoolResources.queryPodFunctionBuild(getTestNamespace(), "test-pod-function-build-1");
+        var build1 = podPoolResources.queryPodFunctionBuild(context.getTargetNamespace(), "test-pod-function-build-1");
         assertThat(build1).isPresent();
     }
 

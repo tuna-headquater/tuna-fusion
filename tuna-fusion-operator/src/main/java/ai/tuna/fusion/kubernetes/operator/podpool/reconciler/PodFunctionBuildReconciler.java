@@ -1,7 +1,7 @@
 package ai.tuna.fusion.kubernetes.operator.podpool.reconciler;
 
-import ai.tuna.fusion.metadata.crd.PodPoolResourceUtils;
 import ai.tuna.fusion.kubernetes.operator.podpool.dr.PodFunctionBuildJobDependentResource;
+import ai.tuna.fusion.metadata.crd.PodPoolResourceUtils;
 import ai.tuna.fusion.metadata.crd.ResourceUtils;
 import ai.tuna.fusion.metadata.crd.podpool.PodFunction;
 import ai.tuna.fusion.metadata.crd.podpool.PodFunctionBuild;
@@ -12,8 +12,6 @@ import io.fabric8.kubernetes.api.model.PodStatus;
 import io.fabric8.kubernetes.api.model.batch.v1.Job;
 import io.fabric8.kubernetes.api.model.batch.v1.JobStatus;
 import io.fabric8.kubernetes.client.KubernetesClient;
-import io.fabric8.kubernetes.client.dsl.base.PatchContext;
-import io.fabric8.kubernetes.client.dsl.base.PatchType;
 import io.javaoperatorsdk.operator.api.reconciler.*;
 import io.javaoperatorsdk.operator.api.reconciler.dependent.Dependent;
 import lombok.extern.slf4j.Slf4j;
@@ -82,12 +80,12 @@ public class PodFunctionBuildReconciler implements Reconciler<PodFunctionBuild>,
                     jobResource.getMetadata().getName(),
                     jobResource.getMetadata().getNamespace()
             )
-                    .map(Pod::getStatus)
-                    .map(PodStatus::getPhase)
-                    .ifPresent(phase -> {
+                    .ifPresent(jobPod -> {
                         PodFunctionBuildStatus.JobPodInfo jobPodInfo = new PodFunctionBuildStatus.JobPodInfo();
-                        jobPodInfo.setPodName(jobResource.getMetadata().getName());
-                        jobPodInfo.setPodPhase(phase);
+                        Optional.ofNullable(jobPod.getStatus())
+                                        .map(PodStatus::getPhase)
+                                                .ifPresent(jobPodInfo::setPodPhase);
+                        jobPodInfo.setPodName(jobPod.getMetadata().getName());
                         log.info("JobPodInfo: {}", jobPodInfo);
                         if (PodPoolResourceUtils.isJobTerminalPhase(jobPodInfo.getPodPhase())) {
                             jobPodInfo.setLogs(

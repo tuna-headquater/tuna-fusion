@@ -9,6 +9,7 @@ import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.DeploymentStatus;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.utils.Serialization;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.CollectionUtils;
 
@@ -23,12 +24,15 @@ import static org.awaitility.Awaitility.await;
  * @author robinqu
  */
 @Slf4j
-public class TestResourceLoader {
+public class TestResourceContext {
 
+    @Getter
     private final KubernetesClient client;
+
+    @Getter
     private final String targetNamespace;
 
-    public TestResourceLoader(KubernetesClient client, String targetNamespace) {
+    public TestResourceContext(KubernetesClient client, String targetNamespace) {
         this.client = client;
         this.targetNamespace = targetNamespace;
     }
@@ -81,7 +85,8 @@ public class TestResourceLoader {
 
     public boolean checkCondition(PodFunctionBuild podFunctionBuild) {
         log.info("checkCondition for {}", ResourceUtils.computeResourceMetaKey(podFunctionBuild));
-        return Optional.ofNullable(podFunctionBuild.getStatus())
+        var build = ResourceUtils.getKubernetesResource(client, podFunctionBuild.getMetadata().getName(), podFunctionBuild.getMetadata().getNamespace(), PodFunctionBuild.class).orElseThrow();
+        return Optional.ofNullable(build.getStatus())
                 .map(PodFunctionBuildStatus::getPhase)
                 .map(phase -> phase == PodFunctionBuildStatus.Phase.Succeeded || phase == PodFunctionBuildStatus.Phase.Failed)
                 .orElse(false);

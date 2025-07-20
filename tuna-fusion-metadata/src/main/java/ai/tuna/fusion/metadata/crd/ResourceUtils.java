@@ -25,11 +25,11 @@ public class ResourceUtils {
         return result != null && !result.isEmpty();
     }
 
-    public static  <Resource extends HasMetadata> Resource getKubernetesResource(KubernetesClient kubernetesClient, String name, String namespace, Class<Resource> clazz) {
-        return kubernetesClient.resources(clazz)
+    public static  <Resource extends HasMetadata> Optional<Resource> getKubernetesResource(KubernetesClient kubernetesClient, String name, String namespace, Class<Resource> clazz) {
+        return Optional.of(kubernetesClient.resources(clazz)
                 .inNamespace(namespace)
                 .withName(name)
-                .get();
+                .get());
     }
 
 

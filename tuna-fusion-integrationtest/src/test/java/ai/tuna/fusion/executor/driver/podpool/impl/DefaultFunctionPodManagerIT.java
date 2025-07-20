@@ -2,8 +2,7 @@ package ai.tuna.fusion.executor.driver.podpool.impl;
 
 import ai.tuna.fusion.IntegrationTest;
 import ai.tuna.fusion.executor.driver.podpool.FunctionPodManager;
-import ai.tuna.fusion.intgrationtest.TestResourceLoader;
-import ai.tuna.fusion.metadata.crd.PodPoolResourceUtils;
+import ai.tuna.fusion.intgrationtest.TestResourceContext;
 import ai.tuna.fusion.metadata.crd.ResourceUtils;
 import ai.tuna.fusion.metadata.informer.PodPoolResources;
 import io.fabric8.kubernetes.api.model.Pod;
@@ -27,9 +26,6 @@ public class DefaultFunctionPodManagerIT extends IntegrationTest {
     private FunctionPodManager functionPodManager;
 
     @Autowired
-    private TestResourceLoader resourceLoader;
-
-    @Autowired
     private PodPoolResources podPoolResources;
 
     @Autowired
@@ -38,11 +34,11 @@ public class DefaultFunctionPodManagerIT extends IntegrationTest {
     private final WebClient webClient = WebClient.create();
 
     @Test
-    public void testRequestAccess() throws Exception {
-        resourceLoader.awaitResourceGroup(RESOURCE_GROUP_1);
-        var podPool = podPoolResources.queryPodPool(getTestNamespace(), "test-pool-1").orElseThrow();
+    public void testRequestAccess(TestResourceContext context) throws Exception {
+        context.awaitResourceGroup(RESOURCE_GROUP_1);
+        var podPool = podPoolResources.queryPodPool(context.getTargetNamespace(), "test-pool-1").orElseThrow();
 
-        var fn1 = podPoolResources.queryPodFunction(getTestNamespace(), "test-function-1").orElseThrow();
+        var fn1 = podPoolResources.queryPodFunction(context.getTargetNamespace(), "test-function-1").orElseThrow();
 
         var maxCount = podPool.getSpec().getRunPerPod();
         var count = 0;

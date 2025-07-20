@@ -8,6 +8,7 @@ import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 
 import java.util.List;
 import java.util.Map;
@@ -92,8 +93,12 @@ public class PodPoolResourceUtils {
         return AgentResourceUtils.getReferencedResourceName(build, PodFunction.class);
     }
 
+    public static String computeJobName(PodFunctionBuild build) {
+        return build.getMetadata().getName() + "-job";
+    }
+
     public static boolean isJobTerminalPhase(String phase) {
-        return StringUtils.equals("Succeeded", phase) || StringUtils.equals("Failed", phase);
+        return Strings.CS.equals("Succeeded", phase) || Strings.CS.equals("Failed", phase);
     }
 
     public static String getPodLog(KubernetesClient client, String ns, String podName) {
