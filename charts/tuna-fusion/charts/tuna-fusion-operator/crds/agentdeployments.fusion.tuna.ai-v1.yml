@@ -14,10 +14,6 @@ spec:
   scope: "Namespaced"
   versions:
   - additionalPrinterColumns:
-    - jsonPath: ".metadata.ownerReferences[0].name"
-      name: "Catalogue"
-      priority: 0
-      type: "string"
     - jsonPath: ".spec.agentCard.url"
       name: "Url"
       priority: 0

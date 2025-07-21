@@ -53,7 +53,7 @@ public class PodPoolReconciler implements Reconciler<PodPool>, Cleaner<PodPool> 
         podPoolUpdate.getMetadata().setName(resource.getMetadata().getName());
         podPoolUpdate.getMetadata().setNamespace(resource.getMetadata().getNamespace());
         return UpdateControl.patchStatus(podPoolUpdate)
-                .rescheduleAfter(10, TimeUnit.SECONDS);
+                .rescheduleAfter(60, TimeUnit.SECONDS);
     }
 
     private static final long TTL_IN_SECONDS_FOR_SPECIALIZED_POD = 60 * 60 * 24;

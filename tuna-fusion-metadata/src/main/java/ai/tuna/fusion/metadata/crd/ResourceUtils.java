@@ -26,7 +26,7 @@ public class ResourceUtils {
     }
 
     public static  <Resource extends HasMetadata> Optional<Resource> getKubernetesResource(KubernetesClient kubernetesClient, String name, String namespace, Class<Resource> clazz) {
-        return Optional.of(kubernetesClient.resources(clazz)
+        return Optional.ofNullable(kubernetesClient.resources(clazz)
                 .inNamespace(namespace)
                 .withName(name)
                 .get());

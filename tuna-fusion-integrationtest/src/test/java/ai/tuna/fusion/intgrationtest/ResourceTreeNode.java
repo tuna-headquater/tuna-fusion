@@ -1,5 +1,7 @@
 package ai.tuna.fusion.intgrationtest;
 
+import ai.tuna.fusion.metadata.crd.agent.AgentDeployment;
+import ai.tuna.fusion.metadata.crd.agent.AgentEnvironment;
 import ai.tuna.fusion.metadata.crd.podpool.PodFunction;
 import ai.tuna.fusion.metadata.crd.podpool.PodFunctionBuild;
 import ai.tuna.fusion.metadata.crd.podpool.PodPool;
@@ -26,6 +28,8 @@ public class ResourceTreeNode {
             case "PodPool" -> PodPool.class;
             case "PodFunction" -> PodFunction.class;
             case "PodFunctionBuild" -> PodFunctionBuild.class;
+            case "AgentDeployment" -> AgentDeployment.class;
+            case "AgentEnvironment" -> AgentEnvironment.class;
             default -> throw new IllegalArgumentException("Invalid type name: " + typeName);
         };
     }

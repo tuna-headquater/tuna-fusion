@@ -18,7 +18,7 @@ import java.util.Optional;
  */
 public class GitRequestContextUtil {
 
-    public record URLParams (String namespace, String agentCatalogueName, String agentDeploymentName) {}
+    public record URLParams (String namespace, String agentDeploymentName) {}
 
     public static final String AgentEnvironmentName = "ai.tuna.fusion.gitops.server.agent-environment";
     public static final String AgentDeploymentName = "ai.tuna.fusion.gitops.server.agent-deployment";
@@ -66,19 +66,18 @@ public class GitRequestContextUtil {
 
         // Validate URL starts with /repositories/
         if (!requestUri.startsWith("/repositories/")) {
-            throw new ServiceNotEnabledException("Invalid URL format. Expected pattern: /repositories/<namespace>/<agent-catalogue-name>/<agent-deployment-name>.git");
+            throw new ServiceNotEnabledException("Invalid URL format. Expected pattern: /repositories/<namespace>/<agent-deployment-name>.git");
         }
 
         String[] segments = requestUri.split("/");
 
         // Ensure we have at least the required parts: "", "repositories", namespace, catalogue, deployment.git
         if (segments.length < 5) {
-            receivePack.ifPresent(rp -> rp.sendError("Invalid URL format. Expected pattern: /repositories/<namespace>/<agent-catalogue-name>/<agent-deployment-name>.git/*"));
-            throw new ServiceNotEnabledException("Invalid URL format. Expected pattern: /repositories/<namespace>/<agent-catalogue-name>/<agent-deployment-name>.git/*");
+            receivePack.ifPresent(rp -> rp.sendError("Invalid URL format. Expected pattern: /repositories/<namespace>/<agent-deployment-name>.git/*"));
+            throw new ServiceNotEnabledException("Invalid URL format. Expected pattern: /repositories/<namespace>/<agent-deployment-name>.git/*");
         }
 
         String namespace = segments[2];
-        String agentCatalogueName = segments[3];
         String gitSegment = segments[4];
 
         // Ensure URL ends with .git
@@ -89,7 +88,7 @@ public class GitRequestContextUtil {
 
         String agentDeploymentName = gitSegment.substring(0, gitSegment.length() - 4);
 
-        return new URLParams(namespace, agentCatalogueName, agentDeploymentName);
+        return new URLParams(namespace, agentDeploymentName);
     }
 
 }

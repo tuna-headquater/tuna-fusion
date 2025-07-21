@@ -13,7 +13,7 @@ spec:
       builderPodServiceAccountName: fusion-builder-sa
       runPerPod: 10
 
-  endpoint:
+  executor:
     externalHost: localhost:8802
     protocol: http
 

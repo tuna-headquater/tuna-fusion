@@ -37,14 +37,14 @@ public class AgentEnvironmentSpec {
     private DriverSpec driver;
 
     @Data
-    public static class Endpoint {
+    public static class Executor {
         @Required
         String protocol = "https";
         @Required
         String externalHost;
     }
     @Required
-    private Endpoint endpoint;
+    private Executor executor;
 
 
 }

@@ -16,9 +16,6 @@ public class AgentDeploymentSpec {
     private String environmentName;
 
     @Required
-    private String catalogueName;
-
-    @Required
     @ValidationRule(value ="!has(self.url)", message = "URL cannot be set in AgentCard. It will be dynamic generated during reconciliation.")
     private AgentCard agentCard;
 

@@ -45,7 +45,7 @@ public class A2AExecutorController {
             throw new IllegalStateException("PodPool driver is required for agent deployment");
         }
         var podPool = podPoolResources.queryPodPool(namespace, agentEnvironment.getStatus().getPodPool().getName()).orElseThrow();
-        var headlessSvc = podPoolResources.queryPodPoolService(namespace, podPool.getStatus().getHeadlessServiceName()).orElseThrow();
+//        var headlessSvc = podPoolResources.queryPodPoolService(namespace, podPool.getStatus().getHeadlessServiceName()).orElseThrow();
         var podFunction = podPoolResources.queryPodFunction(namespace, agentDeployment.getStatus().getFunction().getFunctionName()).orElseThrow();
 
         String requestUri = proxy.path();

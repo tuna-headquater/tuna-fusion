@@ -17,4 +17,15 @@ public class TestResourceGroups {
                 classpath: yaml/podpool/podpool_1.yaml
             """);
 
+    public static final ResourceTreeNode RESOURCE_GROUP_2 = ResourceTreeNode.parseYaml("""
+            type: PodFunctionBuild
+            classpath: yaml/agent_1/pod_function_build_1.yaml
+            dependencies:
+            - type: AgentDeployment
+              classpath: yaml/agent_1/agent_deployment_1.yaml
+              dependencies:
+              - type: AgentEnvironment
+                classpath: yaml/agent_1/agent_env_1.yaml
+            """);
+
 }

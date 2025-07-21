@@ -20,11 +20,11 @@ public class PodPoolResourcesIT extends MetadataIntegrationTest {
     @Test
     public void testResourceQuery(TestResourceContext context) {
         context.awaitResourceGroup(RESOURCE_GROUP_1);
-        var podPool = podPoolResources.queryPodPool(context.getTargetNamespace(), "test-pool-1");
+        var podPool = podPoolResources.queryPodPool(context.targetNamespace(), "test-pool-1");
         assertThat(podPool).isPresent();
-        var fn1 = podPoolResources.queryPodFunction(context.getTargetNamespace(), "test-function-1");
+        var fn1 = podPoolResources.queryPodFunction(context.targetNamespace(), "test-function-1");
         assertThat(fn1).isPresent();
-        var build1 = podPoolResources.queryPodFunctionBuild(context.getTargetNamespace(), "test-pod-function-build-1");
+        var build1 = podPoolResources.queryPodFunctionBuild(context.targetNamespace(), "test-pod-function-build-1");
         assertThat(build1).isPresent();
     }
 

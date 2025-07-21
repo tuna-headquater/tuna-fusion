@@ -2953,7 +2953,7 @@ spec:
                 x-kubernetes-validations:
                 - message: "driver must be included in resource definition."
                   rule: "has(self.podPoolSpec) || has(self.awsLambdaSpec) || has(self.alibabaCloudFunctionComputeSpec)"
-              endpoint:
+              executor:
                 properties:
                   externalHost:
                     type: "string"
@@ -2965,7 +2965,7 @@ spec:
                 type: "object"
             required:
             - "driver"
-            - "endpoint"
+            - "executor"
             type: "object"
           status:
             properties:

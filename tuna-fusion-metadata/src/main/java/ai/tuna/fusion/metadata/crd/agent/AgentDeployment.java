@@ -15,7 +15,6 @@ import io.fabric8.kubernetes.model.annotation.Version;
 @Version("v1")
 @ShortNames({"ad"})
 @AdditionalPrinterColumns({
-        @AdditionalPrinterColumn(name = "Catalogue", jsonPath = ".metadata.ownerReferences[0].name"),
         @AdditionalPrinterColumn(name = "Env", jsonPath = ".spec.environmentName"),
         @AdditionalPrinterColumn(name = "Url", jsonPath = ".spec.agentCard.url")
 })

@@ -25,7 +25,6 @@ spec:
     provider:
       organization: tuna
       url: https://github.com/tuna-headquarter
-    url: "/${namespace}/${agentCatalogueName}/${agentDeploymentName}"
     version: "1.0.0"
   environmentName: env-1
   git:

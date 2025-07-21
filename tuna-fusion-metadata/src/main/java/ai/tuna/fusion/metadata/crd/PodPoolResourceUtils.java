@@ -3,10 +3,12 @@ package ai.tuna.fusion.metadata.crd;
 import ai.tuna.fusion.metadata.crd.agent.AgentEnvironment;
 import ai.tuna.fusion.metadata.crd.podpool.PodFunction;
 import ai.tuna.fusion.metadata.crd.podpool.PodFunctionBuild;
+import ai.tuna.fusion.metadata.crd.podpool.PodFunctionBuildStatus;
 import ai.tuna.fusion.metadata.crd.podpool.PodPool;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.client.KubernetesClient;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Strings;
 
@@ -19,6 +21,7 @@ import static ai.tuna.fusion.metadata.crd.podpool.PodPool.*;
 /**
  * @author robinqu
  */
+@Slf4j
 public class PodPoolResourceUtils {
     public static String computePodPoolDeploymentName(PodPool resource) {
         return resource.getMetadata().getName() + "-deploy";
@@ -99,6 +102,19 @@ public class PodPoolResourceUtils {
 
     public static boolean isJobTerminalPhase(String phase) {
         return Strings.CS.equals("Succeeded", phase) || Strings.CS.equals("Failed", phase);
+    }
+
+    public static Optional<String> getPodLog(KubernetesClient client, String ns, PodFunctionBuildStatus.JobPodInfo info) {
+        var states = List.of("Running", "Succeeded", "Failed");
+        if (states.stream().anyMatch(state -> Strings.CS.equals(state, info.getPodPhase()))) {
+            try {
+                var log = getPodLog(client, ns, info.getPodName());
+                return Optional.ofNullable(log);
+            } catch (Exception e) {
+                log.error("Failed to fetch log for pod {}", info.getPodName(), e);
+            }
+        }
+        return Optional.empty();
     }
 
     public static String getPodLog(KubernetesClient client, String ns, String podName) {

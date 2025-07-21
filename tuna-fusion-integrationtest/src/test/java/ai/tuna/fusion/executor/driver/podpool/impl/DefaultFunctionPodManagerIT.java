@@ -39,9 +39,9 @@ public class DefaultFunctionPodManagerIT extends IntegrationTest {
     @Test
     public void testRequestAccess(TestResourceContext context) throws Exception {
         context.awaitResourceGroup(RESOURCE_GROUP_1);
-        var podPool = podPoolResources.queryPodPool(context.getTargetNamespace(), "test-pool-1").orElseThrow();
+        var podPool = podPoolResources.queryPodPool(context.targetNamespace(), "test-pool-1").orElseThrow();
 
-        var fn1 = podPoolResources.queryPodFunction(context.getTargetNamespace(), "test-function-1").orElseThrow();
+        var fn1 = podPoolResources.queryPodFunction(context.targetNamespace(), "test-function-1").orElseThrow();
 
         var maxCount = podPool.getSpec().getRunPerPod();
         var count = 0;

@@ -1,6 +1,7 @@
 package ai.tuna.fusion.kubernetes.operator.agent.dr;
 
 import ai.tuna.fusion.kubernetes.operator.agent.reconciler.AgentEnvironmentReconciler;
+import ai.tuna.fusion.metadata.crd.AgentResourceUtils;
 import ai.tuna.fusion.metadata.crd.agent.AgentEnvironment;
 import ai.tuna.fusion.metadata.crd.agent.AgentEnvironmentSpec;
 import ai.tuna.fusion.metadata.crd.podpool.PodPool;
@@ -28,7 +29,7 @@ public class AgentEnvironmentPodPoolDependentResource extends CRUDKubernetesDepe
     protected PodPool desired(AgentEnvironment primary, Context<AgentEnvironment> context) {
         var podPool = new PodPool();
         podPool.getMetadata().getLabels().put(AgentEnvironmentReconciler.SELECTOR, "true");
-        podPool.getMetadata().setName(primary.getMetadata().getName());
+        podPool.getMetadata().setName(AgentResourceUtils.computePodPoolName(primary));
         podPool.getMetadata().setNamespace(primary.getMetadata().getNamespace());
         podPool.setSpec(primary.getSpec().getDriver().getPodPoolSpec());
         return podPool;

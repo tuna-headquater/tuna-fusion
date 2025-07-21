@@ -50,7 +50,7 @@ public class AgentEnvironmentReconciler implements Reconciler<AgentEnvironment>,
             status.setPodPool(podPoolInfo);
             return UpdateControl.patchStatus(update);
         }
-        log.warn("PodPool for Agent Environment {} is not ready yet", resource.getMetadata().getName());
+        log.warn("[reconcile] PodPool for Agent Environment {} is not ready yet", resource.getMetadata().getName());
         return UpdateControl.noUpdate();
 
     }

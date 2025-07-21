@@ -1,7 +1,10 @@
 package ai.tuna.fusion.intgrationtest;
 
+import ai.tuna.fusion.metadata.crd.AgentResourceUtils;
 import ai.tuna.fusion.metadata.crd.PodPoolResourceUtils;
 import ai.tuna.fusion.metadata.crd.ResourceUtils;
+import ai.tuna.fusion.metadata.crd.agent.AgentDeployment;
+import ai.tuna.fusion.metadata.crd.agent.AgentEnvironment;
 import ai.tuna.fusion.metadata.crd.podpool.*;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.Service;
@@ -9,7 +12,6 @@ import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.DeploymentStatus;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.utils.Serialization;
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.CollectionUtils;
 
@@ -24,22 +26,11 @@ import static org.awaitility.Awaitility.await;
  * @author robinqu
  */
 @Slf4j
-public class TestResourceContext {
-
-    @Getter
-    private final KubernetesClient client;
-
-    @Getter
-    private final String targetNamespace;
-
-    public TestResourceContext(KubernetesClient client, String targetNamespace) {
-        this.client = client;
-        this.targetNamespace = targetNamespace;
-    }
+public record TestResourceContext(KubernetesClient client, String targetNamespace) {
 
     public <Resource extends HasMetadata> Resource loadYamlResource(Class<Resource> clazz, String classpath) {
         Resource resource = null;
-        try(var is = getClass().getClassLoader().getResourceAsStream(classpath);) {
+        try (var is = getClass().getClassLoader().getResourceAsStream(classpath)) {
             resource = Serialization.unmarshal(is, clazz);
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -57,8 +48,7 @@ public class TestResourceContext {
                 .until(condition);
     }
 
-    public boolean checkCondition(PodPool podPool) {
-        log.info("checkCondition for {}", ResourceUtils.computeResourceMetaKey(podPool));
+    private boolean checkCondition(PodPool podPool) {
         var deployName = PodPoolResourceUtils.computePodPoolDeploymentName(podPool);
         var svcName = PodPoolResourceUtils.computePodPoolServiceName(podPool);
         if (deployName.isEmpty() || svcName.isEmpty()) {
@@ -78,17 +68,28 @@ public class TestResourceContext {
         return deploy != null && svc != null && Optional.ofNullable(deploy.getStatus()).map(DeploymentStatus::getAvailableReplicas).orElse(0) == podPool.getSpec().getPoolSize();
     }
 
-    public boolean checkCondition(PodFunction podFunction) {
-        log.info("checkCondition for {}", ResourceUtils.computeResourceMetaKey(podFunction));
-        return true;
+    private boolean checkCondition(PodFunction podFunction) {
+        return Objects.nonNull(podFunction);
     }
 
-    public boolean checkCondition(PodFunctionBuild podFunctionBuild) {
-        log.info("checkCondition for {}", ResourceUtils.computeResourceMetaKey(podFunctionBuild));
+    private boolean checkCondition(PodFunctionBuild podFunctionBuild) {
         var build = ResourceUtils.getKubernetesResource(client, podFunctionBuild.getMetadata().getName(), podFunctionBuild.getMetadata().getNamespace(), PodFunctionBuild.class).orElseThrow();
         return Optional.ofNullable(build.getStatus())
                 .map(PodFunctionBuildStatus::getPhase)
                 .map(phase -> phase == PodFunctionBuildStatus.Phase.Succeeded || phase == PodFunctionBuildStatus.Phase.Failed)
+                .orElse(false);
+    }
+
+    private boolean checkCondition(AgentEnvironment agentEnvironment) {
+        var podPoolName = AgentResourceUtils.computePodPoolName(agentEnvironment);
+        return ResourceUtils.getKubernetesResource(client, podPoolName, agentEnvironment.getMetadata().getNamespace(), PodPool.class).map(this::checkCondition).orElse(false);
+    }
+
+    private boolean checkCondition(AgentDeployment agentDeployment) {
+        var fnName = AgentResourceUtils.computeFunctionName(agentDeployment);
+        return ResourceUtils
+                .getKubernetesResource(client, fnName, agentDeployment.getMetadata().getNamespace(), PodFunction.class)
+                .map(this::checkCondition)
                 .orElse(false);
     }
 
@@ -98,16 +99,22 @@ public class TestResourceContext {
 
     public <Resource extends HasMetadata> void awaitYamlResource(Class<Resource> clazz, String classpath) {
         var resource = loadYamlResource(clazz, classpath);
-        log.info("Resource loaded: {}", resource);
+        log.info("Check condition for loaded resource: {}", ResourceUtils.computeResourceMetaKey(resource));
         switch (clazz.getSimpleName()) {
+            case "AgentEnvironment":
+                awaitFor(() -> checkCondition((AgentEnvironment) resource));
+                break;
+            case "AgentDeployment":
+                awaitFor(() -> checkCondition((AgentDeployment) resource));
+                break;
             case "PodPool":
-                awaitFor(()-> checkCondition((PodPool) resource));
+                awaitFor(() -> checkCondition((PodPool) resource));
                 break;
             case "PodFunction":
-                awaitFor(()-> checkCondition((PodFunction) resource));
+                awaitFor(() -> checkCondition((PodFunction) resource));
                 break;
             case "PodFunctionBuild":
-                awaitFor(()-> checkCondition((PodFunctionBuild) resource));
+                awaitFor(() -> checkCondition((PodFunctionBuild) resource));
                 break;
             case null, default:
                 throw new IllegalArgumentException("Unsupported resource type: " + clazz);
@@ -117,7 +124,7 @@ public class TestResourceContext {
     public void awaitResourceGroup(ResourceTreeNode resourceTreeNode) {
         var deps = resourceTreeNode.getDependencies();
         if (!CollectionUtils.isEmpty(deps)) {
-            for(var dep: deps) {
+            for (var dep : deps) {
                 awaitResourceGroup(dep);
             }
         }

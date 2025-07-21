@@ -15,6 +15,7 @@ import io.fabric8.kubernetes.client.KubernetesClient;
 import io.javaoperatorsdk.operator.api.reconciler.*;
 import io.javaoperatorsdk.operator.api.reconciler.dependent.Dependent;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.Strings;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;
@@ -87,11 +88,9 @@ public class PodFunctionBuildReconciler implements Reconciler<PodFunctionBuild>,
                                                 .ifPresent(jobPodInfo::setPodPhase);
                         jobPodInfo.setPodName(jobPod.getMetadata().getName());
                         log.info("JobPodInfo: {}", jobPodInfo);
-                        if (PodPoolResourceUtils.isJobTerminalPhase(jobPodInfo.getPodPhase())) {
-                            jobPodInfo.setLogs(
-                                    PodPoolResourceUtils.getPodLog(context.getClient(), resource.getMetadata().getNamespace(), jobPodInfo.getPodName())
-                            );
-                        }
+                        PodPoolResourceUtils
+                                .getPodLog(context.getClient(), resource.getMetadata().getNamespace(), jobPodInfo)
+                                .ifPresent(jobPodInfo::setLogs);
                         status.setJobPod(jobPodInfo);
                     });
 

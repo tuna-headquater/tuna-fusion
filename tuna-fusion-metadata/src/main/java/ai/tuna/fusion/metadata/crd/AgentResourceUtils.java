@@ -6,7 +6,7 @@ import ai.tuna.fusion.metadata.crd.podpool.PodFunctionBuild;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.OwnerReference;
 import io.fabric8.kubernetes.client.KubernetesClient;
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.apache.commons.text.StringSubstitutor;
 
 import java.util.Map;
@@ -17,18 +17,22 @@ import java.util.Optional;
  */
 public class AgentResourceUtils {
 
+    public static String computePodPoolName(AgentEnvironment agentEnvironment) {
+        return agentEnvironment.getMetadata().getName() + "-pod-pool";
+    }
+
     public static String computeFunctionName(AgentDeployment agentDeployment) {
         return agentDeployment.getMetadata().getName() + "-function";
     }
 
     public static String getReferencedAgentDeploymentName(PodFunctionBuild podFunctionBuild) {
         return podFunctionBuild.getMetadata().getOwnerReferences().stream()
-                .filter(ownerReference -> StringUtils.equals(ownerReference.getKind(), HasMetadata.getKind(AgentDeployment.class)))
+                .filter(ownerReference -> Strings.CS.equals(ownerReference.getKind(), HasMetadata.getKind(AgentDeployment.class)))
                 .findFirst()
                 .map(OwnerReference::getName)
                 .orElseThrow();
     }
-    
+
     public static Optional<AgentDeployment> getReferencedAgentDeployment(final KubernetesClient client, PodFunctionBuild resource) {
         return Optional.ofNullable(client.resources(AgentDeployment.class)
                 .inNamespace(resource.getMetadata().getNamespace())
@@ -47,8 +51,8 @@ public class AgentResourceUtils {
 
     public static <Owner extends HasMetadata, Subject extends HasMetadata> Optional<Owner> getReferencedResource(final KubernetesClient client, Subject resource, Class<Owner> ownerClass) {
         var ref = resource.getMetadata().getOwnerReferences().stream()
-                .filter(ownerReference -> StringUtils.equals(ownerReference.getKind(), HasMetadata.getKind(ownerClass)))
-                .filter(ownerReference -> StringUtils.equals(ownerReference.getApiVersion(), HasMetadata.getApiVersion(ownerClass)))
+                .filter(ownerReference -> Strings.CS.equals(ownerReference.getKind(), HasMetadata.getKind(ownerClass)))
+                .filter(ownerReference -> Strings.CS.equals(ownerReference.getApiVersion(), HasMetadata.getApiVersion(ownerClass)))
                 .findFirst();
 
         return ref.map(ownerReference -> client.resources(ownerClass)
@@ -59,8 +63,8 @@ public class AgentResourceUtils {
 
     public static <Owner extends HasMetadata, Subject extends HasMetadata> Optional<String> getReferencedResourceName(Subject resource, Class<Owner> ownerClass) {
         return resource.getMetadata().getOwnerReferences().stream()
-                .filter(ownerReference -> StringUtils.equals(ownerReference.getKind(), HasMetadata.getKind(ownerClass)))
-                .filter(ownerReference -> StringUtils.equals(ownerReference.getApiVersion(), HasMetadata.getApiVersion(ownerClass)))
+                .filter(ownerReference -> Strings.CS.equals(ownerReference.getKind(), HasMetadata.getKind(ownerClass)))
+                .filter(ownerReference -> Strings.CS.equals(ownerReference.getApiVersion(), HasMetadata.getApiVersion(ownerClass)))
                 .findFirst()
                 .map(OwnerReference::getName);
     }
@@ -68,7 +72,7 @@ public class AgentResourceUtils {
 
     private static final String AGENT_EXECUTOR_URL_TEMPLATE = "${endpointProtocol}://${endpointHost}/${namespace}/${agentDeploymentName}";
     public static  String agentExternalUrl(AgentDeployment agentDeployment, AgentEnvironment agentEnvironment) {
-        var endpoint = agentEnvironment.getSpec().getEndpoint();
+        var endpoint = agentEnvironment.getSpec().getExecutor();
         var substitutor = new StringSubstitutor(Map.of(
                 "endpointProtocol", endpoint.getProtocol(),
                 "endpointHost", endpoint.getExternalHost(),

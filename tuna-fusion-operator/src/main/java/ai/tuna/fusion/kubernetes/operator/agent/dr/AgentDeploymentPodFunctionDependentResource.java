@@ -45,11 +45,14 @@ public class AgentDeploymentPodFunctionDependentResource extends CRUDKubernetesD
         podFunction.getMetadata().setName(AgentResourceUtils.computeFunctionName(primary));
         podFunction.getMetadata().setNamespace(primary.getMetadata().getNamespace());
         var podFunctionSpec = new PodFunctionSpec();
-        var agentEnvironment = AgentResourceUtils.getReferencedAgentEnvironment(context.getClient(), primary).orElseThrow();
+        var agentEnvironment = AgentResourceUtils
+                .getReferencedAgentEnvironment(context.getClient(), primary)
+                .orElseThrow(()-> new IllegalStateException("Agent Environment not found"));
         podFunctionSpec.setFileAssets(Arrays.asList(
                 renderAgentCardJson(agentEnvironment, primary),
                 renderA2aRuntimeConfigJson(primary)
         ));
+        podFunctionSpec.setPodPoolName(AgentResourceUtils.computePodPoolName(agentEnvironment));
         podFunctionSpec.setEntrypoint(primary.getSpec().getEntrypoint());
         podFunction.setSpec(podFunctionSpec);
         return podFunction;
