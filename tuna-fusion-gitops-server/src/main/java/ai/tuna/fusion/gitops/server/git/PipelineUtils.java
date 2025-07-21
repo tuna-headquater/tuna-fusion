@@ -10,6 +10,7 @@ import io.fabric8.kubernetes.api.model.OwnerReference;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 
 import java.io.*;
 import java.security.MessageDigest;
@@ -74,7 +75,7 @@ public class PipelineUtils {
                             .map(PodFunctionBuild::getStatus)
                             .map(PodFunctionBuildStatus::getJobPod);
                     var valid = podInfo.map(PodFunctionBuildStatus.JobPodInfo::getPodName).map(StringUtils::isNotBlank).orElse(false) &&
-                            podInfo.map(p -> !StringUtils.equals(p.getPodPhase(), "Pending")).orElse(false);
+                            podInfo.map(p -> !Strings.CS.equals(p.getPodPhase(), "Pending")).orElse(false);
                     log.debug("[waitForJobPod] Check pod readiness: AgentBuild={}/{}, podInfo={}, valid={}", namespace, agentBuildName, podInfo.orElse(null), valid);
                     return valid;
                 }, 5, TimeUnit.MINUTES);

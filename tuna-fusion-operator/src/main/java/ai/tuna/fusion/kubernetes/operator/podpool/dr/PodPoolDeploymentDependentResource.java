@@ -1,6 +1,7 @@
 package ai.tuna.fusion.kubernetes.operator.podpool.dr;
 
 import ai.tuna.fusion.metadata.crd.PodPoolResourceUtils;
+import ai.tuna.fusion.metadata.crd.ResourceUtils;
 import ai.tuna.fusion.metadata.crd.podpool.PodFunctionBuild;
 import ai.tuna.fusion.metadata.crd.podpool.PodPool;
 import io.fabric8.kubernetes.api.model.*;
@@ -64,6 +65,7 @@ public class PodPoolDeploymentDependentResource extends CRUDKubernetesDependentR
                         .withValue(PodFunctionBuild.ARCHIVE_ROOT_PATH.toString())
                         .build()
         ));
+        podSpec.setSubdomain(PodPoolResourceUtils.computePodPoolServiceName(primary));
 
         return new DeploymentBuilder()
                 .withNewMetadata()

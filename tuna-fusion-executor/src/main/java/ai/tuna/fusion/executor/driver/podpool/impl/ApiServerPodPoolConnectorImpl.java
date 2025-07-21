@@ -16,6 +16,7 @@ import io.fabric8.kubernetes.client.dsl.base.PatchType;
 import io.fabric8.kubernetes.client.informers.ResourceEventHandler;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -150,12 +151,12 @@ public class ApiServerPodPoolConnectorImpl implements PodPoolConnector, Resource
     }
 
     private boolean isManagedPod(Pod pod) {
-        return pod.getMetadata().getLabels().containsKey(PodPool.GENERIC_POD_LABEL_NAME) && StringUtils.equals(pod.getMetadata().getLabels().get(PodPool.POD_POOL_NAME_LABEL_NAME), podPool.getMetadata().getName());
+        return pod.getMetadata().getLabels().containsKey(PodPool.GENERIC_POD_LABEL_NAME) && Strings.CS.equals(pod.getMetadata().getLabels().get(PodPool.POD_POOL_NAME_LABEL_NAME), podPool.getMetadata().getName());
     }
 
     private boolean isReadyPod(Pod pod) {
         return pod.getStatus().getConditions().stream()
-                .anyMatch(condition -> StringUtils.equals(condition.getType(), "Ready") && StringUtils.equals(condition.getStatus(), "True"));
+                .anyMatch(condition -> Strings.CS.equals(condition.getType(), "Ready") && Strings.CS.equals(condition.getStatus(), "True"));
     }
 
     private boolean shouldAddToQueue(Pod pod) {

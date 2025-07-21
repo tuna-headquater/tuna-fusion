@@ -1,0 +1,20 @@
+apiVersion: fusion.tuna.ai/v1
+kind: AgentEnvironment
+metadata:
+  name: env1
+spec:
+  driver:
+    type: PodPool
+    podPoolSpec:
+      archivePvcName: shared-archive-pvc
+      poolSize: 3
+      builderImage: robinqu/fusion-a2a-env-builder:1752756455
+      runtimeImage: robinqu/fusion-a2a-fastapi-runtime:1753011317
+      builderPodServiceAccountName: fusion-builder-sa
+      runPerPod: 10
+
+  endpoint:
+    externalHost: localhost:8802
+    protocol: http
+
+

@@ -30,11 +30,7 @@ public class AgentResourceUtils {
     }
 
     public static String getReferenceAgentCatalogueName(AgentDeployment agentDeployment) {
-        return agentDeployment.getMetadata().getOwnerReferences().stream()
-                .filter(ownerReference -> StringUtils.equals(ownerReference.getKind(), HasMetadata.getKind(AgentCatalogue.class)))
-                .findFirst()
-                .map(OwnerReference::getName)
-                .orElseThrow();
+        return agentDeployment.getSpec().getCatalogueName();
     }
 
     public static Optional<AgentDeployment> getReferencedAgentDeployment(final KubernetesClient client, PodFunctionBuild resource) {
@@ -48,6 +44,13 @@ public class AgentResourceUtils {
         return Optional.ofNullable(client.resources(AgentEnvironment.class)
                 .inNamespace(agentDeployment.getMetadata().getNamespace())
                 .withName(agentDeployment.getSpec().getEnvironmentName())
+                .get());
+    }
+
+    public static Optional<AgentCatalogue> getReferencedAgentCatalogue(final KubernetesClient client, AgentDeployment agentDeployment) {
+        return Optional.ofNullable(client.resources(AgentCatalogue.class)
+                .inNamespace(agentDeployment.getMetadata().getNamespace())
+                .withName(getReferenceAgentCatalogueName(agentDeployment))
                 .get());
     }
 

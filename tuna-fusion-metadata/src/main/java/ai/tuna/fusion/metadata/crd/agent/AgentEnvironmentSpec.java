@@ -16,13 +16,10 @@ public class AgentEnvironmentSpec {
         AlibabaCloudFunctionCompute
     }
 
-
     @Data
     public static class DriverSpec {
-
         @Required
         private DriverType type = DriverType.PodPool;
-
 
         @Data
         public static class AWSLambdaSpec {}

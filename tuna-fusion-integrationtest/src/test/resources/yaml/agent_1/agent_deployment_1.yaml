@@ -1,0 +1,39 @@
+apiVersion: fusion.tuna.ai/v1
+kind: AgentDeployment
+metadata:
+  name: test-deploy-1
+spec:
+  agentCard:
+    name: agent3
+    description: a simple http server that speaks hello
+    capabilities:
+      streaming: true
+      pushNotifications: false
+      stateTransitionHistory: false
+    defaultInputModes:
+      - "text/plain"
+      - "application/json"
+    defaultOutputModes:
+      - "application/json"
+      - "image/png"
+    skills:
+      - description: "hello world"
+        id: say_hello
+        name: say hello
+        tags:
+          - hello
+    provider:
+      organization: tuna
+      url: https://github.com/tuna-headquarter
+    url: "/${namespace}/${agentCatalogueName}/${agentDeploymentName}"
+    version: "1.0.0"
+  environmentName: env1
+  git:
+    watchedBranchName: "refs/heads/main"
+  a2a:
+    queueManager:
+      provider: InMemory
+    taskStore:
+      provider: InMemory
+  entrypoint: main.handler
+
