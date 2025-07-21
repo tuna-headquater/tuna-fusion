@@ -34,11 +34,10 @@ public class AgentDeploymentReconciler implements Reconciler<AgentDeployment>, C
     @Override
     public UpdateControl<AgentDeployment> reconcile(AgentDeployment resource, Context<AgentDeployment> context) {
         var agentEnvironment = AgentResourceUtils.getReferencedAgentEnvironment(context.getClient(), resource).orElseThrow(()-> new IllegalStateException("Agent Environment not found"));
-        var agentCatalogue = AgentResourceUtils.getReferencedAgentCatalogue(context.getClient(), resource).orElseThrow(()-> new IllegalStateException("Agent Catalogue not found"));
         AgentDeployment patch = new AgentDeployment();
         patch.getMetadata().setNamespace(resource.getMetadata().getNamespace());
         patch.getMetadata().setName(resource.getMetadata().getName());
-        ResourceUtils.addOwnerReference(patch, agentCatalogue);
+        ResourceUtils.addOwnerReference(patch, agentEnvironment);
         var status = new AgentDeploymentStatus();
         var driverType = agentEnvironment.getSpec().getDriver().getType();
         status.setDriverType(driverType);

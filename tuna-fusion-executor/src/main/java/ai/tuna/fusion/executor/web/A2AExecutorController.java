@@ -34,10 +34,9 @@ public class A2AExecutorController {
         this.agentResources = agentResources;
     }
 
-    @RequestMapping("/a2a/{namespace}/{agentCatalogueName}/{agentDeploymentName}/**")
+    @RequestMapping("/a2a/{namespace}/{agentDeploymentName}/**")
     public Mono<ResponseEntity<byte[]>> forward(
             @PathVariable String namespace,
-            @PathVariable String agentCatalogueName,
             @PathVariable String agentDeploymentName,
             ProxyExchange<byte[]> proxy) throws Exception {
         var agentDeployment = agentResources.queryAgentDeployment(namespace, agentDeploymentName).orElseThrow();
@@ -50,7 +49,7 @@ public class A2AExecutorController {
         var podFunction = podPoolResources.queryPodFunction(namespace, agentDeployment.getStatus().getFunction().getFunctionName()).orElseThrow();
 
         String requestUri = proxy.path();
-        String matchedPathPrefix = "/a2a/" + namespace + "/" + agentCatalogueName + "/" + agentDeploymentName;
+        String matchedPathPrefix = "/a2a/" + namespace + "/" + agentDeploymentName;
         String trailingPath = requestUri.substring(requestUri.indexOf(matchedPathPrefix) + matchedPathPrefix.length());
         return HttpProxyUtils.forward(
                 functionPodManager,

@@ -78,7 +78,7 @@ public class K8SNamespacedResourceExtension implements BeforeEachCallback, After
     }
 
     private void installNamespacedResources() {
-        log.info("Installing required resources...");
+        log.info("Installing shared namespaced resources...");
         String[] resourceLists = {
                 "yaml/shared/fusion_builder_rbac.yaml",
                 "yaml/shared/shared_archive_pvc.yaml"

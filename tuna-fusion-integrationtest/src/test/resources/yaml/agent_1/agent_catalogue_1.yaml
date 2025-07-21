@@ -1,6 +1,0 @@
-apiVersion: fusion.tuna.ai/v1
-kind: AgentCatalogue
-metadata:
-  name: agent-catalogue-1
-spec:
-  description: "This is a test catalogue"

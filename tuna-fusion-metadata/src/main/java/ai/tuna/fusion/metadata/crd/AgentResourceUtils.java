@@ -1,10 +1,10 @@
 package ai.tuna.fusion.metadata.crd;
 
-import ai.tuna.fusion.metadata.crd.podpool.PodFunctionBuild;
-import ai.tuna.fusion.metadata.crd.agent.AgentCatalogue;
 import ai.tuna.fusion.metadata.crd.agent.AgentDeployment;
 import ai.tuna.fusion.metadata.crd.agent.AgentEnvironment;
-import io.fabric8.kubernetes.api.model.*;
+import ai.tuna.fusion.metadata.crd.podpool.PodFunctionBuild;
+import io.fabric8.kubernetes.api.model.HasMetadata;
+import io.fabric8.kubernetes.api.model.OwnerReference;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.StringSubstitutor;
@@ -28,11 +28,7 @@ public class AgentResourceUtils {
                 .map(OwnerReference::getName)
                 .orElseThrow();
     }
-
-    public static String getReferenceAgentCatalogueName(AgentDeployment agentDeployment) {
-        return agentDeployment.getSpec().getCatalogueName();
-    }
-
+    
     public static Optional<AgentDeployment> getReferencedAgentDeployment(final KubernetesClient client, PodFunctionBuild resource) {
         return Optional.ofNullable(client.resources(AgentDeployment.class)
                 .inNamespace(resource.getMetadata().getNamespace())
@@ -47,12 +43,6 @@ public class AgentResourceUtils {
                 .get());
     }
 
-    public static Optional<AgentCatalogue> getReferencedAgentCatalogue(final KubernetesClient client, AgentDeployment agentDeployment) {
-        return Optional.ofNullable(client.resources(AgentCatalogue.class)
-                .inNamespace(agentDeployment.getMetadata().getNamespace())
-                .withName(getReferenceAgentCatalogueName(agentDeployment))
-                .get());
-    }
 
 
     public static <Owner extends HasMetadata, Subject extends HasMetadata> Optional<Owner> getReferencedResource(final KubernetesClient client, Subject resource, Class<Owner> ownerClass) {
@@ -76,14 +66,13 @@ public class AgentResourceUtils {
     }
 
 
-    private static final String AGENT_EXECUTOR_URL_TEMPLATE = "${endpointProtocol}://${endpointHost}/${namespace}/${agentCatalogueName}/${agentDeploymentName}";
+    private static final String AGENT_EXECUTOR_URL_TEMPLATE = "${endpointProtocol}://${endpointHost}/${namespace}/${agentDeploymentName}";
     public static  String agentExternalUrl(AgentDeployment agentDeployment, AgentEnvironment agentEnvironment) {
         var endpoint = agentEnvironment.getSpec().getEndpoint();
         var substitutor = new StringSubstitutor(Map.of(
                 "endpointProtocol", endpoint.getProtocol(),
                 "endpointHost", endpoint.getExternalHost(),
                 "namespace", agentDeployment.getMetadata().getNamespace(),
-                "agentCatalogueName", AgentResourceUtils.getReferenceAgentCatalogueName(agentDeployment),
                 "agentDeploymentName", agentDeployment.getMetadata().getName()
         ));
         return substitutor.replace(AGENT_EXECUTOR_URL_TEMPLATE);

@@ -1,7 +1,7 @@
 apiVersion: fusion.tuna.ai/v1
 kind: AgentEnvironment
 metadata:
-  name: env1
+  name: env-1
 spec:
   driver:
     type: PodPool

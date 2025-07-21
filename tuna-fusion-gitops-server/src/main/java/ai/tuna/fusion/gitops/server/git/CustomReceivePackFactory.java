@@ -2,7 +2,6 @@ package ai.tuna.fusion.gitops.server.git;
 
 import ai.tuna.fusion.gitops.server.git.pipeline.SourceArchiveHandler;
 import ai.tuna.fusion.gitops.server.spring.GitRequestContextUtil;
-import ai.tuna.fusion.metadata.crd.agent.AgentCatalogue;
 import ai.tuna.fusion.metadata.crd.agent.AgentDeployment;
 import ai.tuna.fusion.metadata.crd.agent.AgentEnvironment;
 import ai.tuna.fusion.metadata.crd.agent.AgentEnvironmentSpec;
@@ -17,15 +16,11 @@ import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.transport.ReceiveCommand;
 import org.eclipse.jgit.transport.ReceivePack;
 import org.eclipse.jgit.transport.resolver.ReceivePackFactory;
-import org.eclipse.jgit.transport.resolver.ServiceNotAuthorizedException;
 import org.eclipse.jgit.transport.resolver.ServiceNotEnabledException;
 
 import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.Optional;
-import java.util.UUID;
 
 /**
  * @author robinqu
@@ -46,18 +41,17 @@ public class CustomReceivePackFactory implements ReceivePackFactory<HttpServletR
     public ReceivePack create(HttpServletRequest req, Repository db) throws ServiceNotEnabledException {
         GitRequestContextUtil.initializeRequestAttributes(kubernetesClient, req);
         var agentDeployment = GitRequestContextUtil.getAgentDeployment().orElseThrow(()-> new ServiceNotEnabledException("AgentDeployment is not associated with this Git repository URL."));
-        var agentCatalogue = GitRequestContextUtil.getAgentCatalogue().orElseThrow(()-> new ServiceNotEnabledException("AgentCatalogue is associated with this Git repository URL."));
         var agentEnvironment = GitRequestContextUtil.getAgentEnvironment().orElseThrow(()-> new ServiceNotEnabledException("AgentEnvironment is associated with this Git repository URL."));
         // TODO check permissions
 
         ReceivePack receivePack = new ReceivePack(db);
         receivePack.setPreReceiveHook((rp, commands) -> {
-            handlePreReceiveHook(agentEnvironment, agentDeployment, agentCatalogue, req, receivePack, commands);
+            handlePreReceiveHook(agentEnvironment, agentDeployment, req, receivePack, commands);
         });
         return receivePack;
     }
 
-    private void handlePreReceiveHook(AgentEnvironment agentEnvironment, AgentDeployment agentDeployment, AgentCatalogue agentCatalogue, HttpServletRequest req, ReceivePack receivePack, Collection<ReceiveCommand> commands) {
+    private void handlePreReceiveHook(AgentEnvironment agentEnvironment, AgentDeployment agentDeployment, HttpServletRequest req, ReceivePack receivePack, Collection<ReceiveCommand> commands) {
         if (agentEnvironment.getSpec().getDriver().getType() != AgentEnvironmentSpec.DriverType.PodPool) {
             logError(receivePack, null, "❌ Only PodPool driver is supported now");
             return;
