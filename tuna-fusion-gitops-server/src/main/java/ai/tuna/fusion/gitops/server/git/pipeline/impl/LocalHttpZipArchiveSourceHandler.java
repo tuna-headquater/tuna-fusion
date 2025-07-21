@@ -7,6 +7,7 @@ import ai.tuna.fusion.metadata.crd.podpool.PodFunction;
 import ai.tuna.fusion.metadata.crd.podpool.PodFunctionBuildSpec;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
@@ -19,9 +20,7 @@ import org.eclipse.jgit.treewalk.TreeWalk;
 import java.io.*;
 import java.nio.file.Path;
 import java.security.NoSuchAlgorithmException;
-import java.text.SimpleDateFormat;
 import java.util.Collection;
-import java.util.Date;
 import java.util.UUID;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -30,7 +29,7 @@ import java.util.zip.ZipOutputStream;
  * @author robinqu
  */
 @Slf4j
-public class LocalHttpZipArchiveSourceHandler implements SourceArchiveHandler {
+public class LocalHttpZipArchiveSourceHandler extends BaseArchiveHandler {
 
     private final Path zipRepositoryRoot;
     private final String httpServerUrlTemplate;
@@ -49,35 +48,21 @@ public class LocalHttpZipArchiveSourceHandler implements SourceArchiveHandler {
         Repository repo = receivePack.getRepository();
         var fileId = UUID.randomUUID().toString();
         File zipFile = zipRepositoryRoot.resolve(fileId + ".zip").toFile();
-        log.info("Creating Zip archive: {}", zipFile.getAbsolutePath());
+        log.info("[createSourceArchive] Creating Zip archive: {}", zipFile.getAbsolutePath());
 
         try (RevWalk revWalk = new RevWalk(repo); ZipOutputStream zos = new ZipOutputStream(new BufferedOutputStream(new FileOutputStream(zipFile)))) {
-
-            var filteredCommands = commands.stream().filter(cmd -> cmd.getType() == ReceiveCommand.Type.UPDATE || cmd.getType() == ReceiveCommand.Type.CREATE).filter(cmd -> StringUtils.equals(cmd.getRefName(), defaultBranch)).filter(cmd -> !cmd.getNewId().equals(ObjectId.zeroId())).toList();
-
-            if (filteredCommands.isEmpty()) {
-                throw new IllegalStateException("No valid commands for default branch found");
-            }
-            log.info("{} commands selected for repo {}", filteredCommands.size(), repo.getDirectory());
-
-            // 只使用第一个有效命令的提交
-            ReceiveCommand cmd = filteredCommands.getFirst();
-            ObjectId commitId = cmd.getNewId();
-            RevCommit commit = revWalk.parseCommit(commitId);
-            RevTree tree = commit.getTree();
-            log.debug("Using tree from commit: {}", commitId.getName());
-
+            var tree = filterCommands(revWalk, defaultBranch, commands);
             // 创建新的TreeWalk并正确初始化
             try (TreeWalk treeWalk = new TreeWalk(repo)) {
                 treeWalk.setRecursive(true);
                 // 必须添加树源再开始遍历
                 treeWalk.addTree(tree);
-                log.info("Tree count after addTree: {}", treeWalk.getTreeCount());
+                log.info("[createSourceArchive] Tree count after addTree: {}", treeWalk.getTreeCount());
 
                 while (treeWalk.next()) {
                     addTreeEntryToZip(receivePack, treeWalk, zos);
                 }
-                log.debug("Finished adding {} entries to zip", treeWalk.getPathString());
+                log.debug("[createSourceArchive] Finished adding {} entries to zip", treeWalk.getPathString());
             }
         }
 

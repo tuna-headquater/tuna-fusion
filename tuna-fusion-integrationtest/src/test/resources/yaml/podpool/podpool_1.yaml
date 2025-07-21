@@ -5,7 +5,7 @@ metadata:
 spec:
   archivePvcName: shared-archive-pvc
   builderImage: robinqu/fusion-a2a-env-builder:1752756455
-  runtimeImage: robinqu/fusion-a2a-fastapi-runtime:1752747026
+  runtimeImage: robinqu/fusion-a2a-fastapi-runtime:1753011317
   poolSize: 3
   builderPodServiceAccountName: fusion-builder-sa
   runPerPod: 10

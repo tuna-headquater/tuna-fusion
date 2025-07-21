@@ -5,6 +5,7 @@ import ai.tuna.fusion.metadata.crd.podpool.PodFunction;
 import ai.tuna.fusion.metadata.crd.podpool.PodFunctionBuildSpec;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
@@ -25,7 +26,7 @@ import java.util.UUID;
  * @author robinqu
  */
 @Slf4j
-public class FolderSourceArchiveHandler implements SourceArchiveHandler {
+public class FolderSourceArchiveHandler extends BaseArchiveHandler {
 
     private final Path archiveRootPath;
 
@@ -37,26 +38,10 @@ public class FolderSourceArchiveHandler implements SourceArchiveHandler {
     public PodFunctionBuildSpec.SourceArchive createSourceArchive(ReceivePack receivePack, Collection<ReceiveCommand> commands, String defaultBranch) throws IOException {
         Repository repo = receivePack.getRepository();
         var destinationPath = archiveRootPath.resolve(UUID.randomUUID().toString());
-        log.info("Creating repository snapshot at: {}", destinationPath);
+        log.info("[createSourceArchive] Creating repository snapshot at: {}", destinationPath);
 
         try (RevWalk revWalk = new RevWalk(repo)) {
-            var filteredCommands = commands.stream()
-                    .filter(cmd -> cmd.getType() == ReceiveCommand.Type.UPDATE || cmd.getType() == ReceiveCommand.Type.CREATE)
-                    .filter(cmd -> StringUtils.equals(cmd.getRefName(), defaultBranch))
-                    .filter(cmd -> !cmd.getNewId().equals(ObjectId.zeroId()))
-                    .toList();
-
-            if (filteredCommands.isEmpty()) {
-                throw new IllegalStateException("No valid commands for default branch found");
-            }
-            log.info("{} commands selected for repo {}", filteredCommands.size(), repo.getDirectory());
-
-            // Use the first valid command's commit
-            ReceiveCommand cmd = filteredCommands.getFirst();
-            ObjectId commitId = cmd.getNewId();
-            RevCommit commit = revWalk.parseCommit(commitId);
-            RevTree tree = commit.getTree();
-            log.debug("Using tree from commit: {}", commitId.getName());
+            var tree = filterCommands(revWalk, defaultBranch, commands);
 
             // Create a new TreeWalk to traverse the repository tree
             try (TreeWalk treeWalk = new TreeWalk(repo)) {
@@ -82,7 +67,7 @@ public class FolderSourceArchiveHandler implements SourceArchiveHandler {
                         Files.copy(in, targetFile);
                     }
                 }
-                log.debug("Finished processing {} entries", treeWalk.getPathString());
+                log.debug("[createSourceArchive] Finished processing {} entries", treeWalk.getPathString());
             }
         }
         var sourceArchive = new PodFunctionBuildSpec.SourceArchive();

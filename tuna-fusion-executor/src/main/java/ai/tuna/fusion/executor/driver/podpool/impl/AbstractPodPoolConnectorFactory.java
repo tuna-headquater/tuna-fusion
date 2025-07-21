@@ -35,6 +35,7 @@ public abstract class AbstractPodPoolConnectorFactory implements PodPoolConnecto
 
     @Override
     public PodPoolConnector get(String ns, String podPoolName) {
+        log.debug("[get] PodPoolConnector for PodPool: {}/{}", ns, podPoolName);
         return podPoolConnectors.computeIfAbsent("%s/%s".formatted(ns, podPoolName), key -> {
             var podPool = podPoolResources.queryPodPool(ns, podPoolName).orElseThrow();
             return createPodQueue(podPool);

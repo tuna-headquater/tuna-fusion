@@ -22,7 +22,7 @@ public class HttpProxyUtils {
             String trailingPath
     ) throws Exception {
         try (var access = functionPodManager.requestAccess(podFunction, podPool, trailingPath)) {
-            log.debug("PodAccess required: {}", access);
+            log.debug("[forward] PodAccess required: {}", access);
             return proxy.uri(access.getUri()).forward();
         }
 

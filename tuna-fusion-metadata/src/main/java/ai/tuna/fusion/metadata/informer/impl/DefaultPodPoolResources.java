@@ -9,6 +9,7 @@ import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.informers.SharedIndexInformer;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 import java.util.Optional;
@@ -17,6 +18,7 @@ import java.util.stream.Stream;
 /**
  * @author robinqu
  */
+@Slf4j
 public class DefaultPodPoolResources extends AbstractResourceOperations implements PodPoolResources {
     private SharedIndexInformer<PodPool> podPoolSharedIndexInformer;
     private SharedIndexInformer<Pod> podSharedIndexInformer;
@@ -72,27 +74,32 @@ public class DefaultPodPoolResources extends AbstractResourceOperations implemen
 
     @Override
     public Optional<PodPool> queryPodPool(String namespace, String podPoolName) {
+        log.debug("[queryPodPool] {}/{}", namespace, podPoolName);
         return ResourceUtils.getResourceFromInformer(podPoolSharedIndexInformer, namespace, podPoolName);
     }
 
     @Override
     public Optional<Pod> queryPod(String namespace, String podName) {
+        log.debug("[queryPod] {}/{}", namespace, podName);
         return ResourceUtils.getResourceFromInformer(podSharedIndexInformer, namespace, podName);
     }
 
     @Override
     public Optional<PodFunction> queryPodFunction(String namespace, String podFunctionName) {
+        log.debug("[queryPodFunction] {}/{}", namespace, podFunctionName);
         return ResourceUtils.getResourceFromInformer(podFunctionSharedIndexInformer, namespace, podFunctionName);
     }
 
     @Override
-    public Optional<Service> queryPodPoolService(String namespace, String podPoolName) {
-        return ResourceUtils.getResourceFromInformer(serviceSharedIndexInformer, namespace, podPoolName);
+    public Optional<Service> queryPodPoolService(String namespace, String svcName) {
+        log.debug("[queryPodPoolService] {}/{}", namespace, svcName);
+        return ResourceUtils.getResourceFromInformer(serviceSharedIndexInformer, namespace, svcName);
     }
 
 
     @Override
     public Optional<PodFunctionBuild> queryPodFunctionBuild(String namespace, String podFunctionBuildName) {
+        log.debug("[queryPodFunctionBuild] {}/{}", namespace, podFunctionBuildName);
         return ResourceUtils.getResourceFromInformer(podFunctionBuildSharedIndexInformer, namespace, podFunctionBuildName);
     }
 

@@ -12,6 +12,6 @@ import lombok.Data;
 @Builder
 public class PodSpecializeRequest {
     private PodFunctionBuildStatus.DeployArchive deployArchive;
-    private String functionName;
+    private String entrypoint;
     private PodFunctionSpec.AppType appType;
 }

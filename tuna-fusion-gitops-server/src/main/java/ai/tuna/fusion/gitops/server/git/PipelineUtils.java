@@ -75,7 +75,7 @@ public class PipelineUtils {
                             .map(PodFunctionBuildStatus::getJobPod);
                     var valid = podInfo.map(PodFunctionBuildStatus.JobPodInfo::getPodName).map(StringUtils::isNotBlank).orElse(false) &&
                             podInfo.map(p -> !StringUtils.equals(p.getPodPhase(), "Pending")).orElse(false);
-                    log.debug("Check pod readiness: AgentBuild={}/{}, podInfo={}, valid={}", namespace, agentBuildName, podInfo.orElse(null), valid);
+                    log.debug("[waitForJobPod] Check pod readiness: AgentBuild={}/{}, podInfo={}, valid={}", namespace, agentBuildName, podInfo.orElse(null), valid);
                     return valid;
                 }, 5, TimeUnit.MINUTES);
         return Optional.ofNullable(agentBuildWithJob).map(PodFunctionBuild::getStatus).map(PodFunctionBuildStatus::getJobPod).orElseThrow();

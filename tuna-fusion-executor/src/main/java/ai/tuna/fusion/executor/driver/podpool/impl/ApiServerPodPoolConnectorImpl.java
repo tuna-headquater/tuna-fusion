@@ -49,7 +49,7 @@ public class ApiServerPodPoolConnectorImpl implements PodPoolConnector, Resource
 
     @Override
     public void disposeAccess(PodAccess podAccess) throws FunctionPodDisposalException {
-        var pod = podAccess.getSelcetedPod();
+        var pod = podAccess.getSelectedPod();
         log.info("Evict specialized POD: {}", ResourceUtils.computeResourceMetaKey(pod));
         var result = ResourceUtils.deleteResource(podPoolResources.getKubernetesClient(), podAccess.getNamespace(), pod.getMetadata().getName(), Pod.class);
         if (!result) {
@@ -59,6 +59,7 @@ public class ApiServerPodPoolConnectorImpl implements PodPoolConnector, Resource
 
     @Override
     public PodAccess requestAccess(PodFunction function, String trailingPath) throws FunctionPodAccessException {
+        log.debug("[requestAccess] fn={}, trailingPath={}", ResourceUtils.computeResourceMetaKey(function), trailingPath);
         var effectiveBuild = Optional.ofNullable(function.getStatus())
                 .map(PodFunctionStatus::getEffectiveBuild)
                 .flatMap(buildInfo -> podPoolResources.queryPodFunctionBuild(podPool.getMetadata().getNamespace(), buildInfo.getName()))
@@ -72,7 +73,7 @@ public class ApiServerPodPoolConnectorImpl implements PodPoolConnector, Resource
                 .orElseThrow(()-> FunctionPodAccessException.of(podPool, function, "No effective build found for pod function " + function.getMetadata().getName()));
         var request = PodSpecializeRequest.builder()
                 .deployArchive(deployArchive)
-                .functionName(function.getSpec().getEntrypoint())
+                .entrypoint(function.getSpec().getEntrypoint())
                 .appType(function.getSpec().getAppType())
                 .build();
         var svcName = PodPoolResourceUtils.computePodPoolServiceName(podPool);
@@ -89,14 +90,20 @@ public class ApiServerPodPoolConnectorImpl implements PodPoolConnector, Resource
         var response = responseSpec.toEntity(String.class)
                 .block(Duration.ofSeconds(5));
         if (response == null || response.getStatusCode() != HttpStatusCode.valueOf(200)) {
+            if (response!=null) {
+                log.debug("[requestAccess] Non-200 response with specialization request: {}", response.getBody());
+            }
             throw FunctionPodAccessException.of(podPool, function, "Failed to specialize pod function " + function.getMetadata().getName());
         }
+        log.debug("[requestAccess] Access acquired: fn={}, pod={}", ResourceUtils.computeResourceMetaKey(function), ResourceUtils.computeResourceMetaKey(pod));
         return PodAccess.builder()
+                .selectedPod(pod)
                 .uri(ResourceUtils.getPodUri(pod, headlessService, trailingPath))
                 .functionBuildName(effectiveBuild.getMetadata().getName())
                 .functionBuildUid(effectiveBuild.getMetadata().getUid())
                 .functionName(function.getMetadata().getName())
                 .podPoolName(podPool.getMetadata().getName())
+                .namespace(pod.getMetadata().getNamespace())
                 .build();
     }
 
@@ -107,7 +114,7 @@ public class ApiServerPodPoolConnectorImpl implements PodPoolConnector, Resource
             try {
                 var podKey = queue.poll(timeout.getSeconds(), TimeUnit.SECONDS);
                 Preconditions.checkNotNull(podKey, "should have polled valid podKey");
-                log.debug("Polled podKey: {}", podKey);
+                log.debug("[poll] podKey={}", podKey);
                 var parsed = ResourceUtils.parseResourceMetaKey(podKey);
                 String patch = String.format(
                         "[{\"op\": \"test\", \"path\": \"/metadata/labels/%s\", \"value\": \"%s\"}," +

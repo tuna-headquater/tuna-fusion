@@ -27,7 +27,7 @@ public class PodPoolDeploymentDependentResource extends CRUDKubernetesDependentR
 
     @Override
     protected Deployment desired(PodPool primary, Context<PodPool> context) {
-        log.debug("Configure Deployment for PodPool: {}/{}", primary.getMetadata().getNamespace(), primary.getMetadata().getName());
+        log.debug("[desired Configure Deployment for PodPool: {}/{}", primary.getMetadata().getNamespace(), primary.getMetadata().getName());
         var selectorLabels = computeGenericPodSelectors(primary);
         var deployLabels = PodPoolResourceUtils.computeDeployLabels(primary);
         var poolSize = primary.getSpec().getPoolSize();

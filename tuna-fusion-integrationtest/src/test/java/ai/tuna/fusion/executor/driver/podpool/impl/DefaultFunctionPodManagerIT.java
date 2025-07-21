@@ -49,7 +49,8 @@ public class DefaultFunctionPodManagerIT extends IntegrationTest {
         Set<String> podNamesSet = new HashSet<>();
         while (count++<maxCount) {
             try(var access = functionPodManager.requestAccess(fn1, podPool)) {
-                selectedPod = access.getPodAccess().getSelcetedPod();
+                selectedPod = access.getPodAccess().getSelectedPod();
+                log.info("Selected pod {}", ResourceUtils.computeResourceMetaKey(selectedPod));
                 assertThat(selectedPod).isNotNull();
                 assertThat(access.getUsageCount().intValue()).isEqualTo(count);
                 assertThat(access.getMaxUsageCount()).isEqualTo(maxCount);
@@ -71,7 +72,8 @@ public class DefaultFunctionPodManagerIT extends IntegrationTest {
 
         // another access would trigger rotation of selected pod
         try(var access = functionPodManager.requestAccess(fn1, podPool)) {
-            selectedPod = access.getPodAccess().getSelcetedPod();
+            selectedPod = access.getPodAccess().getSelectedPod();
+            log.info("Selected pod {}", ResourceUtils.computeResourceMetaKey(selectedPod));
             assertThat(selectedPod).isNotNull();
             assertThat(podNamesSet.add(selectedPod.getMetadata().getName()))
                     .isTrue();

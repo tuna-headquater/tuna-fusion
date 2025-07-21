@@ -1,6 +1,6 @@
-#logging:
-#  level:
-#    root: debug
+logging:
+  level:
+    ai.tuna.fusion: debug
 
 integration-test:
   kubernetes:

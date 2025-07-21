@@ -2,6 +2,7 @@ package ai.tuna.fusion.executor.driver.podpool;
 
 import io.fabric8.kubernetes.api.model.Pod;
 import lombok.Getter;
+import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 
 /**
@@ -9,10 +10,11 @@ import lombok.experimental.SuperBuilder;
  */
 @Getter
 @SuperBuilder(toBuilder = true)
+@ToString(exclude = "selectedPod")
 public class PodAccess {
     private String uri;
     private String namespace;
-    private Pod selcetedPod;
+    private Pod selectedPod;
     private String podPoolName;
     private String functionName;
     private String functionBuildName;

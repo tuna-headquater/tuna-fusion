@@ -132,12 +132,12 @@ public class PodFunctionBuildReconciler implements Reconciler<PodFunctionBuild>,
             var updatedPodFunction = context.getClient()
                     .resource(patchPodFunction)
                     .updateStatus();
-            log.info("Updated PodFunction.status {}", updatedPodFunction.getStatus());
+            log.info("[reconcile] Updated PodFunction.status {}", updatedPodFunction.getStatus());
 
             // update PodFunctionBuild status
             return UpdateControl.patchResourceAndStatus(podFunctionBuildPatch);
         }
-        log.debug("Job is not created or already finished for PodFunctionBuild: {}", ResourceUtils.computeResourceMetaKey(resource));
+        log.debug("[reconcile] Job is not created or already finished for PodFunctionBuild: {}", ResourceUtils.computeResourceMetaKey(resource));
         return UpdateControl.noUpdate();
 
     }
