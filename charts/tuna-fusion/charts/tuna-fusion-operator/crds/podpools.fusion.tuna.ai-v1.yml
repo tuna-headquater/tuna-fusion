@@ -2924,12 +2924,16 @@ spec:
                       type: "object"
                     type: "array"
                 type: "object"
+              ttlPerPod:
+                minimum: 60.0
+                type: "integer"
             required:
             - "archivePvcName"
             - "builderImage"
             - "poolSize"
             - "runPerPod"
             - "runtimeImage"
+            - "ttlPerPod"
             type: "object"
             x-kubernetes-validations:
             - rule: "has(self.runtimePodSpec) || has(self.runtimeImage)"

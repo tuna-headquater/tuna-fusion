@@ -8,6 +8,7 @@ import ai.tuna.fusion.metadata.crd.agent.AgentEnvironment;
 import ai.tuna.fusion.metadata.crd.agent.AgentEnvironmentSpec;
 import ai.tuna.fusion.metadata.crd.podpool.PodFunction;
 import ai.tuna.fusion.metadata.crd.podpool.PodFunctionSpec;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.javaoperatorsdk.operator.api.config.informer.Informer;
 import io.javaoperatorsdk.operator.api.reconciler.Context;
@@ -37,13 +38,15 @@ public class AgentDeploymentPodFunctionDependentResource extends CRUDKubernetesD
         }
     }
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper = new ObjectMapper()
+            .setSerializationInclusion(JsonInclude.Include.NON_NULL);
 
     @Override
     protected PodFunction desired(AgentDeployment primary, Context<AgentDeployment> context) {
         var podFunction = new PodFunction();
         podFunction.getMetadata().setName(AgentResourceUtils.computeFunctionName(primary));
         podFunction.getMetadata().setNamespace(primary.getMetadata().getNamespace());
+        podFunction.getMetadata().getLabels().put(AgentDeploymentReconciler.SELECTOR, "true");
         var podFunctionSpec = new PodFunctionSpec();
         var agentEnvironment = AgentResourceUtils
                 .getReferencedAgentEnvironment(context.getClient(), primary)

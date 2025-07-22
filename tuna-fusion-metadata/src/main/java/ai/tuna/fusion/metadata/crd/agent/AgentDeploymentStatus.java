@@ -26,7 +26,5 @@ public class AgentDeploymentStatus {
     private LambdaInfo lambda;
     private FcInfo fc;
     private AgentEnvironmentSpec.DriverType driverType;
-
-
-
+    private String executorUrl;
 }

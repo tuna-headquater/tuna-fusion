@@ -41,7 +41,6 @@ public class PodPoolReconciler implements Reconciler<PodPool>, Cleaner<PodPool> 
             log.warn("Deploy is not ready yet for PodPool {}", resource.getMetadata().getName());
             return UpdateControl.noUpdate();
         }
-        cleanupOrphanPods(resource, context);
         var deployment = deploy.get();
         var podPoolStatus = new PodPoolStatus();
         podPoolStatus.setDeploymentName(PodPoolResourceUtils.computePodPoolDeploymentName(resource));
@@ -52,25 +51,7 @@ public class PodPoolReconciler implements Reconciler<PodPool>, Cleaner<PodPool> 
         podPoolUpdate.setStatus(podPoolStatus);
         podPoolUpdate.getMetadata().setName(resource.getMetadata().getName());
         podPoolUpdate.getMetadata().setNamespace(resource.getMetadata().getNamespace());
-        return UpdateControl.patchStatus(podPoolUpdate)
-                .rescheduleAfter(60, TimeUnit.SECONDS);
+        return UpdateControl.patchStatus(podPoolUpdate);
     }
 
-    private static final long TTL_IN_SECONDS_FOR_SPECIALIZED_POD = 60 * 60 * 24;
-    private void cleanupOrphanPods(PodPool resource, Context<PodPool> context) {
-        log.debug("[cleanupOrphanPods] Checking orphan pods for PodPool {}", ResourceUtils.computeResourceMetaKey(resource));
-        var specializedPods = PodPoolResourceUtils.listSpecializedPods(resource, context.getClient());
-        for (var pod : specializedPods) {
-            try {
-                var creationTime = Instant.parse(pod.getMetadata().getCreationTimestamp());
-                var isOrphan = creationTime.isBefore(Instant.now().minusSeconds(TTL_IN_SECONDS_FOR_SPECIALIZED_POD));
-                if (isOrphan) {
-                    log.debug("[cleanupOrphanPods] Found orphan pod for PodPool {}: {}", resource.getMetadata().getName(), pod.getMetadata().getName());
-                    Preconditions.checkState(ResourceUtils.deleteResource(context.getClient(), pod.getMetadata().getNamespace(), pod.getMetadata().getName(), Pod.class), "Should have pod %s deleted", pod.getMetadata().getName());
-                }
-            } catch (Exception e) {
-                log.error("Exception occurred during checking specialized pod {}: {}", pod, e.getMessage(), e);
-            }
-        }
-    }
 }

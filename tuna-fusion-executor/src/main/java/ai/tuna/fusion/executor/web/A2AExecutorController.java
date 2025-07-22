@@ -4,12 +4,13 @@ import ai.tuna.fusion.executor.driver.podpool.FunctionPodManager;
 import ai.tuna.fusion.metadata.crd.agent.AgentEnvironmentSpec;
 import ai.tuna.fusion.metadata.informer.AgentResources;
 import ai.tuna.fusion.metadata.informer.PodPoolResources;
+import com.google.common.base.Preconditions;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cloud.gateway.webflux.ProxyExchange;
-import org.springframework.http.ResponseEntity;
+import org.apache.commons.lang3.Strings;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
 /**
@@ -34,28 +35,25 @@ public class A2AExecutorController {
         this.agentResources = agentResources;
     }
 
-    @RequestMapping("/a2a/{namespace}/{agentDeploymentName}/**")
-    public Mono<ResponseEntity<byte[]>> forward(
+    @RequestMapping("/a2a/namespaces/{namespace}/agents/{agentDeploymentName}/{*trailingPath}")
+    public Mono<Void> forward(
             @PathVariable String namespace,
             @PathVariable String agentDeploymentName,
-            ProxyExchange<byte[]> proxy) throws Exception {
+            @PathVariable String trailingPath,
+            ServerWebExchange exchange) throws Exception {
         var agentDeployment = agentResources.queryAgentDeployment(namespace, agentDeploymentName).orElseThrow();
-        var agentEnvironment = agentResources.queryAgentEnvironment(namespace, agentDeployment.getSpec().getEnvironmentName()).orElseThrow();
-        if (agentEnvironment.getSpec().getDriver().getType() != AgentEnvironmentSpec.DriverType.PodPool) {
-            throw new IllegalStateException("PodPool driver is required for agent deployment");
-        }
+        var agentEnvironmentName = agentDeployment.getSpec().getEnvironmentName();
+        var agentEnvironment = agentResources.queryAgentEnvironment(namespace, agentEnvironmentName).orElseThrow();
+        Preconditions.checkState(agentEnvironment.getSpec().getDriver().getType() == AgentEnvironmentSpec.DriverType.PodPool, "PodPool driver is required for agent deployment");
+        Preconditions.checkState(Strings.CS.equals(agentEnvironmentName, agentDeployment.getSpec().getEnvironmentName()), "mismatch env name in AgentDeployment: expected=%s, actual=%s", agentDeployment.getSpec().getEnvironmentName(), agentEnvironmentName);
         var podPool = podPoolResources.queryPodPool(namespace, agentEnvironment.getStatus().getPodPool().getName()).orElseThrow();
-//        var headlessSvc = podPoolResources.queryPodPoolService(namespace, podPool.getStatus().getHeadlessServiceName()).orElseThrow();
         var podFunction = podPoolResources.queryPodFunction(namespace, agentDeployment.getStatus().getFunction().getFunctionName()).orElseThrow();
 
-        String requestUri = proxy.path();
-        String matchedPathPrefix = "/a2a/" + namespace + "/" + agentDeploymentName;
-        String trailingPath = requestUri.substring(requestUri.indexOf(matchedPathPrefix) + matchedPathPrefix.length());
         return HttpProxyUtils.forward(
                 functionPodManager,
                 podFunction,
                 podPool,
-                proxy,
+                exchange,
                 trailingPath
         );
 

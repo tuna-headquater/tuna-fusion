@@ -1,5 +1,15 @@
 server:
   port: 8082
+
 spring:
+  cloud:
+    kubernetes:
+      client:
+        namespace: default
+      config:
+        namespace: default
   main:
     cloud-platform: KUBERNETES
+logging:
+  level:
+    ai.tuna.fusion: debug

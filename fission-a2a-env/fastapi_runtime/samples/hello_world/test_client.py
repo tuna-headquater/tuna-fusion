@@ -27,7 +27,7 @@ async def test_client_send_message_streaming() -> None:
 
     # --8<-- [start:A2ACardResolver]
 
-    base_url = 'http://localhost:8888'
+    base_url = 'http://localhost:8082/a2a/namespaces/tuna-fusion-test/agents/test-deploy-1'
 
     async with httpx.AsyncClient() as httpx_client:
         # Initialize A2ACardResolver

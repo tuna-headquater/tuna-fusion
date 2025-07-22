@@ -14,7 +14,7 @@ spec:
   scope: "Namespaced"
   versions:
   - additionalPrinterColumns:
-    - jsonPath: ".spec.driverType"
+    - jsonPath: ".spec.driver.type"
       name: "Driver"
       priority: 0
       type: "string"
@@ -2932,12 +2932,16 @@ spec:
                               type: "object"
                             type: "array"
                         type: "object"
+                      ttlPerPod:
+                        minimum: 60.0
+                        type: "integer"
                     required:
                     - "archivePvcName"
                     - "builderImage"
                     - "poolSize"
                     - "runPerPod"
                     - "runtimeImage"
+                    - "ttlPerPod"
                     type: "object"
                     x-kubernetes-validations:
                     - rule: "has(self.runtimePodSpec) || has(self.runtimeImage)"

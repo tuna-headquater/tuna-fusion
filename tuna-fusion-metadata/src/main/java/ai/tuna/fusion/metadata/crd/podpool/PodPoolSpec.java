@@ -6,6 +6,8 @@ import io.fabric8.generator.annotation.ValidationRule;
 import io.fabric8.kubernetes.api.model.PodSpec;
 import lombok.Data;
 
+import static ai.tuna.fusion.metadata.crd.podpool.PodPool.TTL_IN_SECONDS_FOR_SPECIALIZED_POD;
+
 /**
  * @author robinqu
  */
@@ -34,6 +36,13 @@ public class PodPoolSpec {
     @Required
     @Min(1)
     private int runPerPod = 3;
+
+    /**
+     * The time to live of each pod in seconds.
+     */
+    @Required
+    @Min(60)
+    private long ttlPerPod = TTL_IN_SECONDS_FOR_SPECIALIZED_POD;
 
     /**
      * The pod spec of the runtime pod.

@@ -49,9 +49,7 @@ public abstract class AbstractResourceOperations {
     protected abstract List<SharedIndexInformer<?>> createInformers();
 
     protected <T extends HasMetadata> SharedIndexInformer<T> createInformer(Class<T> clazz) {
-//        var labelMap = Stream.of(labels)
-//                .collect(Collectors.toMap(label -> label, label -> "true"));
-        log.info("Create informer for {} in all namespaces", clazz.getSimpleName());
+        log.info("[createInformer] Create informer for {} in all namespaces", clazz.getSimpleName());
         return informerFactory.sharedIndexInformerFor(clazz, 30*1000);
     }
 

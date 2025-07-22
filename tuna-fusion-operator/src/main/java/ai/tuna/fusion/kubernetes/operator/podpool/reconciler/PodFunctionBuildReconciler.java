@@ -54,14 +54,14 @@ public class PodFunctionBuildReconciler implements Reconciler<PodFunctionBuild>,
                     jobResource.getMetadata().getNamespace()
             ).orElseThrow();
             var jobStatus = Optional.ofNullable(fullJob.getStatus()).orElse(new JobStatus());
-            log.info("Job(namespace={},name={}) has already been created: ready={}, failed={}, active={}, succeeded={}", fullJob.getMetadata().getNamespace(), fullJob.getMetadata().getName(), jobStatus.getReady(), jobStatus.getFailed(), jobStatus.getActive(), jobStatus.getSucceeded());
+            log.info("[reconcile] Job(namespace={},name={}) has already been created: ready={}, failed={}, active={}, succeeded={}", fullJob.getMetadata().getNamespace(), fullJob.getMetadata().getName(), jobStatus.getReady(), jobStatus.getFailed(), jobStatus.getActive(), jobStatus.getSucceeded());
 
             var podFunction = PodPoolResourceUtils.getReferencedPodFunction(resource, context.getClient()).orElseThrow(()-> new IllegalArgumentException("PodFunction not found for PodFunctionBuild " + resource.getMetadata().getName()));
 
             var podFunctionBuildPatch = new PodFunctionBuild();
             podFunctionBuildPatch.getMetadata().setName(resource.getMetadata().getName());
             podFunctionBuildPatch.getMetadata().setNamespace(resource.getMetadata().getNamespace());
-            ResourceUtils.addOwnerReference(podFunctionBuildPatch, resource);
+            ResourceUtils.addOwnerReference(podFunctionBuildPatch, podFunction, false);
 
             var status = new PodFunctionBuildStatus();
             // deployArchive field is updated by builder script
@@ -87,7 +87,7 @@ public class PodFunctionBuildReconciler implements Reconciler<PodFunctionBuild>,
                                         .map(PodStatus::getPhase)
                                                 .ifPresent(jobPodInfo::setPodPhase);
                         jobPodInfo.setPodName(jobPod.getMetadata().getName());
-                        log.info("JobPodInfo: {}", jobPodInfo);
+                        log.info("[reconcile] JobPodInfo: {}", jobPodInfo);
                         PodPoolResourceUtils
                                 .getPodLog(context.getClient(), resource.getMetadata().getNamespace(), jobPodInfo)
                                 .ifPresent(jobPodInfo::setLogs);
@@ -112,17 +112,17 @@ public class PodFunctionBuildReconciler implements Reconciler<PodFunctionBuild>,
 
             switch (podFunctionBuildPatch.getStatus().getPhase()) {
                 case Succeeded -> {
-                    log.info("Patching Succeeded PodFunctionBuild: {}", podFunctionBuildPatch.getMetadata().getName());
+                    log.info("[reconcile] Patching Succeeded PodFunctionBuild: {}", podFunctionBuildPatch.getMetadata().getName());
                     podFunctionStatus.setCurrentBuild(null);
                     podFunctionStatus.setEffectiveBuild(buildInfo);
                 }
                 case Failed -> {
-                    log.info("Patching Failed PodFunctionBuild: {}", podFunctionBuildPatch.getMetadata().getName());
+                    log.info("[reconcile] Patching Failed PodFunctionBuild: {}", podFunctionBuildPatch.getMetadata().getName());
                     podFunctionStatus.setCurrentBuild(null);
                     podFunctionStatus.setEffectiveBuild(null);
                 }
                 default -> {
-                    log.info("Patching On-going PodFunctionBuild: {}", podFunctionBuildPatch.getMetadata().getName());
+                    log.info("[reconcile] Patching On-going PodFunctionBuild: {}", podFunctionBuildPatch.getMetadata().getName());
                     podFunctionStatus.setCurrentBuild(buildInfo);
                     podFunctionStatus.setEffectiveBuild(null);
                 }

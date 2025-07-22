@@ -69,13 +69,6 @@ public class PodPoolResourceUtils {
                 .get());
     }
 
-    public static Optional<PodPool> getPodPoolForAgentEnvironment(AgentEnvironment resource, KubernetesClient kubernetesClient) {
-        return Optional.ofNullable(kubernetesClient.resources(PodPool.class)
-                .inNamespace(resource.getMetadata().getNamespace())
-                .withName(resource.getMetadata().getName())
-                .get());
-    }
-
     public static Optional<PodFunction> getReferencedPodFunction(PodFunctionBuild resource, KubernetesClient kubernetesClient) {
         return Optional.ofNullable(kubernetesClient.resources(PodFunction.class)
                 .inNamespace(resource.getMetadata().getNamespace())
@@ -105,6 +98,7 @@ public class PodPoolResourceUtils {
     }
 
     public static Optional<String> getPodLog(KubernetesClient client, String ns, PodFunctionBuildStatus.JobPodInfo info) {
+        log.debug("[getPodLog] ns={}, info={}", ns, info);
         var states = List.of("Running", "Succeeded", "Failed");
         if (states.stream().anyMatch(state -> Strings.CS.equals(state, info.getPodPhase()))) {
             try {

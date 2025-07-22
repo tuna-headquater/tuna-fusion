@@ -7,6 +7,9 @@ import io.fabric8.kubernetes.api.model.EnvVarBuilder;
 
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import static ai.tuna.fusion.metadata.crd.PodPoolResourceUtils.computeDeployArchivePath;
 
 /**
  * @author robinqu
@@ -23,15 +26,20 @@ public abstract class BaseInitContainerCommand implements InitContainerCommand {
 
     @Override
     public List<String> renderInitCommand() {
-        var script = generateFileAssets().values().stream().map(fileAsset -> {
+        var commands = generateFileAssets().values().stream().map(fileAsset -> {
             var filePath = pathForFileAsset(fileAsset);
             var line = "echo -e '%s' > %s".formatted(fileAsset.getContent(), filePath);
             if (fileAsset.isExecutable()) {
                 line += " && chmod +x %s".formatted(filePath);
             }
             return line;
-        }).collect(Collectors.joining(" && "));
+        });
+        var script = enhanceCommandLines(commands).collect(Collectors.joining(" && "));
         return Arrays.asList("sh", "-c", script);
+    }
+
+    protected Stream<String> enhanceCommandLines(Stream<String> generatedCommands) {
+        return generatedCommands;
     }
 
     protected abstract String pathForFileAsset(PodFunction.FileAsset fileAsset);

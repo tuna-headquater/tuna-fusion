@@ -37,7 +37,7 @@ public class AgentDeploymentReconciler implements Reconciler<AgentDeployment>, C
         AgentDeployment patch = new AgentDeployment();
         patch.getMetadata().setNamespace(resource.getMetadata().getNamespace());
         patch.getMetadata().setName(resource.getMetadata().getName());
-        ResourceUtils.addOwnerReference(patch, agentEnvironment);
+        ResourceUtils.addOwnerReference(patch, agentEnvironment, false);
         var status = new AgentDeploymentStatus();
         var driverType = agentEnvironment.getSpec().getDriver().getType();
         status.setDriverType(driverType);
@@ -48,7 +48,10 @@ public class AgentDeploymentReconciler implements Reconciler<AgentDeployment>, C
                         podFunctionInfo.setFunctionName(podFunction.getMetadata().getName());
                         status.setFunction(podFunctionInfo);
                     });
+            status.setExecutorUrl(AgentResourceUtils.agentExternalUrl(resource, agentEnvironment));
         }
+        patch.setStatus(status);
+        log.info("[reconcile] Patching status for Agent Deployment {}: {}", resource.getMetadata().getName(), status);
         return UpdateControl.patchResourceAndStatus(patch);
     }
 }

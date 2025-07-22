@@ -18,7 +18,7 @@ public class FusionExecutorConfiguration {
 
     @Bean
     public FunctionPodManager functionPodManager(PodPoolResources podPoolResources) {
-        return new DefaulltFunctionPodManager(new DefaultPodPoolConnectorFactory(podPoolResources));
+        return new DefaulltFunctionPodManager(new DefaultPodPoolConnectorFactory(podPoolResources), podPoolResources);
     }
 
     @Bean(initMethod = "start", destroyMethod = "stop")

@@ -8,19 +8,21 @@ import io.fabric8.kubernetes.api.model.batch.v1.Job;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.informers.SharedIndexInformer;
 import io.fabric8.kubernetes.client.informers.cache.Cache;
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author robinqu
  */
 public class ResourceUtils {
-    public static <Resource extends HasMetadata> boolean deleteResource(KubernetesClient client, String namespace, String name, Class<Resource> clazz) {
+    public static <Resource extends HasMetadata> boolean deleteResource(KubernetesClient client, String namespace, String name, Class<Resource> clazz, int timeoutInSeconds) {
         var result = client.resources(clazz)
                 .inNamespace( namespace)
                 .withName(name)
+                .withTimeout(timeoutInSeconds, TimeUnit.SECONDS)
                 .delete();
         return result != null && !result.isEmpty();
     }
@@ -55,16 +57,19 @@ public class ResourceUtils {
     }
 
     @SuppressWarnings("HttpUrlsUsage")
-    private static final String POD_HTTP_URL = "http://%s:%s%s";
+    private static final String POD_HTTP_URL = "http://%s:%s/%s";
     public static String getPodUri(Pod pod, Service service, String subPath) {
         var port = pod.getSpec().getContainers().getFirst().getPorts().getFirst().getContainerPort();
         var ip = pod.getStatus().getPodIP();
+        if (subPath.startsWith("/")) {
+            subPath = subPath.substring(1);
+        }
         return String.format(POD_HTTP_URL, ip, port, subPath);
     }
 
     public static <ChildResource extends HasMetadata, OwnerResource extends HasMetadata> Optional<String> getMatchedOwnerReferenceResourceName(ChildResource resource, Class<OwnerResource> ownerClass) {
         return resource.getMetadata().getOwnerReferences()
-                .stream().filter(ownerReference -> StringUtils.equals(ownerReference.getKind(), HasMetadata.getKind(ownerClass)) && StringUtils.equals(ownerReference.getApiVersion(), HasMetadata.getApiVersion(ownerClass)))
+                .stream().filter(ownerReference -> Strings.CS.equals(ownerReference.getKind(), HasMetadata.getKind(ownerClass)) && Strings.CS.equals(ownerReference.getApiVersion(), HasMetadata.getApiVersion(ownerClass)))
                 .map(OwnerReference::getName)
                 .findAny();
     }
@@ -80,10 +85,10 @@ public class ResourceUtils {
 
     public static boolean hasOwnerReference(HasMetadata resource, HasMetadata owner) {
         return resource.getMetadata().getOwnerReferences()
-                .stream().anyMatch(ownerReference -> StringUtils.equals(ownerReference.getKind(), owner.getKind()) && StringUtils.equals(ownerReference.getApiVersion(), owner.getApiVersion()) && StringUtils.equals(ownerReference.getName(), owner.getMetadata().getName()));
+                .stream().anyMatch(ownerReference -> Strings.CS.equals(ownerReference.getKind(), owner.getKind()) && Strings.CS.equals(ownerReference.getApiVersion(), owner.getApiVersion()) && Strings.CS.equals(ownerReference.getName(), owner.getMetadata().getName()));
     }
 
-    public static void addOwnerReference(HasMetadata resource, HasMetadata owner) {
+    public static void addOwnerReference(HasMetadata resource, HasMetadata owner, boolean controller) {
         if (!hasOwnerReference(resource, owner)) {
             resource.getMetadata().getOwnerReferences().add(new OwnerReference(
                     owner.getApiVersion(),

@@ -1,6 +1,7 @@
 package ai.tuna.fusion.kubernetes.operator.agent.reconciler;
 
 import ai.tuna.fusion.kubernetes.operator.agent.dr.AgentEnvironmentPodPoolDependentResource;
+import ai.tuna.fusion.metadata.crd.AgentResourceUtils;
 import ai.tuna.fusion.metadata.crd.PodPoolResourceUtils;
 import ai.tuna.fusion.metadata.crd.agent.AgentEnvironment;
 import ai.tuna.fusion.metadata.crd.agent.AgentEnvironmentSpec;
@@ -37,7 +38,7 @@ public class AgentEnvironmentReconciler implements Reconciler<AgentEnvironment>,
         if (resource.getSpec().getDriver().getType() != AgentEnvironmentSpec.DriverType.PodPool) {
             throw new IllegalArgumentException("Only PodPool is supported now");
         }
-        var podPool = PodPoolResourceUtils.getPodPoolForAgentEnvironment(resource, context.getClient());
+        var podPool = AgentResourceUtils.getPodPoolForAgentEnvironment(resource, context.getClient());
         var podPoolStatus = podPool.map(PodPool::getStatus);
         if(podPoolStatus.isPresent()) {
             AgentEnvironment update = new AgentEnvironment();
@@ -48,6 +49,8 @@ public class AgentEnvironmentReconciler implements Reconciler<AgentEnvironment>,
             podPoolInfo.setName(podPool.get().getMetadata().getName());
             podPoolInfo.setStatus(podPoolStatus.get());
             status.setPodPool(podPoolInfo);
+            update.setStatus(status);
+            log.info("[reconcile] Patching status for Agent Environment {}: {}", resource.getMetadata().getName(), status);
             return UpdateControl.patchStatus(update);
         }
         log.warn("[reconcile] PodPool for Agent Environment {} is not ready yet", resource.getMetadata().getName());

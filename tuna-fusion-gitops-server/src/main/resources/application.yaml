@@ -3,6 +3,12 @@ server:
 
 
 spring:
+  cloud:
+    kubernetes:
+      client:
+        namespace: default
+      config:
+        namespace: default
   main:
     cloud-platform: KUBERNETES
 logging:

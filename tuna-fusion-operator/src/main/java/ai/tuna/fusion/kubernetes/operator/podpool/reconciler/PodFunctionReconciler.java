@@ -23,7 +23,7 @@ public class PodFunctionReconciler implements Reconciler<PodFunction> {
         PodFunction patch = new PodFunction();
         patch.getMetadata().setName(resource.getMetadata().getName());
         patch.getMetadata().setNamespace(resource.getMetadata().getNamespace());
-        ResourceUtils.addOwnerReference(patch, podPool);
+        ResourceUtils.addOwnerReference(patch, podPool, false);
         return UpdateControl.patchResource(patch);
     }
 }

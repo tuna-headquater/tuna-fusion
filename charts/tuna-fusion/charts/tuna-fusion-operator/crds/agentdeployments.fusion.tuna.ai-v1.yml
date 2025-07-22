@@ -14,12 +14,12 @@ spec:
   scope: "Namespaced"
   versions:
   - additionalPrinterColumns:
-    - jsonPath: ".spec.agentCard.url"
-      name: "Url"
-      priority: 0
-      type: "string"
     - jsonPath: ".spec.environmentName"
       name: "Env"
+      priority: 0
+      type: "string"
+    - jsonPath: ".status.executorUrl"
+      name: "URL"
       priority: 0
       type: "string"
     name: "v1"
@@ -230,6 +230,8 @@ spec:
                 - "AlibabaCloudFunctionCompute"
                 - "AwsLambda"
                 - "PodPool"
+                type: "string"
+              executorUrl:
                 type: "string"
               fc:
                 properties:

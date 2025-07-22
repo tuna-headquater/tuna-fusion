@@ -23,6 +23,7 @@ public abstract class AbstractPodPoolConnectorFactory implements PodPoolConnecto
     @Getter(value = AccessLevel.PROTECTED)
     private final PodPoolResources podPoolResources;
 
+    @Getter(AccessLevel.PROTECTED)
     private final Map<String, PodPoolConnector> podPoolConnectors;
 
     public AbstractPodPoolConnectorFactory(PodPoolResources podPoolResources) {

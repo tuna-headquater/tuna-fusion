@@ -12,6 +12,7 @@ spec:
       runtimeImage: robinqu/fusion-a2a-fastapi-runtime:1753011317
       builderPodServiceAccountName: fusion-builder-sa
       runPerPod: 10
+      ttlPerPod: 86400
 
   executor:
     externalHost: localhost:8802

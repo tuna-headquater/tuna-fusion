@@ -18,8 +18,11 @@ public class PodPool extends CustomResource<PodPoolSpec, PodPoolStatus> implemen
 
     public static final String GENERIC_POD_LABEL_NAME = "fusion.tuna.ai/is-generic-pod";
     public static final String SPECIALIZED_POD_LABEL_VALUE = "fusion.tuna.ai/is-specialized-pod";
+    public static final String SPECIALIZED_POD_FUNCTION_NAME_LABEL_VALUE = "fusion.tuna.ai/specialized-function-name";
+    public static final String SPECIALIZED_POD_FUNCTION_BUILD_ID_LABEL_VALUE = "fusion.tuna.ai/specialized-function-build-id";
     public static final String POD_POOL_NAME_LABEL_NAME = "fusion.tuna.ai/pool-name";
     public static final int DEFAULT_RUNTIME_SERVICE_PORT = 8888;
     public static final String DR_SELECTOR = "fusion.tuna.ai/managed-by-pp";
+    public static final long TTL_IN_SECONDS_FOR_SPECIALIZED_POD = 60 * 60 * 24;
 
 }

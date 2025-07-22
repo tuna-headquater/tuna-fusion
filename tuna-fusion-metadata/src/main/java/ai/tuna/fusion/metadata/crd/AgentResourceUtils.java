@@ -3,6 +3,7 @@ package ai.tuna.fusion.metadata.crd;
 import ai.tuna.fusion.metadata.crd.agent.AgentDeployment;
 import ai.tuna.fusion.metadata.crd.agent.AgentEnvironment;
 import ai.tuna.fusion.metadata.crd.podpool.PodFunctionBuild;
+import ai.tuna.fusion.metadata.crd.podpool.PodPool;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.OwnerReference;
 import io.fabric8.kubernetes.client.KubernetesClient;
@@ -47,6 +48,13 @@ public class AgentResourceUtils {
                 .get());
     }
 
+    public static Optional<PodPool> getPodPoolForAgentEnvironment(AgentEnvironment resource, KubernetesClient kubernetesClient) {
+        return ResourceUtils.getKubernetesResource(kubernetesClient,
+                computePodPoolName(resource),
+                resource.getMetadata().getNamespace(),
+                PodPool.class
+        );
+    }
 
 
     public static <Owner extends HasMetadata, Subject extends HasMetadata> Optional<Owner> getReferencedResource(final KubernetesClient client, Subject resource, Class<Owner> ownerClass) {
@@ -70,13 +78,14 @@ public class AgentResourceUtils {
     }
 
 
-    private static final String AGENT_EXECUTOR_URL_TEMPLATE = "${endpointProtocol}://${endpointHost}/${namespace}/${agentDeploymentName}";
+    private static final String AGENT_EXECUTOR_URL_TEMPLATE = "${endpointProtocol}://${endpointHost}/a2a/namespaces/${namespace}/agents/${agentDeploymentName}";
     public static  String agentExternalUrl(AgentDeployment agentDeployment, AgentEnvironment agentEnvironment) {
         var endpoint = agentEnvironment.getSpec().getExecutor();
         var substitutor = new StringSubstitutor(Map.of(
                 "endpointProtocol", endpoint.getProtocol(),
                 "endpointHost", endpoint.getExternalHost(),
                 "namespace", agentDeployment.getMetadata().getNamespace(),
+                "agentEnvironmentName", agentEnvironment.getMetadata().getName(),
                 "agentDeploymentName", agentDeployment.getMetadata().getName()
         ));
         return substitutor.replace(AGENT_EXECUTOR_URL_TEMPLATE);

@@ -25,7 +25,7 @@ import java.io.InputStream;
  */
 @Slf4j
 @ExtendWith(K8SNamespacedResourceExtension.class)
-@SpringBootTest
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ContextConfiguration(classes = {
         IntegrationTestApplication.class,
         IntegrationTest.IntegrationTestConfiguration.class

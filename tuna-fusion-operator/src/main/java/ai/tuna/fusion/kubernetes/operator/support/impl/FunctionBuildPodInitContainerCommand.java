@@ -12,7 +12,9 @@ import lombok.SneakyThrows;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Stream;
 
+import static ai.tuna.fusion.metadata.crd.PodPoolResourceUtils.computeDeployArchivePath;
 import static ai.tuna.fusion.metadata.crd.PodPoolResourceUtils.computeDeployFileAssetPath;
 
 /**
@@ -58,6 +60,14 @@ public class FunctionBuildPodInitContainerCommand extends BaseInitContainerComma
                 .content(objectMapper.writeValueAsString(podFunctionBuild.getSpec().getSourceArchive()))
                 .executable(false)
                 .build();
+    }
+
+    @Override
+    protected Stream<String> enhanceCommandLines(Stream<String> generatedCommands) {
+        return Stream.concat(
+                Stream.of("mkdir -p %s".formatted(computeDeployArchivePath(podFunctionBuild))),
+                generatedCommands
+        );
     }
 
     @Override

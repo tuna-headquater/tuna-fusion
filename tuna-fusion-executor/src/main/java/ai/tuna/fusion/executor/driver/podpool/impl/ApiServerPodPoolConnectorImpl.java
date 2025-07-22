@@ -1,6 +1,9 @@
 package ai.tuna.fusion.executor.driver.podpool.impl;
 
-import ai.tuna.fusion.executor.driver.podpool.*;
+import ai.tuna.fusion.executor.driver.podpool.FunctionPodAccessException;
+import ai.tuna.fusion.executor.driver.podpool.FunctionPodDisposalException;
+import ai.tuna.fusion.executor.driver.podpool.PodAccess;
+import ai.tuna.fusion.executor.driver.podpool.PodPoolConnector;
 import ai.tuna.fusion.metadata.crd.PodPoolResourceUtils;
 import ai.tuna.fusion.metadata.crd.ResourceUtils;
 import ai.tuna.fusion.metadata.crd.podpool.PodFunction;
@@ -15,20 +18,22 @@ import io.fabric8.kubernetes.client.dsl.base.PatchContext;
 import io.fabric8.kubernetes.client.dsl.base.PatchType;
 import io.fabric8.kubernetes.client.informers.ResourceEventHandler;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Strings;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
-import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.http.client.JdkClientHttpRequestFactory;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.web.client.RestClient;
 
+import java.net.http.HttpClient;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.Optional;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
-import static ai.tuna.fusion.metadata.crd.podpool.PodPool.GENERIC_POD_LABEL_NAME;
-import static ai.tuna.fusion.metadata.crd.podpool.PodPool.SPECIALIZED_POD_LABEL_VALUE;
+import static ai.tuna.fusion.metadata.crd.podpool.PodPool.*;
 
 /**
  * @author robinqu
@@ -38,10 +43,16 @@ public class ApiServerPodPoolConnectorImpl implements PodPoolConnector, Resource
     private final PodPoolResources podPoolResources;
     private final BlockingQueue<String> queue;
     private final PodPool podPool;
-    private final WebClient webClient;
+    private final RestClient restClient;
 
     public ApiServerPodPoolConnectorImpl(PodPoolResources podPoolResources, PodPool podPool) {
-        this.webClient = WebClient.create();
+        HttpClient httpClient = HttpClient.newBuilder()
+                .version(HttpClient.Version.HTTP_1_1)
+                .connectTimeout(Duration.ofSeconds(10))
+                .build();
+        this.restClient = RestClient.builder()
+                .requestFactory(new JdkClientHttpRequestFactory(httpClient))
+                .build();
         this.podPoolResources = podPoolResources;
         this.podPool = podPool;
         this.queue = new LinkedBlockingQueue<>();
@@ -51,11 +62,8 @@ public class ApiServerPodPoolConnectorImpl implements PodPoolConnector, Resource
     @Override
     public void disposeAccess(PodAccess podAccess) throws FunctionPodDisposalException {
         var pod = podAccess.getSelectedPod();
-        log.info("Evict specialized POD: {}", ResourceUtils.computeResourceMetaKey(pod));
-        var result = ResourceUtils.deleteResource(podPoolResources.getKubernetesClient(), podAccess.getNamespace(), pod.getMetadata().getName(), Pod.class);
-        if (!result) {
-            throw FunctionPodDisposalException.of(pod, "Failed to dispose pod " + pod.getMetadata().getName());
-        }
+        log.info("[disposeAccess] Evict specialized POD: {}", ResourceUtils.computeResourceMetaKey(pod));
+        ResourceUtils.deleteResource(podPoolResources.getKubernetesClient(), podAccess.getNamespace(), pod.getMetadata().getName(), Pod.class, 3);
     }
 
     @Override
@@ -66,7 +74,18 @@ public class ApiServerPodPoolConnectorImpl implements PodPoolConnector, Resource
                 .flatMap(buildInfo -> podPoolResources.queryPodFunctionBuild(podPool.getMetadata().getNamespace(), buildInfo.getName()))
                 .orElseThrow(() -> new FunctionPodAccessException("Cannot find effectiveBuild", podPool, function));
 
-        var pod = poll(Duration.ofSeconds(5))
+        String patch = String.format(
+                "[{\"op\": \"test\", \"path\": \"/metadata/labels/%s\", \"value\": \"%s\"}," +
+                        "{\"op\": \"add\", \"path\": \"/metadata/labels/%s\", \"value\": \"%s\"}," +
+                        "{\"op\": \"add\", \"path\": \"/metadata/labels/%s\", \"value\": \"%s\"}," +
+                        "{\"op\": \"add\", \"path\": \"/metadata/labels/%s\", \"value\": \"%s\"}," +
+                        "{\"op\": \"remove\", \"path\": \"/metadata/labels/%s\"}]",
+                encodeJsonPointer(GENERIC_POD_LABEL_NAME), "true",
+                encodeJsonPointer(SPECIALIZED_POD_LABEL_VALUE), "true",
+                encodeJsonPointer(SPECIALIZED_POD_FUNCTION_NAME_LABEL_VALUE), function.getMetadata().getName(),
+                encodeJsonPointer(SPECIALIZED_POD_FUNCTION_BUILD_ID_LABEL_VALUE), effectiveBuild.getMetadata().getUid(),
+                encodeJsonPointer(GENERIC_POD_LABEL_NAME));
+        var pod = poll(Duration.ofSeconds(5), patch)
                 .orElseThrow(()-> new FunctionPodAccessException("Cannot find available Generic Pod", podPool, function));
 
         var deployArchive = Optional.ofNullable(effectiveBuild.getStatus())
@@ -83,17 +102,14 @@ public class ApiServerPodPoolConnectorImpl implements PodPoolConnector, Resource
                     svcName
                 )
                 .orElseThrow(()-> FunctionPodAccessException.of(podPool, function, "Cannot find PodPool service: " + svcName));
-        var responseSpec = webClient.post()
+        var responseSpec = restClient.post()
                 .uri(ResourceUtils.getPodUri(pod, headlessService, "/specialize"))
                 .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue(request)
+                .body(request)
                 .retrieve();
-        var response = responseSpec.toEntity(String.class)
-                .block(Duration.ofSeconds(5));
-        if (response == null || response.getStatusCode() != HttpStatusCode.valueOf(200)) {
-            if (response!=null) {
-                log.debug("[requestAccess] Non-200 response with specialization request: {}", response.getBody());
-            }
+        var response = responseSpec.toEntity(String.class);
+        if (response.getStatusCode() != HttpStatusCode.valueOf(200)) {
+            log.debug("[requestAccess] Non-200 response with specialization request: {}", response.getBody());
             throw FunctionPodAccessException.of(podPool, function, "Failed to specialize pod function " + function.getMetadata().getName());
         }
         log.debug("[requestAccess] Access acquired: fn={}, pod={}", ResourceUtils.computeResourceMetaKey(function), ResourceUtils.computeResourceMetaKey(pod));
@@ -108,7 +124,7 @@ public class ApiServerPodPoolConnectorImpl implements PodPoolConnector, Resource
                 .build();
     }
 
-    public Optional<Pod> poll(Duration timeout) {
+    public Optional<Pod> poll(Duration timeout, String podPatch) {
         int retries = 0;
         int MAX_POLL_RETRIES = 3;
         while (retries++ < MAX_POLL_RETRIES) {
@@ -117,20 +133,12 @@ public class ApiServerPodPoolConnectorImpl implements PodPoolConnector, Resource
                 Preconditions.checkNotNull(podKey, "should have polled valid podKey");
                 log.debug("[poll] podKey={}", podKey);
                 var parsed = ResourceUtils.parseResourceMetaKey(podKey);
-                String patch = String.format(
-                        "[{\"op\": \"test\", \"path\": \"/metadata/labels/%s\", \"value\": \"%s\"}," +
-                                "{\"op\": \"add\", \"path\": \"/metadata/labels/%s\", \"value\": \"%s\"}," +
-                                "{\"op\": \"remove\", \"path\": \"/metadata/labels/%s\"}]",
-                        encodeJsonPointer(GENERIC_POD_LABEL_NAME), "true",
-                        encodeJsonPointer(SPECIALIZED_POD_LABEL_VALUE), "true",
-                        encodeJsonPointer(GENERIC_POD_LABEL_NAME));
-
                 try {
                     var selectedPod = podPoolResources.queryPod(parsed.getLeft(), parsed.getRight())
                             .orElseThrow(()-> new IllegalStateException("Cannot find Pod in informer cache"));
                     return Optional.ofNullable(podPoolResources.getKubernetesClient().resource(selectedPod)
                             .inNamespace(podPool.getMetadata().getNamespace())
-                            .patch(PatchContext.of(PatchType.JSON), patch));
+                            .patch(PatchContext.of(PatchType.JSON), podPatch));
                 } catch (KubernetesClientException e) {
                     if (e.getCode() == 422) {
                         log.warn("Update conflict for patching pod. Retries {} of {}.", retries, MAX_POLL_RETRIES, e);
@@ -151,7 +159,7 @@ public class ApiServerPodPoolConnectorImpl implements PodPoolConnector, Resource
     }
 
     private boolean isManagedPod(Pod pod) {
-        return pod.getMetadata().getLabels().containsKey(PodPool.GENERIC_POD_LABEL_NAME) && Strings.CS.equals(pod.getMetadata().getLabels().get(PodPool.POD_POOL_NAME_LABEL_NAME), podPool.getMetadata().getName());
+        return Strings.CS.equals(pod.getMetadata().getLabels().get(PodPool.POD_POOL_NAME_LABEL_NAME), podPool.getMetadata().getName());
     }
 
     private boolean isReadyPod(Pod pod) {
@@ -161,6 +169,10 @@ public class ApiServerPodPoolConnectorImpl implements PodPoolConnector, Resource
 
     private boolean shouldAddToQueue(Pod pod) {
         return isManagedPod(pod) && isReadyPod(pod);
+    }
+
+    private boolean existInQueue(Pod pod) {
+        return queue.contains(ResourceUtils.computeResourceMetaKey(pod));
     }
 
     @Override
@@ -179,28 +191,26 @@ public class ApiServerPodPoolConnectorImpl implements PodPoolConnector, Resource
     @Override
     public void onUpdate(Pod oldObj, Pod newObj) {
         var podPoolKey = ResourceUtils.computeResourceMetaKey(podPool);
+        var oldPodKey = ResourceUtils.computeResourceMetaKey(newObj);
+        var newPodKey = ResourceUtils.computeResourceMetaKey(newObj);
         if (!shouldAddToQueue(oldObj)) {
-            var podKey = ResourceUtils.computeResourceMetaKey(newObj);
-            if (queue.remove(podKey)) {
-                log.info("[onUpdate] Removed GenericPod for PodPool {}: {}", podPoolKey, podKey);
+            if (queue.remove(oldPodKey)) {
+                log.info("[onUpdate] Removed GenericPod for PodPool {}: {}", podPoolKey, oldPodKey);
             }
         }
-        if (shouldAddToQueue(newObj) ) {
-            var podKey = ResourceUtils.computeResourceMetaKey(newObj);
-            if (queue.add(podKey)) {
-                log.info("[onUpdate] Added GenericPod for PodPool {}: {}", podPoolKey, podKey);
+        if (shouldAddToQueue(newObj) && !existInQueue(newObj)) {
+            if (queue.add(newPodKey)) {
+                log.info("[onUpdate] Added GenericPod for PodPool {}: {}, ", podPoolKey, newPodKey);
             }
         }
     }
 
     @Override
     public void onDelete(Pod obj, boolean deletedFinalStateUnknown) {
-        if (shouldAddToQueue(obj)) {
-            var podPoolKey = ResourceUtils.computeResourceMetaKey(podPool);
-            var podKey = ResourceUtils.computeResourceMetaKey(obj);
-            if (queue.remove(podKey)) {
-                log.info("[onDelete] Removed GenericPod for PodPool {}: {}", podPoolKey, podKey);
-            }
+        var podPoolKey = ResourceUtils.computeResourceMetaKey(podPool);
+        var podKey = ResourceUtils.computeResourceMetaKey(obj);
+        if (queue.remove(podKey)) {
+            log.info("[onDelete] Removed GenericPod for PodPool {}: {}", podPoolKey, podKey);
         }
     }
 }

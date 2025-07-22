@@ -16,7 +16,7 @@ import io.fabric8.kubernetes.model.annotation.Version;
 @ShortNames({"ad"})
 @AdditionalPrinterColumns({
         @AdditionalPrinterColumn(name = "Env", jsonPath = ".spec.environmentName"),
-        @AdditionalPrinterColumn(name = "Url", jsonPath = ".spec.agentCard.url")
+        @AdditionalPrinterColumn(name = "URL", jsonPath = ".status.executorUrl")
 })
 public class AgentDeployment extends CustomResource<AgentDeploymentSpec, AgentDeploymentStatus> implements Namespaced {
 

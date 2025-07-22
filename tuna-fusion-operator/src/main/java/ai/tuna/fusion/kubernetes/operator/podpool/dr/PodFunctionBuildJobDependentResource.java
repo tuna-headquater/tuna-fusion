@@ -31,7 +31,7 @@ public class PodFunctionBuildJobDependentResource extends KubernetesDependentRes
 
     @Override
     protected Job desired(PodFunctionBuild primary, Context<PodFunctionBuild> context) {
-        log.info("Resolving Job DR for build {}", primary.getMetadata());
+        log.info("[desired] Resolving Job DR for build {}", primary.getMetadata());
         var podFunction = PodPoolResourceUtils.getReferencedPodFunction(primary, context.getClient()).orElseThrow(()-> new IllegalArgumentException("PodFunction not found for PodFunctionBuild " + primary.getMetadata().getName()));
         var podPool = PodPoolResourceUtils.getReferencedPodPool(podFunction, context.getClient()).orElseThrow(()-> new IllegalArgumentException("PodPool not found for PodFunction " + podFunction.getMetadata().getName()));
         var archivePath = PodFunctionBuild.ARCHIVE_ROOT_PATH.toString();

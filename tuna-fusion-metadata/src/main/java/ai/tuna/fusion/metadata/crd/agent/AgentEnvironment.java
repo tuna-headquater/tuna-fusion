@@ -13,6 +13,6 @@ import io.fabric8.kubernetes.model.annotation.Version;
 @Group("fusion.tuna.ai")
 @Version("v1")
 @ShortNames({"ae"})
-@AdditionalPrinterColumn(name = "Driver", jsonPath = ".spec.driverType")
+@AdditionalPrinterColumn(name = "Driver", jsonPath = ".spec.driver.type")
 public class AgentEnvironment extends CustomResource<AgentEnvironmentSpec, AgentEnvironmentStatus> implements Namespaced {
 }

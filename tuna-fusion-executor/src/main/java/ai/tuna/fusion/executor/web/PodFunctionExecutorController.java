@@ -1,15 +1,14 @@
 package ai.tuna.fusion.executor.web;
 
 import ai.tuna.fusion.executor.driver.podpool.CountedPodAccess;
-import ai.tuna.fusion.executor.driver.podpool.FunctionPodManager;
 import ai.tuna.fusion.executor.driver.podpool.FunctionPodAccessException;
+import ai.tuna.fusion.executor.driver.podpool.FunctionPodManager;
 import ai.tuna.fusion.executor.web.entity.PagedContent;
 import ai.tuna.fusion.metadata.crd.ResourceUtils;
 import ai.tuna.fusion.metadata.crd.podpool.PodPool;
 import ai.tuna.fusion.metadata.informer.PodPoolResources;
-import org.springframework.cloud.gateway.webflux.ProxyExchange;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
 import java.util.ArrayList;
@@ -39,9 +38,9 @@ public class PodFunctionExecutorController {
                 var podPool = ResourceUtils.getMatchedOwnerReferenceResourceName(podFunction, PodPool.class)
                         .flatMap(name -> podPoolResources.queryPodPool(namespace, name))
                         .orElseThrow();
-                try {
-                    list.add(functionPodManager.requestAccess(podFunction, podPool));
-                } catch (FunctionPodAccessException e) {
+                try(var access = functionPodManager.requestAccess(podFunction, podPool)) {
+                    list.add(access);
+                } catch (Exception e) {
                     sink.error(e);
                     return;
                 }
@@ -53,21 +52,17 @@ public class PodFunctionExecutorController {
     }
 
 
-    @RequestMapping(path = "/namespaces/{namespace}/functions/{functionName}/**", method = {RequestMethod.DELETE, RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.PATCH, RequestMethod.OPTIONS, RequestMethod.HEAD, RequestMethod.TRACE})
-    public Mono<ResponseEntity<byte[]>> forward(
+    @RequestMapping(path = "/namespaces/{namespace}/functions/{functionName}/{*trailingPath}", method = {RequestMethod.DELETE, RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.PATCH, RequestMethod.OPTIONS, RequestMethod.HEAD, RequestMethod.TRACE})
+    public Mono<Void> forward(
             @PathVariable String namespace,
             @PathVariable String functionName,
-            ProxyExchange<byte[]> proxy) throws Exception {
-
+            @PathVariable String trailingPath,
+            ServerWebExchange exchange) throws Exception {
         var podFunction = podPoolResources.queryPodFunction(namespace, functionName).orElseThrow();
         var podPool = ResourceUtils.getMatchedOwnerReferenceResourceName(podFunction, PodPool.class)
                 .flatMap(name -> podPoolResources.queryPodPool(namespace, name))
                 .orElseThrow();
-
-        String requestUri = proxy.path();
-        String matchedPathPrefix = "/functions/" + namespace + "/" + functionName;
-        String trailingPath = requestUri.substring(requestUri.indexOf(matchedPathPrefix) + matchedPathPrefix.length());
-        return HttpProxyUtils.forward(functionPodManager, podFunction, podPool, proxy, trailingPath);
+        return HttpProxyUtils.forward(functionPodManager, podFunction, podPool, exchange, trailingPath);
     }
 
 }
