@@ -17,6 +17,7 @@ import java.util.Optional;
 
 import static ai.tuna.fusion.metadata.crd.PodPoolResourceUtils.computeGenericPodSelectors;
 import static ai.tuna.fusion.metadata.crd.PodPoolResourceUtils.computePodPoolDeploymentName;
+import static ai.tuna.fusion.metadata.crd.podpool.PodPool.DEFAULT_POOL_SIZE;
 
 /**
  * @author robinqu
@@ -30,7 +31,8 @@ public class PodPoolDeploymentDependentResource extends CRUDKubernetesDependentR
         log.debug("[desired Configure Deployment for PodPool: {}/{}", primary.getMetadata().getNamespace(), primary.getMetadata().getName());
         var selectorLabels = computeGenericPodSelectors(primary);
         var deployLabels = PodPoolResourceUtils.computeDeployLabels(primary);
-        var poolSize = primary.getSpec().getPoolSize();
+        var poolSize = Optional.ofNullable(primary.getSpec().getPoolSize())
+                .orElse(DEFAULT_POOL_SIZE);
 
         var podSpec = Optional.ofNullable(primary.getSpec().getRuntimePodSpec()).map(templatePodSpec -> templatePodSpec.toBuilder().build()).orElseGet(()-> podSpec(primary));
 

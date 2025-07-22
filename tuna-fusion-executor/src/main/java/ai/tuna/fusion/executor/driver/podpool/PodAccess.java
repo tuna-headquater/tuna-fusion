@@ -1,5 +1,6 @@
 package ai.tuna.fusion.executor.driver.podpool;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.fabric8.kubernetes.api.model.Pod;
 import lombok.Getter;
 import lombok.ToString;

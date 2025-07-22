@@ -1,8 +1,8 @@
 package ai.tuna.fusion.executor.web;
 
 import ai.tuna.fusion.executor.driver.podpool.CountedPodAccess;
-import ai.tuna.fusion.executor.driver.podpool.FunctionPodAccessException;
 import ai.tuna.fusion.executor.driver.podpool.FunctionPodManager;
+import ai.tuna.fusion.executor.web.entity.PodFunctionListItem;
 import ai.tuna.fusion.executor.web.entity.PagedContent;
 import ai.tuna.fusion.metadata.crd.ResourceUtils;
 import ai.tuna.fusion.metadata.crd.podpool.PodPool;
@@ -30,22 +30,20 @@ public class PodFunctionExecutorController {
 
 
     @GetMapping("/namespaces/{namespace}/functions")
-    public Mono<PagedContent<CountedPodAccess>> listPodFunctions(@PathVariable String namespace) {
+    public Mono<PagedContent<PodFunctionListItem>> listPodFunctions(@PathVariable String namespace) {
         return Mono.create(sink -> {
-            List<CountedPodAccess> list = new ArrayList<>();
+            List<PodFunctionListItem> list = new ArrayList<>();
             var functions = podPoolResources.podFunction().getStore().list();
             for (var podFunction : functions) {
                 var podPool = ResourceUtils.getMatchedOwnerReferenceResourceName(podFunction, PodPool.class)
                         .flatMap(name -> podPoolResources.queryPodPool(namespace, name))
                         .orElseThrow();
-                try(var access = functionPodManager.requestAccess(podFunction, podPool)) {
-                    list.add(access);
-                } catch (Exception e) {
-                    sink.error(e);
-                    return;
-                }
+                list.add(PodFunctionListItem.builder()
+                        .podFunction(podFunction)
+                        .podAccesses(functionPodManager.listAccess(podFunction, podPool))
+                        .build());
             }
-            sink.success(PagedContent.<CountedPodAccess>builder()
+            sink.success(PagedContent.<PodFunctionListItem>builder()
                             .items(list)
                     .build());
         });

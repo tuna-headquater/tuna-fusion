@@ -79,7 +79,7 @@ spec:
       builderImage: robinqu/fusion-a2a-env-builder:1752756455
       runtimeImage: robinqu/fusion-a2a-fastapi-runtime:1753011317
       builderPodServiceAccountName: fusion-builder-sa
-      runPerPod: 10
+      runPerPod: 100
       ttlPerPod: 86400
 
   executor:

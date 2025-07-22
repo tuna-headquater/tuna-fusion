@@ -24,5 +24,7 @@ public class PodPool extends CustomResource<PodPoolSpec, PodPoolStatus> implemen
     public static final int DEFAULT_RUNTIME_SERVICE_PORT = 8888;
     public static final String DR_SELECTOR = "fusion.tuna.ai/managed-by-pp";
     public static final long TTL_IN_SECONDS_FOR_SPECIALIZED_POD = 60 * 60 * 24;
-
+    public static final int DEFAULT_RUN_PER_POD = 10;
+    public static final int DEFAULT_POOL_SIZE = 5;
+    public static final int POD_ACCESS_PER_BUILD = 3;
 }

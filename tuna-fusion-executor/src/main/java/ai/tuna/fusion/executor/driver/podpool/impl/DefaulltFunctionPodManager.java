@@ -7,7 +7,6 @@ import ai.tuna.fusion.metadata.crd.podpool.PodFunction;
 import ai.tuna.fusion.metadata.crd.podpool.PodFunctionStatus;
 import ai.tuna.fusion.metadata.crd.podpool.PodPool;
 import ai.tuna.fusion.metadata.informer.PodPoolResources;
-import com.google.common.base.Preconditions;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import io.fabric8.kubernetes.api.model.Pod;
@@ -17,12 +16,11 @@ import org.apache.commons.lang3.Strings;
 import org.springframework.scheduling.annotation.Scheduled;
 
 import java.time.Instant;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static ai.tuna.fusion.metadata.crd.podpool.PodPool.TTL_IN_SECONDS_FOR_SPECIALIZED_POD;
+import static ai.tuna.fusion.metadata.crd.podpool.PodPool.*;
 
 /**
  * @author robinqu
@@ -43,15 +41,26 @@ public class DefaulltFunctionPodManager implements FunctionPodManager {
         return Optional.ofNullable(function.getStatus())
                 .map(PodFunctionStatus::getEffectiveBuild)
                 .map(PodFunctionStatus.BuildInfo::getUid)
+                .map(this::cacheKey)
                 .orElseThrow(()-> new FunctionPodAccessException("Cannot find effectiveBuild", podPool, function));
     }
 
     private String cacheKey(PodAccess podAccess) {
-        return podAccess.getFunctionBuildUid();
+        var uid =  podAccess.getFunctionBuildUid();
+        return cacheKey(uid);
     }
 
     private String cacheKey(Pod pod) {
-        return pod.getMetadata().getLabels().get(PodPool.SPECIALIZED_POD_FUNCTION_BUILD_ID_LABEL_VALUE);
+        var uid = pod.getMetadata().getLabels().get(PodPool.SPECIALIZED_POD_FUNCTION_BUILD_ID_LABEL_VALUE);
+        return cacheKey(uid);
+    }
+
+    private String cacheKey(String buildUid) {
+        return cacheKey(buildUid, Instant.now().getEpochSecond() % POD_ACCESS_PER_BUILD);
+    }
+
+    private String cacheKey(String buildUid, long idx) {
+        return buildUid + "-" + idx;
     }
 
     @Scheduled(fixedRate = 1000 * 30)
@@ -115,7 +124,9 @@ public class DefaulltFunctionPodManager implements FunctionPodManager {
      * Limit the lifespan of a specialized pod
      */
     private boolean isExpiredPod(Pod pod, PodPool podPool) {
-        var ttl = podPool.getSpec().getTtlPerPod() > 0 ? podPool.getSpec().getTtlPerPod() : TTL_IN_SECONDS_FOR_SPECIALIZED_POD;
+        var ttl = Optional.ofNullable(podPool.getSpec().getTtlPerPod())
+                .filter(v -> v > 0)
+                .orElse(TTL_IN_SECONDS_FOR_SPECIALIZED_POD);
         var creationTime = Instant.parse(pod.getMetadata().getCreationTimestamp());
         return creationTime.isBefore(Instant.now().minusSeconds(ttl));
     }
@@ -136,9 +147,8 @@ public class DefaulltFunctionPodManager implements FunctionPodManager {
             try {
                  access= podAccessCache.get(cacheKey, () -> CountedPodAccess.builder()
                         .podAccess(podPoolConnectorFactory.get(podPool).requestAccess(function, trailingPath))
-                        .maxUsageCount(podPool.getSpec().getRunPerPod())
+                        .maxUsageCount(Optional.ofNullable(podPool.getSpec().getRunPerPod()).filter(v -> v > 0).orElse(DEFAULT_RUN_PER_POD))
                         .usageCount(new AtomicInteger(0))
-                        .referenceCount(new AtomicInteger(0))
                         .functionPodManager(this)
                         .build());
             } catch (ExecutionException e) {
@@ -152,7 +162,6 @@ public class DefaulltFunctionPodManager implements FunctionPodManager {
 
             if (!isOrphanPod(access.getPodAccess().getSelectedPod(), podPool)) {
                 access.getUsageCount().incrementAndGet();
-                access.getReferenceCount().intValue();
                 log.debug("[requestAccess] Access acquired: pod={}, usageCount={}, maxUsageCount={}", ResourceUtils.computeResourceMetaKey(access.getPodAccess().getSelectedPod()), access.getUsageCount(), access.getMaxUsageCount());
                 return access;
             } else {
@@ -185,5 +194,20 @@ public class DefaulltFunctionPodManager implements FunctionPodManager {
     private void doDisposeAccess(PodAccess access) throws FunctionPodDisposalException {
         var connector = podPoolConnectorFactory.get(access.getNamespace(), access.getPodPoolName());
         connector.disposeAccess(access);
+    }
+
+    @Override
+    public List<CountedPodAccess> listAccess(PodFunction function, PodPool podPool) {
+        return Optional.ofNullable(function.getStatus())
+                .map(PodFunctionStatus::getEffectiveBuild)
+                .map(buildInfo -> {
+                    List<CountedPodAccess> podAccessList = new ArrayList<CountedPodAccess>();
+                    for(int i=0;i<POD_ACCESS_PER_BUILD;i++) {
+                        Optional.ofNullable(podAccessCache.getIfPresent(cacheKey(buildInfo.getUid(), i)))
+                                .ifPresent(podAccessList::add);
+                    }
+                    return podAccessList;
+                })
+                .orElse(Collections.emptyList());
     }
 }

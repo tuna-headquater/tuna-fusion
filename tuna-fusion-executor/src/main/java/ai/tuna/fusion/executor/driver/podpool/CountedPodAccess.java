@@ -1,7 +1,6 @@
 package ai.tuna.fusion.executor.driver.podpool;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
@@ -19,13 +18,9 @@ public class CountedPodAccess implements AutoCloseable {
     private final int maxUsageCount;
     @JsonIgnore
     private final FunctionPodManager functionPodManager;
-
-    private final AtomicInteger referenceCount;
-
     private final PodAccess podAccess;
     @Override
     public void close() throws Exception {
-        referenceCount.decrementAndGet();
         functionPodManager.disposeAccess(this);
     }
 
