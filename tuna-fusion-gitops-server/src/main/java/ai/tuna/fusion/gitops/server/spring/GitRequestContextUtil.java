@@ -71,14 +71,14 @@ public class GitRequestContextUtil {
 
         String[] segments = requestUri.split("/");
 
-        // Ensure we have at least the required parts: "", "repositories", namespace, catalogue, deployment.git
-        if (segments.length < 5) {
+        // Ensure we have at least the required parts: "", "repositories", namespace, deployment.git
+        if (segments.length < 4) {
             receivePack.ifPresent(rp -> rp.sendError("Invalid URL format. Expected pattern: /repositories/<namespace>/<agent-deployment-name>.git/*"));
             throw new ServiceNotEnabledException("Invalid URL format. Expected pattern: /repositories/<namespace>/<agent-deployment-name>.git/*");
         }
 
         String namespace = segments[2];
-        String gitSegment = segments[4];
+        String gitSegment = segments[3];
 
         // Ensure URL ends with .git
         if (!gitSegment.endsWith(".git")) {

@@ -9,7 +9,6 @@ import ai.tuna.fusion.metadata.crd.podpool.PodFunction;
 import ai.tuna.fusion.metadata.crd.podpool.PodFunctionBuild;
 import ai.tuna.fusion.metadata.crd.podpool.PodFunctionBuildStatus;
 import io.fabric8.kubernetes.client.KubernetesClient;
-import io.fabric8.kubernetes.client.ResourceNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.jgit.lib.Repository;
@@ -17,10 +16,12 @@ import org.eclipse.jgit.transport.ReceiveCommand;
 import org.eclipse.jgit.transport.ReceivePack;
 import org.eclipse.jgit.transport.resolver.ReceivePackFactory;
 import org.eclipse.jgit.transport.resolver.ServiceNotEnabledException;
+import org.springframework.util.CollectionUtils;
 
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author robinqu
@@ -79,11 +80,19 @@ public class CustomReceivePackFactory implements ReceivePackFactory<HttpServletR
                     line -> logInfo(receivePack, line)
             );
 
-            var finalPhase = PipelineUtils.getFunctionBuild(kubernetesClient, functionBuild.getMetadata().getNamespace(), functionBuild.getMetadata().getName())
-                    .map(PodFunctionBuild::getStatus)
-                    .map(PodFunctionBuildStatus::getPhase)
-                    .orElseThrow(()-> new ResourceNotFoundException("FunctionBuild is not found: name=%s,ns=%s".formatted(functionBuild.getMetadata().getName(), functionBuild.getMetadata().getNamespace())));
-            if (finalPhase == PodFunctionBuildStatus.Phase.Succeeded) {
+            logInfo(receivePack, "⏳ Waiting for final status of PodFunctionBuild with timeout of 5 mins");
+            var isBuildSucceeded = !kubernetesClient.resources(PodFunctionBuild.class)
+                    .inNamespace(functionBuild.getMetadata().getNamespace())
+                    .withName(functionBuild.getMetadata().getName())
+                    .informOnCondition(podFunctionBuilds -> {
+                        return Optional.ofNullable(CollectionUtils.firstElement(podFunctionBuilds))
+                                .map(PodFunctionBuild::getStatus)
+                                .map(PodFunctionBuildStatus::getPhase)
+                                .map(phase -> phase == PodFunctionBuildStatus.Phase.Succeeded)
+                                .orElse(false);
+                    }).get(3, TimeUnit.MINUTES).isEmpty();
+
+            if (isBuildSucceeded) {
                 logInfo(receivePack, "✅ FunctionBuild CR is completed successfully");
             } else {
                 throw new RuntimeException("FunctionBuild is in Failed Phase. Please check logs.");

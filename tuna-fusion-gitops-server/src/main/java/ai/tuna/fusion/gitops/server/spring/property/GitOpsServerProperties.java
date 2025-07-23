@@ -38,7 +38,7 @@ public class GitOpsServerProperties {
         @Data
         public static class ZipArchiveOnLocalHttpServerProperties {
             private Path zipRepositoryRoot;
-            private String httpServerUrlTemplate;
+            private String httpServerBaseUrl;
         }
         private ZipArchiveOnLocalHttpServerProperties zipArchiveOnLocalHttpServer;
 

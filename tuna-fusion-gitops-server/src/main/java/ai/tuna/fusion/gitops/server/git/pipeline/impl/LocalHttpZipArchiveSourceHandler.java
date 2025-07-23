@@ -13,6 +13,8 @@ import org.eclipse.jgit.transport.ReceivePack;
 import org.eclipse.jgit.treewalk.TreeWalk;
 
 import java.io.*;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.security.NoSuchAlgorithmException;
 import java.util.Collection;
@@ -27,15 +29,15 @@ import java.util.zip.ZipOutputStream;
 public class LocalHttpZipArchiveSourceHandler extends BaseArchiveHandler {
 
     private final Path zipRepositoryRoot;
-    private final String httpServerUrlTemplate;
+    private final String httpServerBaseUrl;
 
     public LocalHttpZipArchiveSourceHandler(GitOpsServerProperties.SourceArchiveHandlerProperties.ZipArchiveOnLocalHttpServerProperties properties) {
         this.zipRepositoryRoot = properties.getZipRepositoryRoot();
-        this.httpServerUrlTemplate = properties.getHttpServerUrlTemplate();
+        this.httpServerBaseUrl = properties.getHttpServerBaseUrl();
     }
 
     private String getZipUrl(String fileId) {
-        return httpServerUrlTemplate.replace("${fileId}", fileId);
+        return httpServerBaseUrl + "/source_archives/" + URLEncoder.encode(fileId, StandardCharsets.UTF_8);
     }
 
     @Override

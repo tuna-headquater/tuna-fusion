@@ -26,7 +26,7 @@ import java.util.concurrent.CompletableFuture;
  */
 @Configuration
 @Slf4j
-public class GitServerConfig {
+public class GitOpsServerConfig {
 
     @Bean
     public CustomReceivePackFactory customReceivePackFactory(KubernetesClient kubernetesClient, GitOpsServerProperties properties) {

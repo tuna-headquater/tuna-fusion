@@ -1,7 +1,5 @@
 server:
   port: 8081
-
-
 spring:
   cloud:
     kubernetes:
@@ -13,14 +11,16 @@ spring:
     cloud-platform: KUBERNETES
 logging:
   level:
-#    org.eclipse.jgit: debug
     ai.tuna.fusion: debug
-    root: info
 
 gitops:
+#  source-archive-handler:
+#    type: FolderOnFilesystem
+#    folder-on-filesystem:
+#      local-source-archive-root-path: /tmp
+
   source-archive-handler:
     type: ZipArchiveOnLocalHttpServer
     zip-archive-on-local-http-server:
       zip-repository-root: /tmp
-      # assuming the namespace is `tuna-fusion`
-      http-server-url-template: "http://gitops-server.tuna-fusion.svc.cluster.local/source_archives/${fileId}"
+      http-server-base-url: "http://host.docker.internal:8081"

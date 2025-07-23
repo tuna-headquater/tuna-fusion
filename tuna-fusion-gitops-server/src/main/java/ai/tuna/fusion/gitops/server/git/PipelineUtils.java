@@ -25,12 +25,6 @@ import java.util.function.Consumer;
  */
 @Slf4j
 public class PipelineUtils {
-    public static Optional<PodFunctionBuild> getFunctionBuild(KubernetesClient client, String ns, String name) {
-        return Optional.ofNullable(client.resources(PodFunctionBuild.class)
-                .inNamespace(ns)
-                .withName(name)
-                .get());
-    }
 
     public static PodFunctionBuild createAgentFunctionBuild(
             KubernetesClient kubernetesClient,
