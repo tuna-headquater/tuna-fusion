@@ -46,6 +46,7 @@ public class PodPoolDeploymentDependentResource extends CRUDKubernetesDependentR
         var container = podSpec.getContainers().getFirst();
         container.getVolumeMounts().add(new VolumeMountBuilder()
                 .withName("archive-volume")
+                .withReadOnly(true)
                 .withMountPath(PodFunctionBuild.ARCHIVE_ROOT_PATH.toString())
                 .build());
         // clear ports for safety reasons

@@ -1,6 +1,7 @@
 package ai.tuna.fusion.executor.web;
 
 import ai.tuna.fusion.executor.driver.podpool.FunctionPodManager;
+import ai.tuna.fusion.metadata.crd.ResourceUtils;
 import ai.tuna.fusion.metadata.crd.podpool.PodFunction;
 import ai.tuna.fusion.metadata.crd.podpool.PodPool;
 import lombok.extern.slf4j.Slf4j;
@@ -26,8 +27,8 @@ public class HttpProxyUtils {
             String trailingPath
     ) throws Exception {
         // this access is closed asynchronously, so we need to close it after we finish
-        var access = functionPodManager.requestAccess(podFunction, podPool, trailingPath);
-        var fullUrl = access.getUri();
+        var access = functionPodManager.requestAccess(podFunction, podPool);
+        var fullUrl = ResourceUtils.getPodUri(access.getPodAccess().getSelectedPod(), trailingPath);
         log.debug("[forward] {} {}", exchange.getRequest().getMethod(), fullUrl);
         var requestBody = exchange.getRequest().getBody();
         var response = exchange.getResponse();

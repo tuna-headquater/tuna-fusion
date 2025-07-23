@@ -3,6 +3,9 @@ ARG PYPI_INDEX=https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple
 ENV PYPI_INDEX=${PYPI_INDEX}
 COPY --from=ghcr.io/astral-sh/uv:0.7.12 /uv /uvx /usr/local/bin/
 WORKDIR /app
-COPY . /app/
+COPY pyproject.toml uv.lock .python-version /app/
 RUN uv sync -i ${PYPI_INDEX}
+ENV UV_PYTHON=/app/.venv/bin/python \
+    PATH=/app/.venv/bin:$PATH
+COPY . /app/
 CMD ["uv", "run", "-m", "fastapi_runtime"]

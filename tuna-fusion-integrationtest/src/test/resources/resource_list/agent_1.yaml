@@ -76,8 +76,8 @@ spec:
     podPoolSpec:
       archivePvcName: shared-archive-pvc
       poolSize: 10
-      builderImage: robinqu/fusion-a2a-env-builder:1752756455
-      runtimeImage: robinqu/fusion-a2a-fastapi-runtime:1753011317
+      builderImage: robinqu/fusion-a2a-env-builder:1753247400
+      runtimeImage: robinqu/fusion-a2a-fastapi-runtime:1753247461
       builderPodServiceAccountName: fusion-builder-sa
       runPerPod: 100
       ttlPerPod: 86400

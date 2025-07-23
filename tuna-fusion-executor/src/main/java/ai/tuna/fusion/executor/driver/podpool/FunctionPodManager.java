@@ -10,11 +10,7 @@ import java.util.List;
  */
 public interface FunctionPodManager {
 
-    default CountedPodAccess requestAccess(PodFunction function, PodPool podPool) throws FunctionPodAccessException {
-        return requestAccess(function, podPool, "");
-    }
-
-    CountedPodAccess requestAccess(PodFunction function, PodPool podPool, String trailingPath) throws FunctionPodAccessException;
+    CountedPodAccess requestAccess(PodFunction function, PodPool podPool) throws FunctionPodAccessException;
     
     void disposeAccess(CountedPodAccess countedPodAccess) throws FunctionPodDisposalException;
 

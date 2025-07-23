@@ -6,8 +6,10 @@ WORKDIR /builder
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
   --mount=type=cache,target=/var/lib/apt,sharing=locked \
     apt-get update && apt-get install -y wget curl git zip unzip
-ADD pyproject.toml uv.lock /builder/
+ADD pyproject.toml uv.lock .python-version /builder/
 RUN uv sync -i ${PYPI_INDEX}
+ENV UV_PYTHON=/builder/.venv/bin/python \
+    PATH=/builder/.venv/bin:$PATH
 ADD . /builder/
 RUN chmod +x build.sh
 CMD ["sh", "build.sh"]

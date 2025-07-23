@@ -58,7 +58,11 @@ public class ResourceUtils {
 
     @SuppressWarnings("HttpUrlsUsage")
     private static final String POD_HTTP_URL = "http://%s:%s/%s";
-    public static String getPodUri(Pod pod, Service service, String subPath) {
+
+    public static String getPodUri(Pod pod) {
+        return getPodUri(pod,"");
+    }
+    public static String getPodUri(Pod pod, String subPath) {
         var port = pod.getSpec().getContainers().getFirst().getPorts().getFirst().getContainerPort();
         var ip = pod.getStatus().getPodIP();
         if (subPath.startsWith("/")) {

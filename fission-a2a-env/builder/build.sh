@@ -1,9 +1,8 @@
 set -e
 set -x
 
-
 echo "Run pre_build.py"
-uv run -m fusion_builder.pre_build
+python -m fusion_builder.pre_build
 
 echo "Copy source to deploy"
 mkdir -p "$DEPLOY_ARCHIVE_PATH"
@@ -26,6 +25,6 @@ else
 fi
 
 echo "Run post_build.py"
-uv run -m fusion_builder.post_build
+python -m fusion_builder.post_build
 
 echo "Done!"

@@ -65,8 +65,8 @@ public class ApiServerPodPoolConnectorImpl implements PodPoolConnector, Resource
     }
 
     @Override
-    public PodAccess requestAccess(PodFunction function, String trailingPath) throws FunctionPodAccessException {
-        log.debug("[requestAccess] fn={}, trailingPath={}", ResourceUtils.computeResourceMetaKey(function), trailingPath);
+    public PodAccess requestAccess(PodFunction function) throws FunctionPodAccessException {
+        log.debug("[requestAccess] fn={}", ResourceUtils.computeResourceMetaKey(function));
         var effectiveBuild = Optional.ofNullable(function.getStatus())
                 .map(PodFunctionStatus::getEffectiveBuild)
                 .flatMap(buildInfo -> podPoolResources.queryPodFunctionBuild(podPool.getMetadata().getNamespace(), buildInfo.getName()))
@@ -101,7 +101,7 @@ public class ApiServerPodPoolConnectorImpl implements PodPoolConnector, Resource
                 )
                 .orElseThrow(()-> FunctionPodAccessException.of(podPool, function, "Cannot find PodPool service: " + svcName));
         var responseSpec = restClient.post()
-                .uri(ResourceUtils.getPodUri(pod, headlessService, "/specialize"))
+                .uri(ResourceUtils.getPodUri(pod, "/specialize"))
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(request)
                 .retrieve();
@@ -113,7 +113,7 @@ public class ApiServerPodPoolConnectorImpl implements PodPoolConnector, Resource
         log.debug("[requestAccess] Access acquired: fn={}, pod={}", ResourceUtils.computeResourceMetaKey(function), ResourceUtils.computeResourceMetaKey(pod));
         return PodAccess.builder()
                 .selectedPod(pod)
-                .uri(ResourceUtils.getPodUri(pod, headlessService, trailingPath))
+                .uri(ResourceUtils.getPodUri(pod))
                 .functionBuildName(effectiveBuild.getMetadata().getName())
                 .functionBuildUid(effectiveBuild.getMetadata().getUid())
                 .functionName(function.getMetadata().getName())
