@@ -39,9 +39,7 @@ public class AgentEnvironmentSpec {
     @Data
     public static class Executor {
         @Required
-        String protocol = "https";
-        @Required
-        String externalHost;
+        private String baseUrl;
     }
     @Required
     private Executor executor;

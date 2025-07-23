@@ -78,12 +78,11 @@ public class AgentResourceUtils {
     }
 
 
-    private static final String AGENT_EXECUTOR_URL_TEMPLATE = "${endpointProtocol}://${endpointHost}/a2a/namespaces/${namespace}/agents/${agentDeploymentName}";
+    private static final String AGENT_EXECUTOR_URL_TEMPLATE = "${baseUrl}/a2a/namespaces/${namespace}/agents/${agentDeploymentName}";
     public static  String agentExternalUrl(AgentDeployment agentDeployment, AgentEnvironment agentEnvironment) {
         var endpoint = agentEnvironment.getSpec().getExecutor();
         var substitutor = new StringSubstitutor(Map.of(
-                "endpointProtocol", endpoint.getProtocol(),
-                "endpointHost", endpoint.getExternalHost(),
+                "baseUrl", endpoint.getBaseUrl(),
                 "namespace", agentDeployment.getMetadata().getNamespace(),
                 "agentEnvironmentName", agentEnvironment.getMetadata().getName(),
                 "agentDeploymentName", agentDeployment.getMetadata().getName()

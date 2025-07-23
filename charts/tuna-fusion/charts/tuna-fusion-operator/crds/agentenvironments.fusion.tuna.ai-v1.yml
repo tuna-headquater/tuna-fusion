@@ -2956,13 +2956,10 @@ spec:
                   rule: "has(self.podPoolSpec) || has(self.awsLambdaSpec) || has(self.alibabaCloudFunctionComputeSpec)"
               executor:
                 properties:
-                  externalHost:
-                    type: "string"
-                  protocol:
+                  baseUrl:
                     type: "string"
                 required:
-                - "externalHost"
-                - "protocol"
+                - "baseUrl"
                 type: "object"
             required:
             - "driver"
