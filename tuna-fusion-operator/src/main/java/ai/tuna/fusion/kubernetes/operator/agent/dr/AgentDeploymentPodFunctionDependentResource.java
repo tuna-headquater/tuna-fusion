@@ -56,6 +56,7 @@ public class AgentDeploymentPodFunctionDependentResource extends CRUDKubernetesD
                 renderA2aRuntimeConfigJson(primary)
         ));
         podFunctionSpec.setPodPoolName(AgentResourceUtils.computePodPoolName(agentEnvironment));
+        podFunctionSpec.setAppType(PodFunctionSpec.AppType.AgentApp);
         podFunctionSpec.setEntrypoint(primary.getSpec().getEntrypoint());
         podFunction.setSpec(podFunctionSpec);
         return podFunction;

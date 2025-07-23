@@ -4,7 +4,7 @@ metadata:
   name: test-deploy-1
 spec:
   agentCard:
-    name: agent3
+    name: agent1
     description: a simple http server that speaks hello
     capabilities:
       streaming: true
@@ -26,7 +26,7 @@ spec:
       organization: tuna
       url: https://github.com/tuna-headquarter
     version: "1.0.0"
-  environmentName: env-1
+  environmentName: agent-env-1
   git:
     watchedBranchName: "refs/heads/main"
   a2a:
@@ -34,5 +34,5 @@ spec:
       provider: InMemory
     taskStore:
       provider: InMemory
-  entrypoint: main.handler
+  entrypoint: app.handle
 

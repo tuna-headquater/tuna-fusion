@@ -22,7 +22,7 @@ public class AgentResourcesIT extends IntegrationTest {
         context.awaitResourceGroup(TestResourceGroups.RESOURCE_GROUP_2);
         var deploy1 = agentResources.queryAgentDeployment(context.targetNamespace(), "test-deploy-1");
         assertThat(deploy1).isPresent();
-        var env1 = agentResources.queryAgentEnvironment(context.targetNamespace(), "env-1");
+        var env1 = agentResources.queryAgentEnvironment(context.targetNamespace(), "agent-env-1");
         assertThat(env1).isPresent();
     }
 

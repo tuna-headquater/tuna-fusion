@@ -5,11 +5,15 @@ import io.fabric8.kubernetes.client.Config;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientBuilder;
 import io.fabric8.kubernetes.client.dsl.NonDeletingOperation;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.boot.web.reactive.context.ReactiveWebServerApplicationContext;
 import org.springframework.cloud.kubernetes.fabric8.Fabric8AutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
@@ -25,13 +29,22 @@ import java.io.InputStream;
  */
 @Slf4j
 @ExtendWith(K8SNamespacedResourceExtension.class)
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(
+        webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+        properties = "spring.main.web-application-type=reactive"
+)
 @ContextConfiguration(classes = {
         IntegrationTestApplication.class,
         IntegrationTest.IntegrationTestConfiguration.class
 })
 public class IntegrationTest {
 
+    @Autowired
+    private ReactiveWebServerApplicationContext server;
+
+    protected int getTestServerPort() {
+        return server.getWebServer().getPort();
+    }
 
     @TestConfiguration
     public static class IntegrationTestConfiguration {

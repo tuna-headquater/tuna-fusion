@@ -94,12 +94,12 @@ public class ApiServerPodPoolConnectorImpl implements PodPoolConnector, Resource
                 .entrypoint(function.getSpec().getEntrypoint())
                 .appType(function.getSpec().getAppType())
                 .build();
-        var svcName = PodPoolResourceUtils.computePodPoolServiceName(podPool);
-        var headlessService = podPoolResources.queryPodPoolService(
-                    podPool.getMetadata().getNamespace(),
-                    svcName
-                )
-                .orElseThrow(()-> FunctionPodAccessException.of(podPool, function, "Cannot find PodPool service: " + svcName));
+//        var svcName = PodPoolResourceUtils.computePodPoolServiceName(podPool);
+//        var headlessService = podPoolResources.queryPodPoolService(
+//                    podPool.getMetadata().getNamespace(),
+//                    svcName
+//                )
+//                .orElseThrow(()-> FunctionPodAccessException.of(podPool, function, "Cannot find PodPool service: " + svcName));
         var responseSpec = restClient.post()
                 .uri(ResourceUtils.getPodUri(pod, "/specialize"))
                 .contentType(MediaType.APPLICATION_JSON)

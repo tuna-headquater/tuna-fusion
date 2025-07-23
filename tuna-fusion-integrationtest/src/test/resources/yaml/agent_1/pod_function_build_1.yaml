@@ -6,5 +6,5 @@ spec:
   podFunctionName: test-deploy-1-function
   sourceArchive:
     httpZipSource:
-      url: https://gist.github.com/RobinQu/f8f755f8bb0807ad564662c637175d23/archive/e82defc2b563fbc9f36b49a94cc3b8b80e5be689.zip
-      sha256Checksum: 5aa97e2c44e86a9993ba3f4a450847b8c6912439bb83b1e1037ac9a5408df65f
+      url: https://gist.github.com/RobinQu/bd00d0ac55f8bbfc269a90cfd04f0512/archive/0ff72f720fca75f0a942fc4174e2550fc1eb06d2.zip
+      sha256Checksum: 505a11cda2bbb5af61d9c414a473a88a10f8c9bbbebf3592913846aa50726bbd

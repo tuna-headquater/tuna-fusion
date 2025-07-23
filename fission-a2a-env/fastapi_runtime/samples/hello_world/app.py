@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from a2a.server.agent_execution import AgentExecutor, RequestContext
 from a2a.server.events import EventQueue
 from a2a.server.tasks import TaskUpdater
@@ -12,9 +14,17 @@ class HelloWorldAgentExecutor(AgentExecutor):
         msg = new_agent_text_message(text="hello world", task_id=context.task_id)
         updater = TaskUpdater(event_queue, task.id, task.contextId)
 
+        # explict use timestamps without timezone info so that Java client can correctly parse them
         try:
-            await updater.update_status(state=TaskState.working, message=msg)
-            await updater.complete()
+            await updater.update_status(state=TaskState.working,
+                                        message=msg,
+                                        timestamp=datetime.now().isoformat()
+                                        )
+            await updater.update_status(
+                TaskState.completed,
+                final=True,
+                timestamp=datetime.now().isoformat()
+            )
         except Exception as e:
             await updater.update_status(TaskState.failed, new_agent_text_message(text=str(e), task_id=task.id, context_id=task.contextId))
 

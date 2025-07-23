@@ -36,6 +36,7 @@
         <spring-cloud.version>2025.0.0</spring-cloud.version>
         <aws.java.sdk.version>2.31.69</aws.java.sdk.version>
         <testcontainers.version>1.21.3</testcontainers.version>
+        <io.a2a.sdk.version>0.2.3.Beta1</io.a2a.sdk.version>
     </properties>
 
     <dependencyManagement>
@@ -165,6 +166,14 @@
                 <version>${testcontainers.version}</version>
                 <scope>test</scope>
             </dependency>
+
+            <dependency>
+                <groupId>io.github.a2asdk</groupId>
+                <artifactId>a2a-java-sdk-client</artifactId>
+                <!-- Use a released version from https://github.com/a2aproject/a2a-java/releases -->
+                <version>${io.a2a.sdk.version}</version>
+            </dependency>
+
         </dependencies>
     </dependencyManagement>
 
