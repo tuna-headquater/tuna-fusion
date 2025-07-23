@@ -33,6 +33,7 @@ def read_runtime_config(file_root: str) -> A2ARuntimeConfig:
     with open(os.path.join(file_root, "a2a_runtime.json")) as f:
         return A2ARuntimeConfig.model_validate(json.load(f))
 
+AGENT_CARD_PATH = "/.well-known/agent.json"
 
 class A2AApplication(JSONRPCApplication):
 
@@ -157,10 +158,10 @@ class FuncApp(FastAPI):
     async def dispatch(self, request: Request):
         async with self._mutex:
             if self._agent_app:
-                if request.url.path == "/":
-                    return await self.agent_task_call(request)
-                else:
+                if request.url.path == AGENT_CARD_PATH:
                     return await self.agent_card_call(request)
+                else:
+                    return await self.agent_task_call(request)
             elif self._web_app:
                 if asyncio.iscoroutinefunction(self._web_app):
                     return await self._web_app(request)
