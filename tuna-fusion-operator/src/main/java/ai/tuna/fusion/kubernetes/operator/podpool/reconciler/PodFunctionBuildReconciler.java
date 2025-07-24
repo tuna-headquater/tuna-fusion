@@ -30,7 +30,7 @@ import static ai.tuna.fusion.metadata.crd.podpool.PodFunctionBuildStatus.Phase.S
  */
 @Slf4j
 @Component
-@ControllerConfiguration
+@ControllerConfiguration(name = "podFunctionBuildReconciler")
 @Workflow(dependents = {
         @Dependent(type = PodFunctionBuildJobDependentResource.class),
 })

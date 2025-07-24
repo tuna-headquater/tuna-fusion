@@ -6,4 +6,17 @@ metadata:
     {{- include "tuna-fusion-operator.labels" . | nindent 4 }}
 data:
   application.yaml: |
-    {{- toYaml .Values.operator | nindent 4}}
+    server:
+      port: {{.Values.operator.serverPort}}
+    logging:
+      level:
+        ai.tuna.fusion: {{.Values.operator.loggingLevel}}
+    javaoperatorsdk:
+      reconcilers:
+        podFunctionBuildReconciler:
+          clusterScoped: {{.Values.operator.clusterScoped }}
+          namespaces:
+            - {{.Release.Namespace}}
+            {{- range .Values.operator.additionalWatchedNamespaces }}
+            - {{ . }}
+            {{- end }}

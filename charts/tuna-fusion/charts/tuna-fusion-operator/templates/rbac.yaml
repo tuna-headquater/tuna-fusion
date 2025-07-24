@@ -13,7 +13,7 @@ automountServiceAccountToken: {{ .Values.serviceAccount.automount }}
 {{- end }}
 
 ---
-{{- if .Values.clusterRole.create }}
+{{- if.Values.clusterRole.create }}
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
@@ -57,6 +57,7 @@ rules:
       - delete
       - patch
 
+
 ---
 
 apiVersion: rbac.authorization.k8s.io/v1
@@ -71,4 +72,67 @@ subjects:
   - kind: ServiceAccount
     name: {{ include "tuna-fusion-operator.serviceAccountName" . }}
     namespace: {{.Release.Namespace}}
+{{- end }}
+
+---
+{{- if .Values.namespacedRole.create }}
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  namespace: {{ .Release.Namespace }}
+  name: {{ include "tuna-fusion-operator.namespacedRoleName" . }}
+  labels:
+    {{- include "tuna-fusion-operator.labels" . | nindent 4 }}
+  {{- with .Values.namespacedRole.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+rules:
+  # Application: watching & handling for the custom resource we declare.
+  - apiGroups:
+      - fusion.tuna.ai
+    resources:
+      - podpools
+      - podpools/status
+      - podfunctions
+      - podfunctions/status
+      - podfunctionbuilds
+      - podfunctionbuilds/status
+    verbs:
+      - get
+      - list
+      - create
+      - update
+      - delete
+      - patch
+
+
+  # Framework: posting the events about the handlers progress/errors.
+  - apiGroups: [ "" ]
+    resources: [ events ]
+    verbs: [ create ]
+
+  # Application: other resources it produces and manipulates.
+  # Here, we create Jobs+PVCs+Pods, but we do not patch/update/delete them ever.
+  - apiGroups: [ batch, extensions ]
+    resources: [ jobs ]
+    verbs: [ create, get, list ]
+  - apiGroups: [ "" ]
+    resources: [ pods, persistentvolumeclaims ]
+    verbs: [ create ]
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  namespace: {{.Release.Namespace}}
+  name: {{include "tuna-fusion-operator.namespacedRoleName" .}}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: {{include "tuna-fusion-operator.namespacedRoleName" .}}
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "tuna-fusion-operator.serviceAccountName" . }}
+
 {{- end }}
