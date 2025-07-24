@@ -34,14 +34,12 @@ spec:
             {{- toYaml .Values.securityContext | nindent 12 }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
-          command:
-            - kopf
-            - run
-            - src/tuna/fusion/kubernetes/operator.py
-            - --verbose
+          env:
+            - name: JAVA_TOOL_OPTS
+              value: "-Dspring.config.import=kubernetes: -Dspring.application.name={{include "tuna-fusion-operator.configmap" .}}"
           ports:
             - name: http
-              containerPort: {{ .Values.service.port }}
+              containerPort: {{ .Values.operator.server.port }}
               protocol: TCP
           livenessProbe:
             {{- toYaml .Values.livenessProbe | nindent 12 }}

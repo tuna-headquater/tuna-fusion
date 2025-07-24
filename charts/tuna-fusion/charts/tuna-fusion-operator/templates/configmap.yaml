@@ -4,4 +4,6 @@ metadata:
   name: {{include "tuna-fusion-operator.configmap" .}}
   labels:
     {{- include "tuna-fusion-operator.labels" . | nindent 4 }}
-data: {}
+data:
+  application.yaml: |
+    {{- toYaml .Values.operator | nindent 4}}

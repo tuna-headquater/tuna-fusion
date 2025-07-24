@@ -5,7 +5,7 @@ ARG MAVEN_TARGET
 WORKDIR /build/
 ADD . /build/
 ADD $MAVEN_SETTING_FILE_URL /root/.m2/settings.xml
-RUN --mount=type=cache,target=/root/.m2 mvn clean package -pl $MAVEN_TARGET -am -DskipTests
+RUN --mount=type=cache,target=/root/.m2/repository mvn -s /root/.m2/settings.xml clean package -pl $MAVEN_TARGET -am -DskipTests
 
 
 FROM eclipse-temurin:21-noble
