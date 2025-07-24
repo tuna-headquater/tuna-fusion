@@ -36,7 +36,7 @@
         <spring-cloud.version>2025.0.0</spring-cloud.version>
         <aws.java.sdk.version>2.31.69</aws.java.sdk.version>
         <testcontainers.version>1.21.3</testcontainers.version>
-        <io.a2a.sdk.version>0.2.3.Beta1</io.a2a.sdk.version>
+        <io.a2a.sdk.version>0.2.5</io.a2a.sdk.version>
     </properties>
 
     <dependencyManagement>
@@ -121,22 +121,22 @@
             <dependency>
                 <groupId>ai.tuna.fusion</groupId>
                 <artifactId>tuna-fusion-metadata</artifactId>
-                <version>1.0-SNAPSHOT</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>ai.tuna.fusion</groupId>
                 <artifactId>tuna-fusion-operator</artifactId>
-                <version>1.0-SNAPSHOT</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>ai.tuna.fusion</groupId>
                 <artifactId>tuna-fusion-gitops-server</artifactId>
-                <version>1.0-SNAPSHOT</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>ai.tuna.fusion</groupId>
                 <artifactId>tuna-fusion-executor</artifactId>
-                <version>1.0-SNAPSHOT</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>io.github.vishalmysore</groupId>

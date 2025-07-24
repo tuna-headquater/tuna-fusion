@@ -54,3 +54,8 @@ config/secrets.json
 .circleci/
 .github/workflows/
 .travis.yml
+
+Dockerfile
+
+# maven build
+target/
