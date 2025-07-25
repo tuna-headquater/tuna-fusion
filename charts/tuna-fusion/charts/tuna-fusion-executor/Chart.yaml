@@ -1,6 +1,6 @@
 apiVersion: v2
-name: tuna-fusion
-description: The master chart of tuna-fusion components
+name: tuna-fusion-executor
+description: A Helm chart for tuna-fusion-executor
 
 # A chart can be either an 'application' or a 'library' chart.
 #
@@ -22,14 +22,3 @@ version: 0.1.0
 # follow Semantic Versioning. They should reflect the version the application is using.
 # It is recommended to use it with quotes.
 appVersion: "1.16.0"
-
-dependencies:
-  - name: tuna-fusion-executor
-    version: 0.1.0
-    condition: tuna-fusion-executor.enabled
-  - name: tuna-fusion-gitops-server
-    version: 0.1.0
-    condition: tuna-fusion-gitops-server.enabled
-  - name: tuna-fusion-operator
-    version: 0.1.0
-    condition: tuna-fusion-operator.enabled

@@ -1,0 +1,14 @@
+global:
+  clusterScoped: false
+  additionalWatchedNamespaces: [ ]
+  executor:
+    servicePort: 80
+    serviceName: ""
+  gitOpsServer:
+    servicePort: 80
+    serviceName: ""
+  archivePvc:
+    accessMode: ReadWriteOnce
+    create: true
+    capacity: 100Gi
+    name: ""

@@ -38,20 +38,39 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
             - name: http
-              containerPort: {{ .Values.service.port }}
+              containerPort: {{ .Values.app.serverPort }}
               protocol: TCP
+          env:
+            - name: JAVA_TOOL_OPTS
+              value: "-Dspring.config.import=kubernetes: -Dspring.application.name={{include "tuna-fusion-gitops-server.configmapName" .}}"
           livenessProbe:
             {{- toYaml .Values.livenessProbe | nindent 12 }}
           readinessProbe:
             {{- toYaml .Values.readinessProbe | nindent 12 }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
-          {{- with .Values.volumeMounts }}
           volumeMounts:
+            - name: archive
+              mountPath: "/archive"
+            - name: repository
+              mountPath: "/gits"
+              subPath: "gits"
+            - name: repository
+              mountPath: "/zips"
+              subPath: "zips"
+            {{- with .Values.volumeMounts }}
             {{- toYaml . | nindent 12 }}
           {{- end }}
-      {{- with .Values.volumes }}
       volumes:
+        - name: repository
+          persistentVolumeClaim:
+            claimName: {{include "tuna-fusion-gitops-server.repositoryPvcName" .}}
+        {{- if .Values.global.archivePvc.create}}
+        - name: archive
+          persistentVolumeClaim:
+            claimName: {{include "shared.archivePvcName" .}}
+        {{- end }}
+        {{- with .Values.volumes }}
         {{- toYaml . | nindent 8 }}
       {{- end }}
       {{- with .Values.nodeSelector }}

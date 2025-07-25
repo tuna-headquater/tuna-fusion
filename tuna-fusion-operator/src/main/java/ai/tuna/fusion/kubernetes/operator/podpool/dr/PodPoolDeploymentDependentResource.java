@@ -101,7 +101,7 @@ public class PodPoolDeploymentDependentResource extends CRUDKubernetesDependentR
 
     private PodSpec podSpec(PodPool podPool) {
         return new PodSpecBuilder()
-                .withServiceAccountName(podPool.getSpec().getRuntimePodServiceAccountName())
+                .withServiceAccountName(serviceAccountName(podPool))
                 .addNewContainer()
                 .withName(podPool.getMetadata().getName() + "-container")
                 .withImage(podPool.getSpec().getRuntimeImage())
@@ -129,6 +129,14 @@ public class PodPoolDeploymentDependentResource extends CRUDKubernetesDependentR
                 .endLivenessProbe()
                 .endContainer()
                 .build();
+    }
+
+    /**
+     * Get the service account name to use for the pod pool
+     */
+    private String serviceAccountName(PodPool podPool) {
+        return Optional.ofNullable(podPool.getSpec().getRuntimePodServiceAccountName())
+                .orElse(System.getProperty("operator.runtimePodServiceAccountName"));
     }
 
 }

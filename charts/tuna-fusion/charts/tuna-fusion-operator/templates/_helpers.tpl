@@ -78,7 +78,7 @@ Create the name of the service account to use
 {{- end }}
 
 
-{{- define "tuna-fusion-operator.configmap" -}}
+{{- define "tuna-fusion-operator.configmapName" -}}
 {{- if .Values.namespacedRole.create }}
 {{- default (include "tuna-fusion-operator.fullname" .) .Values.configmap.name }}
 {{- else }}
@@ -86,3 +86,7 @@ Create the name of the service account to use
 {{- end }}
 
 {{- end }}
+
+{{- define "tuna-fusion-operator.archivePvc" -}}
+{{- default (include "tuna-fusion-operator.fullname" .) .Values.archivePvc.name }}
+{{- end}}

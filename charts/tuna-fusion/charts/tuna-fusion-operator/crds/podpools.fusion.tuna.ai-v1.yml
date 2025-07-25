@@ -2928,7 +2928,6 @@ spec:
                 minimum: 60.0
                 type: "integer"
             required:
-            - "archivePvcName"
             - "builderImage"
             - "runtimeImage"
             type: "object"

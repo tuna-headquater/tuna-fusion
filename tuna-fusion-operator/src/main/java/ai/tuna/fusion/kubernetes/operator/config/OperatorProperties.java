@@ -18,4 +18,8 @@ public class OperatorProperties {
     }
 
     private LeaderElection leaderElection;
+    private String sharedArchivePvcName;
+    private String builderServiceAccountName;
+    private String runtimeServiceAccountName;
+
 }

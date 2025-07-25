@@ -64,7 +64,6 @@ public class PodPoolSpec {
     /**
      * The name of PVC to store build archives.
      */
-    @Required
     private String archivePvcName;
 
 }

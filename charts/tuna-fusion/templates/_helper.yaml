@@ -1,0 +1,19 @@
+{{- define "shared.archivePvcName" -}}
+{{- default (printf "%s-archive-pvc" .Release.Name | trunc 63 | trimSuffix "-") .Values.global.archivePvc.name }}
+{{- end }}
+
+{{- define "shared.exeuctorServiceName" }}
+{{- default (printf "%s-executor-svc" .Release.Name | trunc 63 | trimSuffix "-") .Values.global.executor.serviceName}}
+{{- end }}
+
+{{- define "shared.executorBaseUrl" -}}
+{{include "shared.exeuctorServiceName" .}}:{{.Values.global.executor.servicePort}}
+{{- end }}
+
+{{- define "shared.gitopsServerServiceName" }}
+{{- default (printf "%s-gitops-server-svc" .Release.Name | trunc 63 | trimSuffix "-") .Values.global.gitOpsServer.serviceName}}
+{{- end }}
+
+{{- define "shared.gitopsServerBaseurl" -}}
+{{include "shared.gitopsServerServiceName"}}:{{.Values.global.gitOpsServer.servicePort}}
+{{- end }}

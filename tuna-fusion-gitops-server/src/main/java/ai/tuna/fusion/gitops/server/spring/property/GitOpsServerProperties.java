@@ -29,9 +29,9 @@ public class GitOpsServerProperties {
     public static class SourceArchiveHandlerProperties {
         public enum Type {
             ZipArchiveOnLocalHttpServer,
-            ZipArchiveOnS3,
+//            ZipArchiveOnS3,
             FolderOnFilesystem,
-            ZipArchiveOnFilesystem
+//            ZipArchiveOnFilesystem
         }
         private Type type;
 
@@ -50,13 +50,5 @@ public class GitOpsServerProperties {
     }
     private SourceArchiveHandlerProperties sourceArchiveHandler;
 
-
-    @Data
-    public static class S3Properties {
-        private String endpointUrl;
-        private String accessKey;
-        private String accessSecret;
-    }
-    private S3Properties s3Properties;
 
 }

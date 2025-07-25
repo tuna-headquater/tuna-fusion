@@ -1,0 +1,13 @@
+{{- if .Values.global.archivePvc.create }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{include "shared.archivePvcName" .}}
+spec:
+  accessModes:
+    - {{.Values.global.archivePvc.accessMode }}
+  volumeMode: Filesystem
+  resources:
+    requests:
+      storage: {{.Values.global.archivePvc.capacity}}
+{{- end }}

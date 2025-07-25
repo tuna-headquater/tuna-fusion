@@ -5,6 +5,7 @@ import ai.tuna.fusion.kubernetes.operator.support.impl.FunctionBuildPodInitConta
 import ai.tuna.fusion.metadata.crd.PodPoolResourceUtils;
 import ai.tuna.fusion.metadata.crd.podpool.PodFunctionBuild;
 import ai.tuna.fusion.metadata.crd.podpool.PodFunctionBuildSpec;
+import ai.tuna.fusion.metadata.crd.podpool.PodPool;
 import io.fabric8.kubernetes.api.model.EnvVar;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.batch.v1.Job;
@@ -39,12 +40,7 @@ public class PodFunctionBuildJobDependentResource extends KubernetesDependentRes
         var builderImage = Optional.ofNullable(primary.getSpec().getEnvironmentOverrides())
                 .map(PodFunctionBuildSpec.EnvironmentOverrides::getBuilderImage)
                 .orElse(podPool.getSpec().getBuilderImage());
-        var serviceAccountName = Optional.ofNullable(primary.getSpec().getEnvironmentOverrides())
-                .map(PodFunctionBuildSpec.EnvironmentOverrides::getServiceAccountName)
-                .orElse(podPool.getSpec().getBuilderPodServiceAccountName());
-
         var initCommand = new FunctionBuildPodInitContainerCommand(primary, podFunction, podPool);
-
         return new JobBuilder()
                 .withNewMetadata()
                 .withName(computeJobName(primary))
@@ -65,12 +61,8 @@ public class PodFunctionBuildJobDependentResource extends KubernetesDependentRes
                 .withCompletions(1)
                 .withActiveDeadlineSeconds(60 * 10L)
                 .withNewTemplate()
-//                .withNewMetadata()
-//                .withName(computeJobPodName(primary))
-//                .withNamespace(primary.getMetadata().getNamespace())
-//                .endMetadata()
                 .withNewSpec()
-                .withServiceAccountName(serviceAccountName)
+                .withServiceAccountName(builderServiceAccountName(primary, podPool))
                 .withRestartPolicy("Never")
                 .addNewInitContainer()
                 .withName("builder-init-container")
@@ -116,7 +108,7 @@ public class PodFunctionBuildJobDependentResource extends KubernetesDependentRes
                 .addNewVolume()
                 .withName("archive-volume")
                 .withNewPersistentVolumeClaim()
-                .withClaimName(podPool.getSpec().getArchivePvcName())
+                .withClaimName(archivePvcName(podPool))
                 .endPersistentVolumeClaim()
                 .endVolume()
                 // declare builder script volume
@@ -129,5 +121,22 @@ public class PodFunctionBuildJobDependentResource extends KubernetesDependentRes
                 .endTemplate()
                 .endSpec()
                 .build();
+    }
+
+    /**
+     * PVC for local shared archive. Use the one specified in pod pool spec, or the one specified in env var.
+     */
+    private String archivePvcName(PodPool podPool) {
+        return Optional.ofNullable(podPool.getSpec().getArchivePvcName())
+                .orElse(System.getProperty("operator.sharedArchivePvcName"));
+    }
+
+    /**
+     * Service account name for builder pod. Use the one specified in pod pool spec, or the one specified in `environmentOverrides` of PodFunctionBuild, or the one specified in system properties.
+     */
+    private String builderServiceAccountName(PodFunctionBuild primary, PodPool podPool) {
+        return Optional.ofNullable(primary.getSpec().getEnvironmentOverrides())
+                .map(PodFunctionBuildSpec.EnvironmentOverrides::getServiceAccountName)
+                .orElseGet(()-> Optional.ofNullable(podPool.getSpec().getBuilderPodServiceAccountName()).orElse(System.getProperty("operator.builderServiceAccountName")));
     }
 }

@@ -1,0 +1,22 @@
+{{- if .Values.configmap.create -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{include "tuna-fusion-gitops-server.configmapName" .}}
+data:
+  application.yaml: |
+    server:
+      port: {{.Values.app.serverPort}}
+    logging:
+      level:
+        ai.tuna.fusion: {{.Values.app.loggingLevel}}
+    reposRootPath: /gits
+    defaultBranch: refs/heads/main
+    sourceArchiveHandler:
+      folderOnFilesystem:
+        path: /archive
+      zipArchiveOnLocalHttpServer:
+        zipRepositoryRoot: /zips
+        httpServerBaseUrl: {{include "shared.gitopsServerBaseurl" .}}
+      type: {{.Values.app.sourceArchiveHandlerType}}
+  {{- end }}

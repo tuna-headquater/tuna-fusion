@@ -12,14 +12,6 @@ import org.eclipse.jgit.http.server.GitServlet;
 import org.springframework.boot.web.servlet.ServletRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
-import software.amazon.awssdk.endpoints.Endpoint;
-import software.amazon.awssdk.regions.Region;
-import software.amazon.awssdk.services.s3.S3Client;
-
-import java.net.URI;
-import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 
 /**
  * @author robinqu
@@ -62,15 +54,15 @@ public class GitOpsServerConfig {
         return registration;
     }
 
-    @Bean
-    public S3Client s3Client(GitOpsServerProperties properties) {
-        return S3Client.builder()
-                .region(Region.AWS_GLOBAL)
-                .endpointProvider(endpointParams -> CompletableFuture.completedFuture(Endpoint.builder()
-                        .url(URI.create(properties.getS3Properties().getEndpointUrl() + "/" + Optional.ofNullable(endpointParams.bucket()).orElse("")))
-                        .build()))
-                .credentialsProvider(()-> AwsBasicCredentials.create(properties.getS3Properties().getAccessKey(), properties.getS3Properties().getAccessSecret()))
-                .build();
-    }
+//    @Bean
+//    public S3Client s3Client(GitOpsServerProperties properties) {
+//        return S3Client.builder()
+//                .region(Region.AWS_GLOBAL)
+//                .endpointProvider(endpointParams -> CompletableFuture.completedFuture(Endpoint.builder()
+//                        .url(URI.create(properties.getS3Properties().getEndpointUrl() + "/" + Optional.ofNullable(endpointParams.bucket()).orElse("")))
+//                        .build()))
+//                .credentialsProvider(()-> AwsBasicCredentials.create(properties.getS3Properties().getAccessKey(), properties.getS3Properties().getAccessSecret()))
+//                .build();
+//    }
 
 }

@@ -11,5 +11,5 @@ spec:
     - name: wget
       image: busybox
       command: ['wget']
-      args: ['{{ include "tuna-fusion-gitops-server.fullname" . }}:{{ .Values.service.port }}']
+      args: ['{{ include "shared.gitopsServerBaseurl" . }}/actuator/health/readiness']
   restartPolicy: Never

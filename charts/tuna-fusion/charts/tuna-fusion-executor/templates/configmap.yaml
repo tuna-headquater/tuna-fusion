@@ -1,0 +1,13 @@
+{{- if .Values.configmap.create -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{include "tuna-fusion-executor.configmapName" .}}
+data:
+  application.yaml: |
+    server:
+      port: {{.Values.app.serverPort}}
+    logging:
+      level:
+        ai.tuna.fusion: {{.Values.app.loggingLevel}}
+{{- end }}

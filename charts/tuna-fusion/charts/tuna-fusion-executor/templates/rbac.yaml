@@ -1,0 +1,110 @@
+{{- if.Values.clusterRole.create }}
+
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: {{ include "tuna-fusion-executor.clusterRoleName" . }}
+  labels:
+    {{- include "tuna-fusion-executor.labels" . | nindent 4 }}
+  {{- with .Values.clusterRole.annotations }}
+  annotations:
+      {{- toYaml . | nindent 4 }}
+  {{- end }}
+rules:
+  # read access to pods and pod logs
+  - apiGroups: [ "" ]
+    resources: [ "pods", "pods/log" ]
+    verbs: [ "get", "list", "delete", "update", "patch" ]
+
+  # read access to CRDs except PodFunctionBuild
+  - apiGroups:
+      - fusion.tuna.ai
+    resources:
+      - podpools
+      - podpools/status
+      - podfunctions
+      - podfunctions/status
+      - agentenvironments
+      - agentenvironments/status
+      - agentdeployments
+      - agentdeployments/status
+      - podfunctionbuilds
+      - podfunctionbuilds/status
+
+    verbs:
+      - get
+      - list
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{include "tuna-fusion-executor.clusterRoleName" .}}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{include "tuna-fusion-executor.clusterRoleName" .}}
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "tuna-fusion-executor.serviceAccountName" . }}
+    namespace: {{.Release.Namespace}}
+{{- end }}
+
+---
+
+{{- if .Values.namespacedRole.create }}
+
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  namespace: {{ .Release.Namespace }}
+  name: {{ include "tuna-fusion-executor.namespacedRoleName" . }}
+  labels:
+    {{- include "tuna-fusion-executor.labels" . | nindent 4 }}
+  {{- with .Values.namespacedRole.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+rules:
+  # read access to pods and pod logs
+  - apiGroups: [ "" ]
+    resources: [ "pods", "pods/log" ]
+    verbs: [ "get", "list", "delete", "update", "patch" ]
+
+  # read access to CRDs except PodFunctionBuild
+  - apiGroups:
+      - fusion.tuna.ai
+    resources:
+      - podpools
+      - podpools/status
+      - podfunctions
+      - podfunctions/status
+      - agentenvironments
+      - agentenvironments/status
+      - agentdeployments
+      - agentdeployments/status
+      - podfunctionbuilds
+      - podfunctionbuilds/status
+
+    verbs:
+      - get
+      - list
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  namespace: {{.Release.Namespace}}
+  name: {{include "tuna-fusion-executor.namespacedRoleName" .}}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: {{include "tuna-fusion-executor.namespacedRoleName" .}}
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "tuna-fusion-executor.serviceAccountName" . }}
+    namespace: {{.Release.Namespace}}
+
+{{- end }}

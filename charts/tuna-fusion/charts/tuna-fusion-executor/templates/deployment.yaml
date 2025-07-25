@@ -1,14 +1,16 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "tuna-fusion-operator.fullname" . }}
+  name: {{ include "tuna-fusion-executor.fullname" . }}
   labels:
-    {{- include "tuna-fusion-operator.labels" . | nindent 4 }}
+    {{- include "tuna-fusion-executor.labels" . | nindent 4 }}
 spec:
-  replicas: {{.Values.replicaCount}}
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
   selector:
     matchLabels:
-      {{- include "tuna-fusion-operator.selectorLabels" . | nindent 6 }}
+      {{- include "tuna-fusion-executor.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       {{- with .Values.podAnnotations }}
@@ -16,7 +18,7 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       labels:
-        {{- include "tuna-fusion-operator.labels" . | nindent 8 }}
+        {{- include "tuna-fusion-executor.labels" . | nindent 8 }}
         {{- with .Values.podLabels }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
@@ -25,7 +27,7 @@ spec:
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      serviceAccountName: {{ include "tuna-fusion-operator.serviceAccountName" . }}
+      serviceAccountName: {{ include "tuna-fusion-executor.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       containers:
@@ -34,25 +36,33 @@ spec:
             {{- toYaml .Values.securityContext | nindent 12 }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
-          env:
-            - name: JAVA_TOOL_OPTS
-              value: "-Dspring.config.import=kubernetes: -Dspring.application.name={{include "tuna-fusion-operator.configmapName" .}} -Doperator.sharedArchivePvcName={{include "shared.archivePvcName" .}} -Doperator.builderServiceAccountName={{include "tuna-fusion-executor.serviceAccountName" .}} -Doperator.runtimeServiceAccount=default"
           ports:
             - name: http
               containerPort: {{ .Values.app.serverPort }}
               protocol: TCP
+          env:
+            - name: JAVA_TOOL_OPTS
+              value: "-Dspring.config.import=kubernetes: -Dspring.application.name={{include "tuna-fusion-executor.configmapName" .}}"
           livenessProbe:
             {{- toYaml .Values.livenessProbe | nindent 12 }}
           readinessProbe:
             {{- toYaml .Values.readinessProbe | nindent 12 }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
-          {{- with .Values.volumeMounts }}
+
           volumeMounts:
+            - name: archive-volume
+              mountPath: /archive
+              readOnly: true
+          {{- with .Values.volumeMounts }}
             {{- toYaml . | nindent 12 }}
           {{- end }}
-      {{- with .Values.volumes }}
+
       volumes:
+      - name: archive-volume
+        persistentVolumeClaim:
+          claimName: {{include "shared.archivePvcName" .}}
+      {{- with .Values.volumes }}
         {{- toYaml . | nindent 8 }}
       {{- end }}
       {{- with .Values.nodeSelector }}
