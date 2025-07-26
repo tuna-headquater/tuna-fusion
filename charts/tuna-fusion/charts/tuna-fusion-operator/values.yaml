@@ -105,6 +105,10 @@ tolerations: []
 
 affinity: {}
 
+service:
+  port: 8080
+  type: ClusterIP
+
 
 configmap:
   create: true

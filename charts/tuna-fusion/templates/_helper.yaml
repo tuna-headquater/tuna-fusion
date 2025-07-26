@@ -15,5 +15,5 @@
 {{- end }}
 
 {{- define "shared.gitopsServerBaseurl" -}}
-{{include "shared.gitopsServerServiceName"}}:{{.Values.global.gitOpsServer.servicePort}}
+{{include "shared.gitopsServerServiceName" .}}:{{.Values.global.gitOpsServer.servicePort}}
 {{- end }}

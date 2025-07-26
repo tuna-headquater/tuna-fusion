@@ -1,5 +1,6 @@
 package ai.tuna.fusion.metadata.crd.podpool;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.fabric8.crd.generator.annotation.AdditionalPrinterColumn;
 import io.fabric8.crd.generator.annotation.AdditionalPrinterColumns;
 import io.fabric8.kubernetes.api.model.Namespaced;
@@ -21,6 +22,7 @@ import java.nio.file.Path;
         @AdditionalPrinterColumn(name = "Phase", jsonPath = ".status.phase"),
         @AdditionalPrinterColumn(name = "JobPodName", jsonPath = ".status.jobPod.podName"),
 })
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class PodFunctionBuild extends CustomResource<PodFunctionBuildSpec, PodFunctionBuildStatus> implements Namespaced {
     public static final Path ARCHIVE_ROOT_PATH = Path.of("/archive");
     public static final Path WORKSPACE_ROOT_PATH = Path.of("/workspace");

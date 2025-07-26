@@ -1,5 +1,6 @@
 package ai.tuna.fusion.metadata.crd.podpool;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.fabric8.crd.generator.annotation.AdditionalPrinterColumn;
 import io.fabric8.generator.annotation.Required;
 import io.fabric8.kubernetes.api.model.Namespaced;
@@ -17,6 +18,7 @@ import lombok.*;
 @ShortNames({"pf"})
 @AdditionalPrinterColumn(name = "CurrentBuild", jsonPath = ".status.currentBuild.name")
 @AdditionalPrinterColumn(name = "EffectiveBuild", jsonPath = ".status.effectiveBuild.name")
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class PodFunction extends CustomResource<PodFunctionSpec, PodFunctionStatus> implements Namespaced {
     @Data
     public static class HttpZipSource {

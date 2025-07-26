@@ -1,6 +1,7 @@
 package ai.tuna.fusion.metadata.crd.agent;
 
 import ai.tuna.fusion.metadata.crd.podpool.PodPoolSpec;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.fabric8.generator.annotation.Required;
 import io.fabric8.generator.annotation.ValidationRule;
 import lombok.Data;
@@ -9,6 +10,7 @@ import lombok.Data;
  * @author robinqu
  */
 @Data
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class AgentEnvironmentSpec {
     public enum DriverType {
         PodPool,

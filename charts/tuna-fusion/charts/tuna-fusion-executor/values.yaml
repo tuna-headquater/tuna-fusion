@@ -1,8 +1,6 @@
 # Default values for tuna-fusion-executor.
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
-
-
 enabled: true
 
 # This will set the replicaset count more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/
@@ -57,7 +55,6 @@ service:
   # This sets the service type more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types
   type: ClusterIP
   # This sets the ports more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#field-spec-ports
-  port: {{- default 80 .Values.global.executor.servicePort -}}
 
 # This block is for setting up the ingress for more information can be found here: https://kubernetes.io/docs/concepts/services-networking/ingress/
 ingress:

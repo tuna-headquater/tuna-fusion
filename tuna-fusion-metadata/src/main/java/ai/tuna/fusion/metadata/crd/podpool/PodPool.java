@@ -1,5 +1,6 @@
 package ai.tuna.fusion.metadata.crd.podpool;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.fabric8.crd.generator.annotation.AdditionalPrinterColumn;
 import io.fabric8.kubernetes.api.model.Namespaced;
 import io.fabric8.kubernetes.client.CustomResource;
@@ -14,6 +15,7 @@ import io.fabric8.kubernetes.model.annotation.Version;
 @Version("v1")
 @ShortNames({"pp"})
 @AdditionalPrinterColumn(name = "PoolSize", jsonPath = ".spec.poolSize")
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class PodPool extends CustomResource<PodPoolSpec, PodPoolStatus> implements Namespaced {
 
     public static final String GENERIC_POD_LABEL_NAME = "fusion.tuna.ai/is-generic-pod";

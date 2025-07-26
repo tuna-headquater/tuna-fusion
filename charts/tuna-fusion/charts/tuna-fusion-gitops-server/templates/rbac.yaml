@@ -14,7 +14,7 @@ rules:
   # read access to pods and pod logs
   - apiGroups: [ "" ]
     resources: [ "pods", "pods/log" ]
-    verbs: [ "get", "list" ]
+    verbs: [ "get", "list", "watch" ]
 
   # full access to PodFunctionBuild CRD
   - apiGroups:
@@ -23,12 +23,7 @@ rules:
       - podfunctionbuilds
       - podfunctionbuilds/status
     verbs:
-      - get
-      - list
-      - create
-      - update
-      - delete
-      - patch
+      - "*"
 
   # read access to CRDs except PodFunctionBuild
   - apiGroups:
@@ -45,6 +40,7 @@ rules:
     verbs:
       - get
       - list
+      - watch
 
 ---
 
@@ -81,7 +77,7 @@ rules:
   # read access to pods and pod logs
   - apiGroups: [ "" ]
     resources: [ "pods", "pods/log" ]
-    verbs: [ "get", "list" ]
+    verbs: [ "get", "list", "watch" ]
 
   # full access to PodFunctionBuild CRD
   - apiGroups:
@@ -90,12 +86,7 @@ rules:
       - podfunctionbuilds
       - podfunctionbuilds/status
     verbs:
-      - get
-      - list
-      - create
-      - update
-      - delete
-      - patch
+      - "*"
 
   # read access to CRDs except PodFunctionBuild
   - apiGroups:
@@ -112,6 +103,7 @@ rules:
     verbs:
       - get
       - list
+      - watch
 
 ---
 

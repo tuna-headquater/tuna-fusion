@@ -1,11 +1,13 @@
 package ai.tuna.fusion.metadata.crd.agent;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
 
 /**
  * @author robinqu
  */
 @Data
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class AgentDeploymentStatus {
     @Data
     public static class PodFunctionInfo {

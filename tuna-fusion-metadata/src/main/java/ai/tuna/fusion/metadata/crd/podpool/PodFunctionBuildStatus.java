@@ -1,11 +1,13 @@
 package ai.tuna.fusion.metadata.crd.podpool;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
 
 /**
  * @author robinqu
  */
 @Data
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class PodFunctionBuildStatus {
 
     @Data

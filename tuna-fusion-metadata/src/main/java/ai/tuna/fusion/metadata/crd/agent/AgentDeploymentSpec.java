@@ -1,6 +1,7 @@
 package ai.tuna.fusion.metadata.crd.agent;
 
 import ai.tuna.fusion.metadata.a2a.AgentCard;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.fabric8.generator.annotation.Required;
 import io.fabric8.generator.annotation.ValidationRule;
 import io.fabric8.generator.annotation.ValidationRules;
@@ -10,6 +11,7 @@ import lombok.Data;
  * @author robinqu
  */
 @Data
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class AgentDeploymentSpec {
 
     @Required

@@ -1,12 +1,14 @@
 package ai.tuna.fusion.metadata.crd.agent;
 
 import ai.tuna.fusion.metadata.crd.podpool.PodPoolStatus;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
 
 /**
  * @author robinqu
  */
 @Data
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class AgentEnvironmentStatus {
 
     @Data

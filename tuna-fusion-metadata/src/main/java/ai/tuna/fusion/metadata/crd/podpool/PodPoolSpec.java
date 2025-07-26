@@ -1,5 +1,6 @@
 package ai.tuna.fusion.metadata.crd.podpool;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.fabric8.generator.annotation.Min;
 import io.fabric8.generator.annotation.Required;
 import io.fabric8.generator.annotation.ValidationRule;
@@ -13,6 +14,7 @@ import static ai.tuna.fusion.metadata.crd.podpool.PodPool.*;
  */
 @Data
 @ValidationRule(value = "has(self.runtimePodSpec) || has(self.runtimeImage)")
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class PodPoolSpec {
     /**
      * The image of the runtime pod.

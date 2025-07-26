@@ -21,5 +21,5 @@ data:
             - {{ . }}
             {{- end }}
     operator:
-      leaderElection: {{default (gt .Values.replicaCount 1) .Values.app.leaderElection}}
+      leaderElection: {{default (gt (int .Values.replicaCount) 1) .Values.app.leaderElection}}
       sharedArchivePvcName: {{include "shared.archivePvcName" .}}
