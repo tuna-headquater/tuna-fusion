@@ -1,6 +1,10 @@
 server:
   port: 8081
 spring:
+#  application:
+#    name: tuna-fusion-gitops-server
+#  config:
+#    import: "kubernetes:"
   cloud:
     kubernetes:
       client:

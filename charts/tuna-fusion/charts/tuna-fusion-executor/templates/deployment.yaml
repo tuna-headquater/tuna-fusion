@@ -34,15 +34,17 @@ spec:
         - name: {{ .Chart.Name }}
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Values.global.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy | default .Values.global.image.pullPolicy }}
           ports:
             - name: http
               containerPort: {{ .Values.app.serverPort }}
               protocol: TCP
           env:
-            - name: JAVA_TOOL_OPTS
-              value: "-Dspring.config.import=kubernetes: -Dspring.application.name={{include "tuna-fusion-executor.configmapName" .}}"
+            - name: spring.application.name
+              value: {{include "tuna-fusion-executor.configmapName" .}}
+            - name: spring.config.import
+              value: "kubernetes:"
           livenessProbe:
             {{- toYaml .Values.livenessProbe | nindent 12 }}
           readinessProbe:

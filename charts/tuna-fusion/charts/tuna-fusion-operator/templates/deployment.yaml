@@ -32,11 +32,19 @@ spec:
         - name: {{ .Chart.Name }}
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Values.global.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy | default .Values.global.image.pullPolicy }}
           env:
-            - name: JAVA_TOOL_OPTS
-              value: "-Dspring.config.import=kubernetes: -Dspring.application.name={{include "tuna-fusion-operator.configmapName" .}} -Doperator.sharedArchivePvcName={{include "shared.archivePvcName" .}} -Doperator.builderServiceAccountName={{include "tuna-fusion-executor.serviceAccountName" .}} -Doperator.runtimeServiceAccount=default"
+            - name: spring.application.name
+              value: {{include "tuna-fusion-operator.configmapName" .}}
+            - name: spring.config.import
+              value: "kubernetes:"
+            - name: operator.builderServiceAccountName
+              value: {{include "tuna-fusion-executor.serviceAccountName" .}}
+            - name: operator.runtimeServiceAccount
+              value: default
+            - name: operator.sharedArchivePvcName
+              value: {{include "shared.archivePvcName" .}}
           ports:
             - name: http
               containerPort: {{ .Values.app.serverPort }}

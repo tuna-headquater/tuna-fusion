@@ -26,12 +26,12 @@ import static ai.tuna.fusion.metadata.crd.podpool.PodPool.*;
  * @author robinqu
  */
 @Slf4j
-public class DefaulltFunctionPodManager implements FunctionPodManager {
+public class DefaultFunctionPodManager implements FunctionPodManager {
     private final PodPoolConnectorFactory podPoolConnectorFactory;
     private final Cache<String, CountedPodAccess> podAccessCache;
     private final PodPoolResources podPoolResources;
 
-    public DefaulltFunctionPodManager(PodPoolConnectorFactory podPoolConnectorFactory, PodPoolResources podPoolResources) {
+    public DefaultFunctionPodManager(PodPoolConnectorFactory podPoolConnectorFactory, PodPoolResources podPoolResources) {
         this.podPoolConnectorFactory = podPoolConnectorFactory;
         this.podPoolResources = podPoolResources;
         this.podAccessCache = CacheBuilder.newBuilder().maximumSize(1000).build();

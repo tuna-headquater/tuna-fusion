@@ -12,8 +12,13 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 @EnableConfigurationProperties(GitOpsServerProperties.class)
 public class FusionGitOpsServerApplication {
 
+
     public static void main(String[] args) {
-        SpringApplication.run(FusionGitOpsServerApplication.class, args);
+//        SpringApplication.run(FusionGitOpsServerApplication.class, args);
+
+        SpringApplication springApplication = new SpringApplication(FusionGitOpsServerApplication.class);
+        springApplication.addListeners(new PropertiesLogger());
+        springApplication.run(args);
     }
 
 }

@@ -34,15 +34,17 @@ spec:
         - name: {{ .Chart.Name }}
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Values.global.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy | default .Values.global.image.pullPolicy }}
           ports:
             - name: http
               containerPort: {{ .Values.app.serverPort }}
               protocol: TCP
           env:
-            - name: JAVA_TOOL_OPTS
-              value: "-Dspring.config.import=kubernetes: -Dspring.application.name={{include "tuna-fusion-gitops-server.configmapName" .}}"
+
+            - name: JAVA_OPTS
+              value: "-Dlogging.level.root=debug -Dspring.application.name={{include "tuna-fusion-gitops-server.configmapName" .}} -Dspring.config.import=kubernetes:"
+
           livenessProbe:
             {{- toYaml .Values.livenessProbe | nindent 12 }}
           readinessProbe:
@@ -50,11 +52,14 @@ spec:
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           volumeMounts:
+            # for FolderSourceArchiveHandler to share snapshot folders across builder pods.
             - name: archive
               mountPath: "/archive"
+            # for storage of repositories of built-in git services
             - name: repository
               mountPath: "/gits"
               subPath: "gits"
+            # for LocalHttpZipArchiveSourceHandler to persist snapshot zip archives. This filesystem is not shared with builder pods.
             - name: repository
               mountPath: "/zips"
               subPath: "zips"

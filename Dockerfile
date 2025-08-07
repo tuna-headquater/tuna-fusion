@@ -12,4 +12,5 @@ FROM eclipse-temurin:21-noble
 ARG MAVEN_TARGET
 WORKDIR /app
 COPY --from=builder /build/$MAVEN_TARGET/target/*.jar /app/app.jar
-CMD ["java", "-jar", "app.jar"]
+ENV JAVA_OPTS=""
+CMD ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]

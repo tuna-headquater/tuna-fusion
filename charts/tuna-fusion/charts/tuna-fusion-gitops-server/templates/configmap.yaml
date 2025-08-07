@@ -10,13 +10,14 @@ data:
     logging:
       level:
         ai.tuna.fusion: {{.Values.app.loggingLevel}}
-    reposRootPath: /gits
-    defaultBranch: refs/heads/main
-    sourceArchiveHandler:
-      folderOnFilesystem:
-        path: /archive
-      zipArchiveOnLocalHttpServer:
-        zipRepositoryRoot: /zips
-        httpServerBaseUrl: {{include "shared.gitopsServerBaseurl" .}}
-      type: {{.Values.app.sourceArchiveHandlerType}}
+    gitops:
+      reposRootPath: /gits
+      defaultBranch: refs/heads/main
+      sourceArchiveHandler:
+        folderOnFilesystem:
+          localSourceArchiveRootPath: /archive
+        zipArchiveOnLocalHttpServer:
+          zipRepositoryRoot: /zips
+          httpServerBaseUrl: {{include "shared.gitopsServerBaseurl" .}}
+        type: {{.Values.app.sourceArchiveHandlerType}}
   {{- end }}

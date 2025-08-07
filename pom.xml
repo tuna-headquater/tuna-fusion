@@ -9,9 +9,10 @@
     <version>1.0-SNAPSHOT</version>
     <packaging>pom</packaging>
     <modules>
+        <module>tuna-fusion-metadata</module>
+        <module>tuna-fusion-server-deps</module>
         <module>tuna-fusion-operator</module>
         <module>tuna-fusion-gitops-server</module>
-        <module>tuna-fusion-metadata</module>
         <module>tuna-fusion-executor</module>
         <module>tuna-fusion-integrationtest</module>
     </modules>
@@ -120,6 +121,11 @@
             </dependency>
             <dependency>
                 <groupId>ai.tuna.fusion</groupId>
+                <artifactId>tuna-fusion-server-deps</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>ai.tuna.fusion</groupId>
                 <artifactId>tuna-fusion-metadata</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -152,6 +158,12 @@
                 <groupId>org.apache.commons</groupId>
                 <artifactId>commons-lang3</artifactId>
                 <version>3.18.0</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-compress</artifactId>
+                <version>1.27.1</version>
             </dependency>
 
             <dependency>

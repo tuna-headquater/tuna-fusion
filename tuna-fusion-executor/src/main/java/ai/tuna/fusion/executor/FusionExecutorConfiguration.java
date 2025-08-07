@@ -1,7 +1,7 @@
 package ai.tuna.fusion.executor;
 
 import ai.tuna.fusion.executor.driver.podpool.FunctionPodManager;
-import ai.tuna.fusion.executor.driver.podpool.impl.DefaulltFunctionPodManager;
+import ai.tuna.fusion.executor.driver.podpool.impl.DefaultFunctionPodManager;
 import ai.tuna.fusion.executor.driver.podpool.impl.DefaultPodPoolConnectorFactory;
 import ai.tuna.fusion.metadata.informer.PodPoolResources;
 import ai.tuna.fusion.metadata.informer.impl.DefaultAgentResources;
@@ -18,7 +18,7 @@ public class FusionExecutorConfiguration {
 
     @Bean
     public FunctionPodManager functionPodManager(PodPoolResources podPoolResources) {
-        return new DefaulltFunctionPodManager(new DefaultPodPoolConnectorFactory(podPoolResources), podPoolResources);
+        return new DefaultFunctionPodManager(new DefaultPodPoolConnectorFactory(podPoolResources), podPoolResources);
     }
 
     @Bean(initMethod = "start", destroyMethod = "stop")
