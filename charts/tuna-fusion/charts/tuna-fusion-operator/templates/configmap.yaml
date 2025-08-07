@@ -13,6 +13,20 @@ data:
         ai.tuna.fusion: {{.Values.app.loggingLevel}}
     javaoperatorsdk:
       reconcilers:
+        agentDeploymentReconciler:
+          clusterScoped: {{.Values.global.clusterScoped }}
+          namespaces:
+            - {{.Release.Namespace}}
+            {{- range .Values.global.additionalWatchedNamespaces }}
+            - {{ . }}
+            {{- end }}
+        agentEnvironmentReconciler:
+          clusterScoped: {{.Values.global.clusterScoped }}
+          namespaces:
+            - {{.Release.Namespace}}
+            {{- range .Values.global.additionalWatchedNamespaces }}
+            - {{ . }}
+            {{- end }}
         podFunctionBuildReconciler:
           clusterScoped: {{.Values.global.clusterScoped }}
           namespaces:
@@ -20,6 +34,23 @@ data:
             {{- range .Values.global.additionalWatchedNamespaces }}
             - {{ . }}
             {{- end }}
+        podFunctionReconciler:
+          clusterScoped: {{.Values.global.clusterScoped }}
+          namespaces:
+            - {{.Release.Namespace}}
+            {{- range .Values.global.additionalWatchedNamespaces }}
+            - {{ . }}
+            {{- end }}
+        podPoolReconciler:
+          clusterScoped: {{.Values.global.clusterScoped }}
+          namespaces:
+            - {{.Release.Namespace}}
+            {{- range .Values.global.additionalWatchedNamespaces }}
+            - {{ . }}
+            {{- end }}
     operator:
-      leaderElection: {{default (gt (int .Values.replicaCount) 1) .Values.app.leaderElection}}
+      leaderElection:
+        enabled: {{default (gt (int .Values.replicaCount) 1) .Values.app.leaderElection}}
+        namespace: {{.Release.Namespace}}
+        identity: {{uuidv4}}
       sharedArchivePvcName: {{include "shared.archivePvcName" .}}

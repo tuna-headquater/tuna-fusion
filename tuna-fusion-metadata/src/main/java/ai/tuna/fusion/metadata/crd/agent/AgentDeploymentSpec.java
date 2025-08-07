@@ -23,7 +23,7 @@ public class AgentDeploymentSpec {
 
     @Data
     public static class GitOptions {
-        String watchedBranchName = "refs/heads/master";
+        private String watchedBranchName = "refs/heads/main";
     }
 
     @Required

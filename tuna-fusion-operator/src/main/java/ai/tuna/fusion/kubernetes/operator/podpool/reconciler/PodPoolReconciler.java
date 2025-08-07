@@ -22,7 +22,7 @@ import java.util.concurrent.TimeUnit;
  */
 @Component
 @Slf4j
-@ControllerConfiguration
+@ControllerConfiguration(name = "podPoolReconciler")
 @Workflow(dependents = {
         @Dependent(type = PodPoolDeploymentDependentResource.class),
         @Dependent(type = PodPoolServiceDependentResource.class)

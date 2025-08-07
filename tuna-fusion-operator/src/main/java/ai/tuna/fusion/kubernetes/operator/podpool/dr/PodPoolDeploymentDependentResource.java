@@ -1,5 +1,6 @@
 package ai.tuna.fusion.kubernetes.operator.podpool.dr;
 
+import ai.tuna.fusion.common.ConfigurationUtils;
 import ai.tuna.fusion.metadata.crd.PodPoolResourceUtils;
 import ai.tuna.fusion.metadata.crd.podpool.PodFunctionBuild;
 import ai.tuna.fusion.metadata.crd.podpool.PodPool;
@@ -136,7 +137,7 @@ public class PodPoolDeploymentDependentResource extends CRUDKubernetesDependentR
      */
     private String serviceAccountName(PodPool podPool) {
         return Optional.ofNullable(podPool.getSpec().getRuntimePodServiceAccountName())
-                .orElse(System.getProperty("operator.runtimePodServiceAccountName"));
+                .orElse(ConfigurationUtils.getStaticValue("operator.runtimePodServiceAccountName", "default"));
     }
 
 }

@@ -1,5 +1,6 @@
 package ai.tuna.fusion.kubernetes.operator.podpool.dr;
 
+import ai.tuna.fusion.common.ConfigurationUtils;
 import ai.tuna.fusion.kubernetes.operator.podpool.reconciler.PodFunctionBuildReconciler;
 import ai.tuna.fusion.kubernetes.operator.support.impl.FunctionBuildPodInitContainerCommand;
 import ai.tuna.fusion.metadata.crd.PodPoolResourceUtils;
@@ -128,7 +129,8 @@ public class PodFunctionBuildJobDependentResource extends KubernetesDependentRes
      */
     private String archivePvcName(PodPool podPool) {
         return Optional.ofNullable(podPool.getSpec().getArchivePvcName())
-                .orElse(System.getProperty("operator.sharedArchivePvcName"));
+                .or(()-> ConfigurationUtils.getStaticValue("operator.sharedArchivePvcName"))
+                .orElseThrow(()-> new IllegalArgumentException("Archive PVC name not found for PodPool " + podPool.getMetadata().getName()));
     }
 
     /**

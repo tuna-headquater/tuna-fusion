@@ -1,4 +1,4 @@
-package ai.tuna.fusion.gitops.server;
+package ai.tuna.fusion.common;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.event.ApplicationPreparedEvent;

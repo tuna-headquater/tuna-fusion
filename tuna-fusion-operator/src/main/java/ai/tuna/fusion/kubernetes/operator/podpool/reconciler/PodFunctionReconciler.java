@@ -3,6 +3,7 @@ package ai.tuna.fusion.kubernetes.operator.podpool.reconciler;
 import ai.tuna.fusion.metadata.crd.PodPoolResourceUtils;
 import ai.tuna.fusion.metadata.crd.ResourceUtils;
 import ai.tuna.fusion.metadata.crd.podpool.PodFunction;
+import ai.tuna.fusion.metadata.crd.podpool.PodFunctionStatus;
 import io.javaoperatorsdk.operator.api.reconciler.Context;
 import io.javaoperatorsdk.operator.api.reconciler.ControllerConfiguration;
 import io.javaoperatorsdk.operator.api.reconciler.Reconciler;
@@ -15,7 +16,7 @@ import org.springframework.stereotype.Component;
  */
 @Slf4j
 @Component
-@ControllerConfiguration
+@ControllerConfiguration(name = "podFunctionReconciler")
 public class PodFunctionReconciler implements Reconciler<PodFunction> {
     @Override
     public UpdateControl<PodFunction> reconcile(PodFunction resource, Context<PodFunction> context) throws Exception {
@@ -24,6 +25,7 @@ public class PodFunctionReconciler implements Reconciler<PodFunction> {
         patch.getMetadata().setName(resource.getMetadata().getName());
         patch.getMetadata().setNamespace(resource.getMetadata().getNamespace());
         ResourceUtils.addOwnerReference(patch, podPool, false);
-        return UpdateControl.patchResource(patch);
+        patch.setStatus(new PodFunctionStatus());
+        return UpdateControl.patchResourceAndStatus(patch);
     }
 }

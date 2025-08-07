@@ -18,7 +18,7 @@ import org.springframework.stereotype.Component;
  */
 @Component
 @Slf4j
-@ControllerConfiguration
+@ControllerConfiguration(name = "agentDeploymentReconciler")
 @Workflow(dependents = {
         @Dependent(type= AgentDeploymentPodFunctionDependentResource.class, activationCondition = AgentDeploymentPodFunctionDependentResource.MatchingDriverCondition.class)
 })

@@ -23,7 +23,7 @@ import org.springframework.stereotype.Component;
 })
 @Component
 @Slf4j
-@ControllerConfiguration
+@ControllerConfiguration(name = "agentEnvironmentReconciler")
 public class AgentEnvironmentReconciler implements Reconciler<AgentEnvironment>, Cleaner<AgentEnvironment> {
 
     public static final String SELECTOR = "fusion.tuna.ai/managed-by-ae";

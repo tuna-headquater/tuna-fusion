@@ -143,3 +143,4 @@ app:
   sourceArchiveHandlerType: FolderOnFilesystem
   serverPort: 8080
   loggingLevel: debug
+  propertyLogger: true

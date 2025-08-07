@@ -41,17 +41,14 @@ spec:
               containerPort: {{ .Values.app.serverPort }}
               protocol: TCP
           env:
-            - name: spring.application.name
-              value: {{include "tuna-fusion-executor.configmapName" .}}
-            - name: spring.config.import
-              value: "kubernetes:"
+            - name: JAVA_OPTS
+              value: "-Dspring.application.name={{include "tuna-fusion-executor.configmapName" .}} -Dspring.config.import=kubernetes: -Dexecutor.propertyLoggerEnabled={{.Values.app.propertyLogger}}"
           livenessProbe:
             {{- toYaml .Values.livenessProbe | nindent 12 }}
           readinessProbe:
             {{- toYaml .Values.readinessProbe | nindent 12 }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
-
           volumeMounts:
             - name: archive-volume
               mountPath: /archive

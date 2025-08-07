@@ -41,10 +41,8 @@ spec:
               containerPort: {{ .Values.app.serverPort }}
               protocol: TCP
           env:
-
             - name: JAVA_OPTS
-              value: "-Dlogging.level.root=debug -Dspring.application.name={{include "tuna-fusion-gitops-server.configmapName" .}} -Dspring.config.import=kubernetes:"
-
+              value: "-Dspring.application.name={{include "tuna-fusion-gitops-server.configmapName" .}} -Dspring.config.import=kubernetes: -Dgitops.propertyLoggerEnabled={{.Values.app.propertyLogger}}"
           livenessProbe:
             {{- toYaml .Values.livenessProbe | nindent 12 }}
           readinessProbe:

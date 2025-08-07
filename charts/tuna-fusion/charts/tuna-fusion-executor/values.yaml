@@ -140,3 +140,4 @@ namespacedRole:
 app:
   serverPort: 8080
   loggingLevel: debug
+  propertyLogger: true
