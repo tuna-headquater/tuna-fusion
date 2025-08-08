@@ -60,6 +60,10 @@ public class PodPoolDeploymentDependentResource extends CRUDKubernetesDependentR
                 .build());
         container.getEnv().addAll(Arrays.asList(
                 new EnvVarBuilder()
+                        .withName("MANAGED_BY_POD_POOL")
+                        .withValue("true")
+                        .build(),
+                new EnvVarBuilder()
                         .withName("RUNTIME_SERVICE_PORT")
                         .withValue(String.valueOf(PodPool.DEFAULT_RUNTIME_SERVICE_PORT))
                         .build(),

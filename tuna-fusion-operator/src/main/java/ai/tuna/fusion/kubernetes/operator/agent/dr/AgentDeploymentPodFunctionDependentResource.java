@@ -18,6 +18,7 @@ import io.javaoperatorsdk.operator.processing.dependent.kubernetes.KubernetesDep
 import io.javaoperatorsdk.operator.processing.dependent.workflow.Condition;
 import lombok.SneakyThrows;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Optional;
@@ -53,10 +54,12 @@ public class AgentDeploymentPodFunctionDependentResource extends CRUDKubernetesD
         var agentEnvironment = AgentResourceUtils
                 .getReferencedAgentEnvironment(context.getClient(), primary)
                 .orElseThrow(()-> new IllegalStateException("Agent Environment not found"));
-        podFunctionSpec.setFileAssets(Arrays.asList(
-                renderAgentCardJson(agentEnvironment, primary),
-                renderA2aRuntimeConfigJson(primary)
-        ));
+        var fileAssets = new ArrayList<PodFunction.FileAsset>();
+        fileAssets.add(renderAgentCardJson(agentEnvironment, primary));
+        fileAssets.add(renderA2aRuntimeConfigJson(primary));
+        Optional.ofNullable(primary.getSpec().getFileAssets())
+                        .ifPresent(fileAssets::addAll);
+        podFunctionSpec.setFileAssets(fileAssets);
         podFunctionSpec.setPodPoolName(AgentResourceUtils.computePodPoolName(agentEnvironment));
         podFunctionSpec.setAppType(PodFunctionSpec.AppType.AgentApp);
         podFunctionSpec.setEntrypoint(primary.getSpec().getEntrypoint());

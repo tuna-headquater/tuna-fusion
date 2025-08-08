@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static ai.tuna.fusion.metadata.crd.PodPoolResourceUtils.computeDeployArchivePath;
+import static ai.tuna.fusion.metadata.crd.podpool.PodFunctionBuild.WORKSPACE_ROOT_PATH;
 
 /**
  * @author robinqu
@@ -34,8 +35,9 @@ public abstract class BaseInitContainerCommand implements InitContainerCommand {
             }
             return line;
         });
-        var script = enhanceCommandLines(commands).collect(Collectors.joining(" && "));
-        return Arrays.asList("sh", "-c", script);
+        var script = enhanceCommandLines(commands).collect(Collectors.joining("\n"));
+        var patch_path = WORKSPACE_ROOT_PATH.resolve("patch_source.sh").toString();
+        return Arrays.asList("sh", "-c", "echo -e '%s' > %s && chmod +x %s".formatted(script, patch_path, patch_path));
     }
 
     protected Stream<String> enhanceCommandLines(Stream<String> generatedCommands) {

@@ -125,7 +125,6 @@ spec:
     taskStore:
       provider: InMemory
   entrypoint: app.handle
-
 ---
 
 apiVersion: fusion.tuna.ai/v1

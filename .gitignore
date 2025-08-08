@@ -6,4 +6,4 @@ target
 .venv
 
 .DS_Store
-fission-a2a-env/test/*/state.json
+fusion-a2a-env/test/*/state.json

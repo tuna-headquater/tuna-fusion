@@ -8,6 +8,11 @@ echo "Copy source to deploy"
 mkdir -p "$DEPLOY_ARCHIVE_PATH"
 cp -r "$SOURCE_ARCHIVE_PATH"/* "$DEPLOY_ARCHIVE_PATH"/
 
+if [ -f "$WORKSPACE_ROOT_PATH"/patch_source.sh ]; then
+  echo "Patch sources"
+  chmod +x "$WORKSPACE_ROOT_PATH"/patch_source.sh
+  sh "$WORKSPACE_ROOT_PATH"/patch_source.sh
+fi
 
 if [ -f "$WORKSPACE_ROOT_PATH"/build_source.sh ]; then
   echo "Run user provided build_source.sh"

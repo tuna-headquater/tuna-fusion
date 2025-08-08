@@ -16,7 +16,7 @@ docker buildx build --push \
       --build-arg MAVEN_TARGET=$MAVEN_TARGET .
 ```
 
-See [build-java-images.sh](/build-java-images.sh) for more details.
+See [build-java-images.sh](/build-all-images.sh) for more details.
 
 
 ### `fusion-a2a-env` module 

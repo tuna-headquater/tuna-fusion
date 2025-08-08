@@ -92,8 +92,10 @@ public class AgentResourceUtils {
                 .map(OwnerReference::getName);
     }
 
-
-    private static final String AGENT_EXECUTOR_URL_TEMPLATE = "${baseUrl}/a2a/namespaces/${namespace}/agents/${agentDeploymentName}";
+    /**
+     * A2A client would send RPC requests to this URL. Ending with a slash would have better results with route matching of current a2a-runtime implementations.
+     */
+    private static final String AGENT_EXECUTOR_URL_TEMPLATE = "${baseUrl}/a2a/namespaces/${namespace}/agents/${agentDeploymentName}/";
     public static  String agentExternalUrl(AgentDeployment agentDeployment, AgentEnvironment agentEnvironment) {
         var endpoint = agentEnvironment.getSpec().getExecutor();
         var substitutor = new StringSubstitutor(Map.of(

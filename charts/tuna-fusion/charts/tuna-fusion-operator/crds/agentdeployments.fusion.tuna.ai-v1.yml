@@ -211,6 +211,29 @@ spec:
                 type: "string"
               environmentName:
                 type: "string"
+              fileAssets:
+                items:
+                  properties:
+                    content:
+                      type: "string"
+                    envName:
+                      type: "string"
+                    executable:
+                      type: "boolean"
+                    fileName:
+                      type: "string"
+                    targetDirectory:
+                      enum:
+                      - "DEPLOY_ARCHIVE"
+                      - "WORKSPACE"
+                      type: "string"
+                  required:
+                  - "content"
+                  - "executable"
+                  - "fileName"
+                  - "targetDirectory"
+                  type: "object"
+                type: "array"
               git:
                 properties:
                   watchedBranchName:

@@ -1,11 +1,14 @@
 package ai.tuna.fusion.metadata.crd.agent;
 
 import ai.tuna.fusion.metadata.a2a.AgentCard;
+import ai.tuna.fusion.metadata.crd.podpool.PodFunction;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.fabric8.generator.annotation.Required;
 import io.fabric8.generator.annotation.ValidationRule;
 import io.fabric8.generator.annotation.ValidationRules;
 import lombok.Data;
+
+import java.util.List;
 
 /**
  * @author robinqu
@@ -108,4 +111,6 @@ public class AgentDeploymentSpec {
 
     @Required
     private String entrypoint;
+
+    private List<PodFunction.FileAsset> fileAssets;
 }
