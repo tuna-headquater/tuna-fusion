@@ -118,12 +118,12 @@ public class PodFunctionBuildReconciler implements Reconciler<PodFunctionBuild>,
                 case Failed -> {
                     log.info("[reconcile] Patching Failed PodFunctionBuild: {}", podFunctionBuildPatch.getMetadata().getName());
                     podFunctionStatus.setCurrentBuild(null);
-                    podFunctionStatus.setEffectiveBuild(null);
+                    podFunctionStatus.setEffectiveBuild(podFunction.getStatus().getEffectiveBuild());
                 }
                 default -> {
                     log.info("[reconcile] Patching On-going PodFunctionBuild: {}", podFunctionBuildPatch.getMetadata().getName());
                     podFunctionStatus.setCurrentBuild(buildInfo);
-                    podFunctionStatus.setEffectiveBuild(null);
+                    podFunctionStatus.setEffectiveBuild(podFunction.getStatus().getEffectiveBuild());
                 }
             }
             // update PodFunction status
