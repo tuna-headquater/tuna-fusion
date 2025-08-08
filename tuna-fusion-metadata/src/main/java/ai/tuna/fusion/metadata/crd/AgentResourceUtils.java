@@ -3,6 +3,7 @@ package ai.tuna.fusion.metadata.crd;
 import ai.tuna.fusion.metadata.crd.agent.AgentDeployment;
 import ai.tuna.fusion.metadata.crd.agent.AgentEnvironment;
 import ai.tuna.fusion.metadata.crd.podpool.PodFunctionBuild;
+import ai.tuna.fusion.metadata.crd.podpool.PodFunctionSpec;
 import ai.tuna.fusion.metadata.crd.podpool.PodPool;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.OwnerReference;
@@ -17,6 +18,20 @@ import java.util.Optional;
  * @author robinqu
  */
 public class AgentResourceUtils {
+
+    public static PodFunctionSpec.ConfigmapReference computeConfigMapRef(AgentDeployment agentDeployment) {
+        return new PodFunctionSpec.ConfigmapReference(
+                agentDeployment.getMetadata().getNamespace(),
+                agentDeployment.getMetadata().getName()
+        );
+    }
+
+    public static PodFunctionSpec.SecretReference computeSecretRef(AgentDeployment agentDeployment) {
+        return new PodFunctionSpec.SecretReference(
+                agentDeployment.getMetadata().getNamespace(),
+                agentDeployment.getMetadata().getName()
+        );
+    }
 
     public static String computePodPoolName(AgentEnvironment agentEnvironment) {
         return agentEnvironment.getMetadata().getName() + "-pod-pool";

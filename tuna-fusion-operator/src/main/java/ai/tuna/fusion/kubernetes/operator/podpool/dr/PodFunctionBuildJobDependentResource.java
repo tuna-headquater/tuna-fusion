@@ -7,8 +7,7 @@ import ai.tuna.fusion.metadata.crd.PodPoolResourceUtils;
 import ai.tuna.fusion.metadata.crd.podpool.PodFunctionBuild;
 import ai.tuna.fusion.metadata.crd.podpool.PodFunctionBuildSpec;
 import ai.tuna.fusion.metadata.crd.podpool.PodPool;
-import io.fabric8.kubernetes.api.model.EnvVar;
-import io.fabric8.kubernetes.api.model.HasMetadata;
+import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.batch.v1.Job;
 import io.fabric8.kubernetes.api.model.batch.v1.JobBuilder;
 import io.javaoperatorsdk.operator.api.config.informer.Informer;
@@ -42,6 +41,7 @@ public class PodFunctionBuildJobDependentResource extends KubernetesDependentRes
                 .map(PodFunctionBuildSpec.EnvironmentOverrides::getBuilderImage)
                 .orElse(podPool.getSpec().getBuilderImage());
         var initCommand = new FunctionBuildPodInitContainerCommand(primary, podFunction, podPool);
+        var ns = podFunction.getMetadata().getNamespace();
         return new JobBuilder()
                 .withNewMetadata()
                 .withName(computeJobName(primary))
@@ -84,6 +84,7 @@ public class PodFunctionBuildJobDependentResource extends KubernetesDependentRes
                 .withImage(builderImage)
                 .addAllToEnv(initCommand.renderFileAssetsEnvVars())
                 .addToEnv(
+                        new EnvVar("NAMESPACE", ns, null),
                         new EnvVar("WORKSPACE_ROOT_PATH", workspacePath, null),
                         new EnvVar("ARCHIVE_ROOT_PATH", archivePath, null),
                         new EnvVar("DEPLOY_ARCHIVE_PATH", PodPoolResourceUtils.computeDeployArchivePath(primary), null),
@@ -91,9 +92,23 @@ public class PodFunctionBuildJobDependentResource extends KubernetesDependentRes
                         new EnvVar("FUNCTION_NAME", podFunction.getMetadata().getName(), null),
                         new EnvVar("POD_POOL", podPool.getMetadata().getName(), null),
                         new EnvVar("FUNCTION_BUILD_NAME", primary.getMetadata().getName(), null),
-                        new EnvVar("FUNCTION_BUILD_UID", primary.getMetadata().getUid(), null),
-                        new EnvVar("NAMESPACE", primary.getMetadata().getNamespace(), null)
+                        new EnvVar("FUNCTION_BUILD_UID", primary.getMetadata().getUid(), null)
                 )
+                // mount configmaps for PF
+                .addAllToVolumeMounts(
+                        podFunction.getSpec().getConfigmaps().stream().map(configmapReference -> new VolumeMountBuilder()
+                                        .withName(configmapReference.getName())
+                                        .withReadOnly(true)
+                                        .withMountPath("/configmaps/%s/%s".formatted(ns, configmapReference.getName()))
+                                        .build()
+                                ).toList()
+                )
+                // mount secrets for PF
+                .addAllToVolumeMounts(podFunction.getSpec().getSecrets().stream().map(secretReference -> new VolumeMountBuilder()
+                        .withReadOnly(true)
+                        .withName(secretReference.getName())
+                        .withMountPath("/secrets/%s/%s".formatted(ns, secretReference.getName()))
+                        .build()).toList())
                 // mount source archive
                 .addNewVolumeMount()
                 .withMountPath(archivePath)
@@ -105,6 +120,29 @@ public class PodFunctionBuildJobDependentResource extends KubernetesDependentRes
                 .withName("builder-script-volume")
                 .endVolumeMount()
                 .endContainer()
+                // volumes for configmap in PF
+                .addAllToVolumes(
+                        podFunction.getSpec().getConfigmaps().stream().map(configmapReference -> new VolumeBuilder()
+                                .withName(configmapReference.getName())
+                                .withNewConfigMap()
+                                .withName(configmapReference.getName())
+                                .withOptional(true)
+                                .endConfigMap()
+                                .build()
+                        ).toList()
+                )
+                // volumes for secrets in PF
+                .addAllToVolumes(
+                        podFunction.getSpec().getSecrets().stream().map(secretReference ->
+                        new VolumeBuilder()
+                                .withName(secretReference.getName())
+                                .withNewSecret()
+                                .withSecretName(secretReference.getName())
+                                .withOptional(true)
+                                .endSecret()
+                                .build()
+                                ).toList()
+                )
                 // declare archive volume
                 .addNewVolume()
                 .withName("archive-volume")

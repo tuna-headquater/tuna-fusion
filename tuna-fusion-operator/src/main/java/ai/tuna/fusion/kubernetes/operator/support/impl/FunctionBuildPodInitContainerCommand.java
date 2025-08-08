@@ -9,9 +9,11 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.SneakyThrows;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 import static ai.tuna.fusion.metadata.crd.PodPoolResourceUtils.computeDeployArchivePath;
@@ -64,10 +66,27 @@ public class FunctionBuildPodInitContainerCommand extends BaseInitContainerComma
 
     @Override
     protected Stream<String> enhanceCommandLines(Stream<String> generatedCommands) {
-        return Stream.concat(
-                Stream.of("mkdir -p %s".formatted(computeDeployArchivePath(podFunctionBuild))),
-                generatedCommands
-        );
+        var ns = podFunction.getMetadata().getNamespace();
+        var deployArchivePath = computeDeployArchivePath(podFunctionBuild);
+        var configmapCommands = Optional.ofNullable(podFunction.getSpec().getConfigmaps())
+                .map(configMaps -> configMaps.stream().map(configmapReference -> "cp -r /configmaps/%s/%s %s/configmaps/".formatted(ns, configmapReference.getName(), deployArchivePath)).toList()).stream().flatMap(Collection::stream);
+        var secretCommands = Optional.ofNullable(podFunction.getSpec().getSecrets())
+                .map(secrets -> secrets.stream().map(secretReference -> "cp -r /secrets/%s/%s %s/secrets/".formatted(ns, secretReference.getName(), deployArchivePath)).toList()).stream().flatMap(Collection::stream);
+
+        return Stream.of(
+                // create dirs
+                Stream.of(
+                        "mkdir -p %s".formatted(deployArchivePath),
+                        "mkdir -p %s/secrets".formatted(deployArchivePath),
+                        "mkdir -p %s/configmaps".formatted(deployArchivePath)
+                ),
+                // write file assets in PF
+                generatedCommands,
+                // copy configmaps
+                configmapCommands,
+                // copy secrets
+                secretCommands
+        ).flatMap(Function.identity());
     }
 
     @Override
@@ -83,14 +102,12 @@ public class FunctionBuildPodInitContainerCommand extends BaseInitContainerComma
                 .map(PodFunctionBuildSpec.EnvironmentOverrides::getBuildScript)
                 .orElse(podPool.getSpec().getBuildScript());
         return Optional.ofNullable(buildScript)
-                .map(s -> {
-                    return PodFunction.FileAsset.builder()
-                            .fileName(PodFunctionBuild.BUILD_SOURCE_SCRIPT_FILENAME)
-                            .targetDirectory(PodFunction.TargetDirectory.WORKSPACE)
-                            .content(s)
-                            .executable(true)
-                            .build();
-                });
+                .map(s -> PodFunction.FileAsset.builder()
+                        .fileName(PodFunctionBuild.BUILD_SOURCE_SCRIPT_FILENAME)
+                        .targetDirectory(PodFunction.TargetDirectory.WORKSPACE)
+                        .content(s)
+                        .executable(true)
+                        .build());
     }
 
 }

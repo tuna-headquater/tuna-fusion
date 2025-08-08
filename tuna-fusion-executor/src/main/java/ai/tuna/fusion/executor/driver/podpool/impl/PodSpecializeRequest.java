@@ -2,6 +2,7 @@ package ai.tuna.fusion.executor.driver.podpool.impl;
 
 import ai.tuna.fusion.metadata.crd.podpool.PodFunctionBuildStatus;
 import ai.tuna.fusion.metadata.crd.podpool.PodFunctionSpec;
+import io.fabric8.kubernetes.api.model.ConfigMap;
 import lombok.Builder;
 import lombok.Data;
 

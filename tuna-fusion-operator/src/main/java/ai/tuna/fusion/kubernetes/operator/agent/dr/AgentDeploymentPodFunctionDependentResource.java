@@ -19,10 +19,12 @@ import io.javaoperatorsdk.operator.processing.dependent.workflow.Condition;
 import lombok.SneakyThrows;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Optional;
 
 import static ai.tuna.fusion.metadata.crd.podpool.PodFunctionBuild.A2A_RUNTIME_FILENAME;
 import static ai.tuna.fusion.metadata.crd.podpool.PodFunctionBuild.AGENT_CARD_FILENAME;
+import static io.fabric8.kubernetes.api.model.HasMetadata.getApiVersion;
 
 /**
  * @author robinqu
@@ -58,6 +60,8 @@ public class AgentDeploymentPodFunctionDependentResource extends CRUDKubernetesD
         podFunctionSpec.setPodPoolName(AgentResourceUtils.computePodPoolName(agentEnvironment));
         podFunctionSpec.setAppType(PodFunctionSpec.AppType.AgentApp);
         podFunctionSpec.setEntrypoint(primary.getSpec().getEntrypoint());
+        podFunctionSpec.setConfigmaps(Collections.singletonList(AgentResourceUtils.computeConfigMapRef(primary)));
+        podFunctionSpec.setSecrets(Collections.singletonList(AgentResourceUtils.computeSecretRef(primary)));
         podFunction.setSpec(podFunctionSpec);
         return podFunction;
     }
