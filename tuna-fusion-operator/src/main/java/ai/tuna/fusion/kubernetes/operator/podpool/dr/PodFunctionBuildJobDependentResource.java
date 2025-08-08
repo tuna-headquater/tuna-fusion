@@ -69,6 +69,21 @@ public class PodFunctionBuildJobDependentResource extends KubernetesDependentRes
                 .withName("builder-init-container")
                 .withImage("busybox:1.36.1-glibc")
                 .addAllToCommand(initCommand.renderInitCommand())
+                // mount configmaps for PF
+                .addAllToVolumeMounts(
+                        podFunction.getSpec().getConfigmaps().stream().map(configmapReference -> new VolumeMountBuilder()
+                                .withName(configmapVolumeName(configmapReference.getName()))
+                                .withReadOnly(true)
+                                .withMountPath("/configmaps/%s/%s".formatted(ns, configmapReference.getName()))
+                                .build()
+                        ).toList()
+                )
+                // mount secrets for PF
+                .addAllToVolumeMounts(podFunction.getSpec().getSecrets().stream().map(secretReference -> new VolumeMountBuilder()
+                        .withReadOnly(true)
+                        .withName(secretVolumeName(secretReference.getName()))
+                        .withMountPath("/secrets/%s/%s".formatted(ns, secretReference.getName()))
+                        .build()).toList())
                 .addNewVolumeMount()
                 .withMountPath(archivePath)
                 .withName("archive-volume")
@@ -94,21 +109,6 @@ public class PodFunctionBuildJobDependentResource extends KubernetesDependentRes
                         new EnvVar("FUNCTION_BUILD_NAME", primary.getMetadata().getName(), null),
                         new EnvVar("FUNCTION_BUILD_UID", primary.getMetadata().getUid(), null)
                 )
-                // mount configmaps for PF
-                .addAllToVolumeMounts(
-                        podFunction.getSpec().getConfigmaps().stream().map(configmapReference -> new VolumeMountBuilder()
-                                        .withName(configmapReference.getName())
-                                        .withReadOnly(true)
-                                        .withMountPath("/configmaps/%s/%s".formatted(ns, configmapReference.getName()))
-                                        .build()
-                                ).toList()
-                )
-                // mount secrets for PF
-                .addAllToVolumeMounts(podFunction.getSpec().getSecrets().stream().map(secretReference -> new VolumeMountBuilder()
-                        .withReadOnly(true)
-                        .withName(secretReference.getName())
-                        .withMountPath("/secrets/%s/%s".formatted(ns, secretReference.getName()))
-                        .build()).toList())
                 // mount source archive
                 .addNewVolumeMount()
                 .withMountPath(archivePath)
@@ -123,7 +123,7 @@ public class PodFunctionBuildJobDependentResource extends KubernetesDependentRes
                 // volumes for configmap in PF
                 .addAllToVolumes(
                         podFunction.getSpec().getConfigmaps().stream().map(configmapReference -> new VolumeBuilder()
-                                .withName(configmapReference.getName())
+                                .withName(configmapVolumeName(configmapReference.getName()))
                                 .withNewConfigMap()
                                 .withName(configmapReference.getName())
                                 .withOptional(true)
@@ -135,7 +135,7 @@ public class PodFunctionBuildJobDependentResource extends KubernetesDependentRes
                 .addAllToVolumes(
                         podFunction.getSpec().getSecrets().stream().map(secretReference ->
                         new VolumeBuilder()
-                                .withName(secretReference.getName())
+                                .withName(secretVolumeName(secretReference.getName()))
                                 .withNewSecret()
                                 .withSecretName(secretReference.getName())
                                 .withOptional(true)
@@ -160,6 +160,14 @@ public class PodFunctionBuildJobDependentResource extends KubernetesDependentRes
                 .endTemplate()
                 .endSpec()
                 .build();
+    }
+
+    private String secretVolumeName(String secretName) {
+        return secretName + "-secret-volume";
+    }
+
+    private String configmapVolumeName(String configmapName) {
+        return configmapName + "-configmap-volume";
     }
 
     /**

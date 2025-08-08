@@ -35,4 +35,3 @@ spec:
     taskStore:
       provider: InMemory
   entrypoint: app.handle
-

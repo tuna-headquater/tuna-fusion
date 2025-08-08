@@ -26,6 +26,10 @@ public class TestResourceGroups {
               dependencies:
               - type: AgentEnvironment
                 classpath: yaml/agent_1/agent_env_1.yaml
+              - type: ConfigMap
+                classpath: yaml/agent_1/configmap_1.yaml
+              - type: Secret
+                classpath: yaml/agent_1/secret_1.yaml
             """);
 
 }

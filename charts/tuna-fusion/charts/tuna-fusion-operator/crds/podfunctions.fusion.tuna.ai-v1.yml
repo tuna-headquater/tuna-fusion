@@ -33,6 +33,15 @@ spec:
                 - "AgentApp"
                 - "WebApp"
                 type: "string"
+              configmaps:
+                items:
+                  properties:
+                    name:
+                      type: "string"
+                    namespace:
+                      type: "string"
+                  type: "object"
+                type: "array"
               entrypoint:
                 type: "string"
               fileAssets:
@@ -60,6 +69,15 @@ spec:
                 type: "array"
               podPoolName:
                 type: "string"
+              secrets:
+                items:
+                  properties:
+                    name:
+                      type: "string"
+                    namespace:
+                      type: "string"
+                  type: "object"
+                type: "array"
             required:
             - "appType"
             - "entrypoint"

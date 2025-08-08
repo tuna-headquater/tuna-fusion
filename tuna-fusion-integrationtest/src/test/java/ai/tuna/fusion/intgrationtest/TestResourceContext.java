@@ -6,7 +6,9 @@ import ai.tuna.fusion.metadata.crd.ResourceUtils;
 import ai.tuna.fusion.metadata.crd.agent.AgentDeployment;
 import ai.tuna.fusion.metadata.crd.agent.AgentEnvironment;
 import ai.tuna.fusion.metadata.crd.podpool.*;
+import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.HasMetadata;
+import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.DeploymentStatus;
@@ -69,7 +71,7 @@ public record TestResourceContext(KubernetesClient client, String targetNamespac
     }
 
     private boolean checkCondition(PodFunction podFunction) {
-        return Objects.nonNull(podFunction);
+        return ResourceUtils.getKubernetesResource(client, podFunction.getMetadata().getName(), podFunction.getMetadata().getNamespace(), PodFunction.class).isPresent();
     }
 
     private boolean checkCondition(PodFunctionBuild podFunctionBuild) {
@@ -91,6 +93,14 @@ public record TestResourceContext(KubernetesClient client, String targetNamespac
                 .getKubernetesResource(client, fnName, agentDeployment.getMetadata().getNamespace(), PodFunction.class)
                 .map(this::checkCondition)
                 .orElse(false);
+    }
+
+    private boolean checkCondition(ConfigMap configMap) {
+        return ResourceUtils.getKubernetesResource(client, configMap.getMetadata().getName(), configMap.getMetadata().getNamespace(), ConfigMap.class).isPresent();
+    }
+
+    private boolean checkCondition(Secret secret) {
+        return ResourceUtils.getKubernetesResource(client, secret.getMetadata().getName(), secret.getMetadata().getNamespace(), Secret.class).isPresent();
     }
 
     public void awaitYamlResource(String type, String classpath) {
@@ -115,6 +125,12 @@ public record TestResourceContext(KubernetesClient client, String targetNamespac
                 break;
             case "PodFunctionBuild":
                 awaitFor(() -> checkCondition((PodFunctionBuild) resource));
+                break;
+            case "Secret":
+                awaitFor(() -> checkCondition((Secret) resource));
+                break;
+            case "ConfigMap":
+                awaitFor(() -> checkCondition((ConfigMap) resource));
                 break;
             case null, default:
                 throw new IllegalArgumentException("Unsupported resource type: " + clazz);

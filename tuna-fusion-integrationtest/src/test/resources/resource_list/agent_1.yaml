@@ -141,3 +141,30 @@ spec:
       sha256Checksum: 53f4c76729bca42a5f29139aadc9e4481d0e0743a0c9a5c585cddf824d29c95f
 
 
+
+---
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: test-deploy-1
+  namespace: tuna-fusion-test
+data:
+  config.json: |-
+    {"hello":  "world"}
+  
+  
+
+---
+
+apiVersion: v1
+kind: Secret
+metadata:
+  name: test-deploy-1
+  namespace: tuna-fusion-test
+type: Opaque
+stringData:
+  secret.json: |-
+    {
+      "apikey": "you-guess-it"
+    }

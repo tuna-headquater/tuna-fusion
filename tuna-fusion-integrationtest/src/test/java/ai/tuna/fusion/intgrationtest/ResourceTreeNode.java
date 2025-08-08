@@ -5,7 +5,9 @@ import ai.tuna.fusion.metadata.crd.agent.AgentEnvironment;
 import ai.tuna.fusion.metadata.crd.podpool.PodFunction;
 import ai.tuna.fusion.metadata.crd.podpool.PodFunctionBuild;
 import ai.tuna.fusion.metadata.crd.podpool.PodPool;
+import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.HasMetadata;
+import io.fabric8.kubernetes.api.model.Secret;
 import lombok.*;
 
 import java.util.List;
@@ -30,6 +32,8 @@ public class ResourceTreeNode {
             case "PodFunctionBuild" -> PodFunctionBuild.class;
             case "AgentDeployment" -> AgentDeployment.class;
             case "AgentEnvironment" -> AgentEnvironment.class;
+            case "ConfigMap" -> ConfigMap.class;
+            case "Secret" -> Secret.class;
             default -> throw new IllegalArgumentException("Invalid type name: " + typeName);
         };
     }

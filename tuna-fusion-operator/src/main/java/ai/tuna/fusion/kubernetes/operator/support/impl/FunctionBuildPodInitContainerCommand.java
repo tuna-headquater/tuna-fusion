@@ -69,16 +69,14 @@ public class FunctionBuildPodInitContainerCommand extends BaseInitContainerComma
         var ns = podFunction.getMetadata().getNamespace();
         var deployArchivePath = computeDeployArchivePath(podFunctionBuild);
         var configmapCommands = Optional.ofNullable(podFunction.getSpec().getConfigmaps())
-                .map(configMaps -> configMaps.stream().map(configmapReference -> "cp -r /configmaps/%s/%s %s/configmaps/".formatted(ns, configmapReference.getName(), deployArchivePath)).toList()).stream().flatMap(Collection::stream);
+                .map(configMaps -> configMaps.stream().map(configmapReference -> "(cp -r /configmaps/%s/%s %s/configmaps 2>/dev/null || echo 'configmap absent; skip...')".formatted(ns, configmapReference.getName(), deployArchivePath)).toList()).stream().flatMap(Collection::stream);
         var secretCommands = Optional.ofNullable(podFunction.getSpec().getSecrets())
-                .map(secrets -> secrets.stream().map(secretReference -> "cp -r /secrets/%s/%s %s/secrets/".formatted(ns, secretReference.getName(), deployArchivePath)).toList()).stream().flatMap(Collection::stream);
+                .map(secrets -> secrets.stream().map(secretReference -> "(cp -r /secrets/%s/%s %s/secrets 2>/dev/null || echo 'secret absent; skip...')".formatted(ns, secretReference.getName(), deployArchivePath)).toList()).stream().flatMap(Collection::stream);
 
         return Stream.of(
                 // create dirs
                 Stream.of(
-                        "mkdir -p %s".formatted(deployArchivePath),
-                        "mkdir -p %s/secrets".formatted(deployArchivePath),
-                        "mkdir -p %s/configmaps".formatted(deployArchivePath)
+                        "mkdir -p %s".formatted(deployArchivePath)
                 ),
                 // write file assets in PF
                 generatedCommands,
