@@ -32,4 +32,5 @@ public class PodFunctionBuildSpec {
     private EnvironmentOverrides environmentOverrides;
     private List<PodFunction.FileAsset> additionalFileAssets;
     private String podFunctionName;
+    private Long ttlSecondsAfterFinished;
 }

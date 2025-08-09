@@ -18,6 +18,7 @@ import io.javaoperatorsdk.operator.api.reconciler.dependent.Dependent;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.Objects;
 import java.util.Optional;
@@ -45,6 +46,11 @@ public class PodFunctionBuildReconciler implements Reconciler<PodFunctionBuild>,
 
     @Override
     public UpdateControl<PodFunctionBuild> reconcile(PodFunctionBuild resource, Context<PodFunctionBuild> context) {
+        if (isExpired(resource)) {
+            context.getClient().resource(resource).delete();
+            log.info("PodFunctionBuild(namespace={},name={}) has expired and has been deleted", resource.getMetadata().getNamespace(), resource.getMetadata().getName());
+            return UpdateControl.noUpdate();
+        }
         var jobResource = context.getSecondaryResource(Job.class)
                 .orElse(null);
 
@@ -135,11 +141,32 @@ public class PodFunctionBuildReconciler implements Reconciler<PodFunctionBuild>,
             log.info("[reconcile] Updated PodFunction.status {}", updatedPodFunction.getStatus());
 
             // update PodFunctionBuild status
-            return UpdateControl.patchResourceAndStatus(podFunctionBuildPatch);
+            return UpdateControl.patchResourceAndStatus(podFunctionBuildPatch)
+                    .rescheduleAfter(getNextCheckDelay(resource));
         }
         log.debug("[reconcile] Job is not created or already finished for PodFunctionBuild: {}", ResourceUtils.computeResourceMetaKey(resource));
-        return UpdateControl.noUpdate();
+        return UpdateControl.<PodFunctionBuild>noUpdate()
+                .rescheduleAfter(getNextCheckDelay(resource));
 
+    }
+
+    private Duration getNextCheckDelay(PodFunctionBuild resource) {
+        long ttl = Optional.ofNullable(resource.getSpec().getTtlSecondsAfterFinished()).orElse(0L);
+        if (ttl <= 0) {
+            return Duration.ofHours(1);
+        }
+        Instant now = Instant.now();
+        Instant createTime = Instant.parse(resource.getMetadata().getCreationTimestamp());
+        Instant expiryTime = createTime.plusSeconds(ttl);
+        long secondsLeft = Duration.between(now, expiryTime).getSeconds();
+
+        if (secondsLeft <= 0) {
+            return Duration.ZERO;
+        } else if (secondsLeft < 60) {
+            return Duration.ofSeconds(secondsLeft);
+        } else {
+            return Duration.ofSeconds(30);
+        }
     }
 
     private Optional<Pod> getJobPod(KubernetesClient client, String jobName, String namespace) {
@@ -150,6 +177,19 @@ public class PodFunctionBuildReconciler implements Reconciler<PodFunctionBuild>,
                 .getItems()
                 .stream()
                 .findFirst();
+    }
+
+    private boolean isExpired(PodFunctionBuild podFunctionBuild) {
+        if (podFunctionBuild.getSpec().getTtlSecondsAfterFinished() == null) {
+            return false;
+        }
+        var phase = podFunctionBuild.getStatus().getPhase();
+        if (phase != Succeeded && phase != Failed) {
+            return false;
+        }
+        return podFunctionBuild.getStatus().getCompletionTime()
+                .plusSeconds(podFunctionBuild.getSpec().getTtlSecondsAfterFinished())
+                .isBefore(Instant.now());
     }
 
 

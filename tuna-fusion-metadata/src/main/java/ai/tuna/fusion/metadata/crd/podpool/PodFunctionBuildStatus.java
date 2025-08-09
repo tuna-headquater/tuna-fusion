@@ -3,6 +3,8 @@ package ai.tuna.fusion.metadata.crd.podpool;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
 
+import java.time.Instant;
+
 /**
  * @author robinqu
  */
@@ -33,4 +35,5 @@ public class PodFunctionBuildStatus {
 
     private Phase phase;
     private JobPodInfo jobPod;
+    private Instant completionTime;
 }
