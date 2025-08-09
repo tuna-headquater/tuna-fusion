@@ -138,7 +138,7 @@ public class PodFunctionBuildReconciler implements Reconciler<PodFunctionBuild>,
             log.info("[reconcile] Updated PodFunction.status {}", updatedPodFunction.getStatus());
 
 
-            if (isExpired(podFunctionBuildPatch)) {
+            if (isExpired(podFunctionBuildPatch.getStatus(), resource.getSpec().getTtlSecondsAfterFinished())) {
                 context.getClient().resource(resource).delete();
                 log.info("PodFunctionBuild(namespace={},name={}) has expired and has been deleted", resource.getMetadata().getNamespace(), resource.getMetadata().getName());
                 return UpdateControl.noUpdate();
@@ -183,16 +183,16 @@ public class PodFunctionBuildReconciler implements Reconciler<PodFunctionBuild>,
                 .findFirst();
     }
 
-    private boolean isExpired(PodFunctionBuild podFunctionBuild) {
-        if (podFunctionBuild.getSpec().getTtlSecondsAfterFinished() == null) {
+    private boolean isExpired(PodFunctionBuildStatus podFunctionBuildStatus, Long ttlSeconds) {
+        if (ttlSeconds == null) {
             return false;
         }
-        var phase = podFunctionBuild.getStatus().getPhase();
+        var phase = podFunctionBuildStatus.getPhase();
         if (phase != Succeeded && phase != Failed) {
             return false;
         }
-        return Optional.ofNullable(podFunctionBuild.getStatus().getCompletionTime())
-                .map(completionTime -> completionTime.plusSeconds(podFunctionBuild.getSpec().getTtlSecondsAfterFinished())
+        return Optional.ofNullable(podFunctionBuildStatus.getCompletionTime())
+                .map(completionTime -> completionTime.plusSeconds(ttlSeconds)
                         .isBefore(Instant.now()))
                 .orElse(false);
     }
