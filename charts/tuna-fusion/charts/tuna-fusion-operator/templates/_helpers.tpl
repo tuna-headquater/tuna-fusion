@@ -53,13 +53,23 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{/*
 Create the name of the service account to use
 */}}
-{{- define "tuna-fusion-operator.serviceAccountName" -}}
+{{- define "tuna-fusion-operator.operatorServiceAccountName" -}}
 {{- if .Values.serviceAccount.create }}
 {{- default (include "tuna-fusion-operator.fullname" .) .Values.serviceAccount.name }}
 {{- else }}
 {{- default "default" .Values.serviceAccount.name }}
 {{- end }}
 {{- end }}
+
+
+{{- define "tuna-fusion-operator.runtimeServiceAccountName" -}}
+{{- if .Values.serviceAccount.create }}
+{{- printf "%s-%s" (include "tuna-fusion-operator.fullname" .) "runtime-sa" }}
+{{- else }}
+{{- default "default" .Values.serviceAccount.name }}
+{{- end }}
+{{- end }}
+
 
 {{- define "tuna-fusion-operator.clusterRoleName" -}}
 {{- if .Values.clusterRole.create }}

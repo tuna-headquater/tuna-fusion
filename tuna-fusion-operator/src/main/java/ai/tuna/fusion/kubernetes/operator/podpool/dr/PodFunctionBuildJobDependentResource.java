@@ -44,10 +44,8 @@ public class PodFunctionBuildJobDependentResource extends KubernetesDependentRes
         var builderImage = Optional.ofNullable(primary.getSpec().getEnvironmentOverrides())
                 .map(PodFunctionBuildSpec.EnvironmentOverrides::getBuilderImage)
                 .orElse(podPool.getSpec().getBuilderImage());
-        var initCommand = new FunctionBuildPodBuilderFileAssets(primary, podFunction, podPool);
+        var fileAssetsBuilder = new FunctionBuildPodBuilderFileAssets(primary, podFunction, podPool);
         var ns = podFunction.getMetadata().getNamespace();
-
-
         return new JobBuilder()
                 .withNewMetadata()
                 .withName(computeJobName(primary))
@@ -71,39 +69,10 @@ public class PodFunctionBuildJobDependentResource extends KubernetesDependentRes
                 .withNewSpec()
                 .withServiceAccountName(builderServiceAccountName(primary, podPool))
                 .withRestartPolicy("Never")
-//                .addNewInitContainer()
-//                .withName("builder-init-container")
-//                .withImage("busybox:1.36.1-glibc")
-//                .addAllToCommand(initCommand.renderInitCommand())
-//                // mount configmaps for PF
-//                .addAllToVolumeMounts(
-//                        podFunction.getSpec().getConfigmaps().stream().map(configmapReference -> new VolumeMountBuilder()
-//                                .withName(configmapVolumeName(configmapReference.getName()))
-//                                .withReadOnly(true)
-//                                .withMountPath("/configmaps/%s/%s".formatted(ns, configmapReference.getName()))
-//                                .build()
-//                        ).toList()
-//                )
-//                // mount secrets for PF
-//                .addAllToVolumeMounts(podFunction.getSpec().getSecrets().stream().map(secretReference -> new VolumeMountBuilder()
-//                        .withReadOnly(true)
-//                        .withName(secretVolumeName(secretReference.getName()))
-//                        .withMountPath("/secrets/%s/%s".formatted(ns, secretReference.getName()))
-//                        .build()).toList())
-//                .addNewVolumeMount()
-//                .withMountPath(archivePath)
-//                .withName("archive-volume")
-//                .endVolumeMount()
-//                // mount build script
-//                .addNewVolumeMount()
-//                .withMountPath(workspacePath)
-//                .withName("builder-script-volume")
-//                .endVolumeMount()
-//                .endInitContainer()
                 .addNewContainer()
                 .withName("build-container")
                 .withImage(builderImage)
-                .addAllToEnv(initCommand.sourcePathEnvVars())
+                .addAllToEnv(fileAssetsBuilder.fileAssetsEnvVars())
                 .addToEnv(
                         new EnvVar("NAMESPACE", ns, null),
                         new EnvVar("WORKSPACE_ROOT_PATH", workspacePath, null),
@@ -145,8 +114,6 @@ public class PodFunctionBuildJobDependentResource extends KubernetesDependentRes
                 .withName("source-patch-volume")
                 .endVolumeMount()
                 .endContainer()
-                .addNewVolume()
-                .endVolume()
                 // volumes for configmap in PF
                 .addAllToVolumes(
                         podFunction.getSpec().getConfigmaps().stream().map(configmapReference -> new VolumeBuilder()

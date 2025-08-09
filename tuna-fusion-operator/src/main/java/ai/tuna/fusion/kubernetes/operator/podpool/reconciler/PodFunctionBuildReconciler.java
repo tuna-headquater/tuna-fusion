@@ -46,11 +46,6 @@ public class PodFunctionBuildReconciler implements Reconciler<PodFunctionBuild>,
 
     @Override
     public UpdateControl<PodFunctionBuild> reconcile(PodFunctionBuild resource, Context<PodFunctionBuild> context) {
-        if (isExpired(resource)) {
-            context.getClient().resource(resource).delete();
-            log.info("PodFunctionBuild(namespace={},name={}) has expired and has been deleted", resource.getMetadata().getNamespace(), resource.getMetadata().getName());
-            return UpdateControl.noUpdate();
-        }
         var jobResource = context.getSecondaryResource(Job.class)
                 .orElse(null);
 
@@ -75,8 +70,10 @@ public class PodFunctionBuildReconciler implements Reconciler<PodFunctionBuild>,
             podFunctionBuildPatch.setStatus(status);
             if(Optional.ofNullable(jobStatus.getSucceeded()).orElse(0) >= jobResource.getSpec().getCompletions()) {
                 status.setPhase(Succeeded);
+                status.setCompletionTime(Instant.now());
             } else if (Optional.ofNullable(jobStatus.getFailed()).orElse(0) > jobResource.getSpec().getBackoffLimit()) {
                 status.setPhase(Failed);
+                status.setCompletionTime(Instant.now());
             } else if (Optional.ofNullable(jobStatus.getActive()).orElse(0)>0) {
                 status.setPhase(PodFunctionBuildStatus.Phase.Running);
             } else  {
@@ -140,6 +137,13 @@ public class PodFunctionBuildReconciler implements Reconciler<PodFunctionBuild>,
                     .updateStatus();
             log.info("[reconcile] Updated PodFunction.status {}", updatedPodFunction.getStatus());
 
+
+            if (isExpired(podFunctionBuildPatch)) {
+                context.getClient().resource(resource).delete();
+                log.info("PodFunctionBuild(namespace={},name={}) has expired and has been deleted", resource.getMetadata().getNamespace(), resource.getMetadata().getName());
+                return UpdateControl.noUpdate();
+            }
+
             // update PodFunctionBuild status
             return UpdateControl.patchResourceAndStatus(podFunctionBuildPatch)
                     .rescheduleAfter(getNextCheckDelay(resource));
@@ -161,7 +165,7 @@ public class PodFunctionBuildReconciler implements Reconciler<PodFunctionBuild>,
         long secondsLeft = Duration.between(now, expiryTime).getSeconds();
 
         if (secondsLeft <= 0) {
-            return Duration.ZERO;
+            return Duration.ofSeconds(10);
         } else if (secondsLeft < 60) {
             return Duration.ofSeconds(secondsLeft);
         } else {
@@ -187,9 +191,10 @@ public class PodFunctionBuildReconciler implements Reconciler<PodFunctionBuild>,
         if (phase != Succeeded && phase != Failed) {
             return false;
         }
-        return podFunctionBuild.getStatus().getCompletionTime()
-                .plusSeconds(podFunctionBuild.getSpec().getTtlSecondsAfterFinished())
-                .isBefore(Instant.now());
+        return Optional.ofNullable(podFunctionBuild.getStatus().getCompletionTime())
+                .map(completionTime -> completionTime.plusSeconds(podFunctionBuild.getSpec().getTtlSecondsAfterFinished())
+                        .isBefore(Instant.now()))
+                .orElse(false);
     }
 
 

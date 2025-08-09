@@ -11,5 +11,5 @@ import java.util.List;
 public interface BuilderFileAssets {
     ConfigMap workspaceFileAssetsConfigMap();
     ConfigMap sourcePatchFileAssetsConfigMap();
-    List<EnvVar> sourcePathEnvVars();
+    List<EnvVar> fileAssetsEnvVars();
 }

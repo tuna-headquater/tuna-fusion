@@ -2,7 +2,7 @@
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: {{ include "tuna-fusion-operator.serviceAccountName" . }}
+  name: {{ include "tuna-fusion-operator.operatorServiceAccountName" . }}
   labels:
     {{- include "tuna-fusion-operator.labels" . | nindent 4 }}
   {{- with .Values.serviceAccount.annotations }}
@@ -10,6 +10,31 @@ metadata:
     {{- toYaml . | nindent 4 }}
   {{- end }}
 automountServiceAccountToken: {{ .Values.serviceAccount.automount }}
+{{- with .Values.global.imagePullSecrets }}
+imagePullSecrets:
+  {{ toYaml . | nindent 2 }}
+{{- end }}
+
+
+---
+{{/* Create another SA for runtime pods with limited permissions  */}}
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ include "tuna-fusion-operator.runtimeServiceAccountName" . }}
+  labels:
+    {{- include "tuna-fusion-operator.labels" . | nindent 4 }}
+  {{- with .Values.serviceAccount.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+automountServiceAccountToken: {{ .Values.serviceAccount.automount }}
+{{- with .Values.global.imagePullSecrets }}
+imagePullSecrets:
+  {{ toYaml . | nindent 2 }}
+{{- end }}
+
+{{/* end of if condition */}}
 {{- end }}
 
 ---
@@ -79,7 +104,7 @@ roleRef:
   name: {{include "tuna-fusion-operator.clusterRoleName" .}}
 subjects:
   - kind: ServiceAccount
-    name: {{ include "tuna-fusion-operator.serviceAccountName" . }}
+    name: {{ include "tuna-fusion-operator.operatorServiceAccountName" . }}
     namespace: {{.Release.Namespace}}
 {{- end }}
 
@@ -157,6 +182,6 @@ roleRef:
   name: {{include "tuna-fusion-operator.namespacedRoleName" .}}
 subjects:
   - kind: ServiceAccount
-    name: {{ include "tuna-fusion-operator.serviceAccountName" . }}
+    name: {{ include "tuna-fusion-operator.operatorServiceAccountName" . }}
 
 {{- end }}

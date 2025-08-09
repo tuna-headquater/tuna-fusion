@@ -11,6 +11,7 @@ import io.fabric8.kubernetes.api.model.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.SneakyThrows;
+import org.apache.commons.text.StringSubstitutor;
 
 import java.util.*;
 import java.util.function.Function;
@@ -19,6 +20,7 @@ import java.util.stream.Stream;
 
 import static ai.tuna.fusion.metadata.crd.PodPoolResourceUtils.*;
 import static ai.tuna.fusion.metadata.crd.podpool.PodFunctionBuild.SOURCE_PATCH_PATH;
+import static ai.tuna.fusion.metadata.crd.podpool.PodFunctionBuild.WORKSPACE_ROOT_PATH;
 
 /**
  * @author robinqu
@@ -43,10 +45,10 @@ public class FunctionBuildPodBuilderFileAssets implements BuilderFileAssets {
         this.podFunction = podFunction;
         this.podFunctionBuild = podFunctionBuild;
         configureFileAssets();
+        fileAssets.add(patchSourceScript());
     }
 
     void configureFileAssets() {
-        fileAssets.add(patchSourceScript());
         renderBuildScript().ifPresent(fileAssets::add);
         fileAssets.add(renderSourceArchiveJson());
         Optional.ofNullable(podFunction.getSpec().getFileAssets())
@@ -56,9 +58,11 @@ public class FunctionBuildPodBuilderFileAssets implements BuilderFileAssets {
     }
 
     public PodFunction.FileAsset patchSourceScript() {
-        var commands = fileAssets.stream().filter(fileAsset -> fileAsset.getTargetDirectory() == PodFunction.TargetDirectory.DEPLOY_ARCHIVE).map(fileAsset -> {
-            var sourcePath = SOURCE_PATCH_PATH.resolve(fileAsset.getFileName());
-            var targetPath = computeDeployFileAssetPath(podFunctionBuild.getMetadata().getUid(), fileAsset);
+        var commands = fileAssets.stream()
+                .filter(fileAsset -> fileAsset.getTargetDirectory() == PodFunction.TargetDirectory.DEPLOY_ARCHIVE)
+                .map(fileAsset -> {
+            var sourcePath = sourceFilePath(fileAsset);
+            var targetPath = targetFilePath(fileAsset);
             var line = "cp -f %s %s".formatted(sourcePath, targetPath);
             if (fileAsset.isExecutable()) {
                 line += " && chmod +x %s".formatted(targetPath);
@@ -80,14 +84,33 @@ public class FunctionBuildPodBuilderFileAssets implements BuilderFileAssets {
 
 
     @Override
-    public List<EnvVar> sourcePathEnvVars() {
+    public List<EnvVar> fileAssetsEnvVars() {
         return fileAssets.stream()
-                .filter(s -> s.getTargetDirectory() == PodFunction.TargetDirectory.DEPLOY_ARCHIVE)
                 .map(s -> new EnvVarBuilder()
                 .withName(convertToEnvName(s))
-                .withValue(computeDeployFileAssetPath(podFunctionBuild.getMetadata().getUid(), s))
+                .withValue(sourceFilePath(s))
                 .build()
         ).toList();
+    }
+
+    private String sourceFilePath(PodFunction.FileAsset fileAsset) {
+        if (fileAsset.getTargetDirectory() == PodFunction.TargetDirectory.DEPLOY_ARCHIVE) {
+            return SOURCE_PATCH_PATH.resolve(fileAsset.getFileName()).toString();
+        }
+        if (fileAsset.getTargetDirectory() == PodFunction.TargetDirectory.WORKSPACE) {
+            return WORKSPACE_ROOT_PATH.resolve(fileAsset.getFileName()).toString();
+        }
+        throw new IllegalArgumentException("Invalid target directory");
+    }
+
+    private String targetFilePath(PodFunction.FileAsset fileAsset) {
+        if (fileAsset.getTargetDirectory() == PodFunction.TargetDirectory.DEPLOY_ARCHIVE) {
+            return computeDeployFileAssetPath(podFunctionBuild.getMetadata().getUid(), fileAsset);
+        }
+        if (fileAsset.getTargetDirectory() == PodFunction.TargetDirectory.WORKSPACE) {
+            return sourceFilePath(fileAsset);
+        }
+        throw new IllegalArgumentException("Invalid target directory");
     }
 
     @SneakyThrows
@@ -100,14 +123,39 @@ public class FunctionBuildPodBuilderFileAssets implements BuilderFileAssets {
                 .build();
     }
 
+    private static final String configmapScriptTemplate = """
+        if [ -d /configmaps/${namespace}/${configMapName} ]; then
+            cp -r /configmaps/${namespace}/${configMapName} ${deployArchivePath}/configmaps
+        fi
+        """;
+
+    private static final String secretScriptTemplate = """
+        if [ -d /secrets/${namespace}/${configMapName} ]; then
+            cp -r /secrets/${namespace}/${configMapName} ${deployArchivePath}/secrets
+        fi
+        """;
+
     private Stream<String> enhanceCommandLines(Stream<String> generatedCommands) {
         var ns = podFunction.getMetadata().getNamespace();
         var deployArchivePath = computeDeployArchivePath(podFunctionBuild);
         var configmapCommands = Optional.ofNullable(podFunction.getSpec().getConfigmaps())
-                .map(configMaps -> configMaps.stream().map(configmapReference -> "(cp -r /configmaps/%s/%s %s/configmaps 2>/dev/null || echo 'configmap absent; skip...')".formatted(ns, configmapReference.getName(), deployArchivePath)).toList()).stream().flatMap(Collection::stream);
+                .map(configMaps -> configMaps.stream().map(configmapReference -> {
+                    StringSubstitutor substitutor = new StringSubstitutor(Map.of(
+                            "namespace", ns,
+                            "deployArchivePath", deployArchivePath
+                            , "configMapName", configmapReference.getName()
+                    ));
+                    return substitutor.replace(configmapScriptTemplate);
+                }).toList()).stream().flatMap(Collection::stream);
         var secretCommands = Optional.ofNullable(podFunction.getSpec().getSecrets())
-                .map(secrets -> secrets.stream().map(secretReference -> "(cp -r /secrets/%s/%s %s/secrets 2>/dev/null || echo 'secret absent; skip...')".formatted(ns, secretReference.getName(), deployArchivePath)).toList()).stream().flatMap(Collection::stream);
-
+                .map(secrets -> secrets.stream().map(secretReference -> {
+                    StringSubstitutor substitutor = new StringSubstitutor(Map.of(
+                            "namespace", ns,
+                            "deployArchivePath", deployArchivePath
+                            , "configMapName", secretReference.getName()
+                    ));
+                    return substitutor.replace(configmapScriptTemplate);
+                }).toList()).stream().flatMap(Collection::stream);
         return Stream.of(
                 // create dirs
                 Stream.of(
@@ -121,7 +169,6 @@ public class FunctionBuildPodBuilderFileAssets implements BuilderFileAssets {
                 secretCommands
         ).flatMap(Function.identity());
     }
-
 
     private Optional<PodFunction.FileAsset> renderBuildScript() {
         var buildScript = Optional.ofNullable(podFunctionBuild.getSpec().getEnvironmentOverrides())
@@ -145,6 +192,7 @@ public class FunctionBuildPodBuilderFileAssets implements BuilderFileAssets {
                 .addNewOwnerReference()
                 .withKind(HasMetadata.getKind(PodFunctionBuild.class))
                 .withName(podFunctionBuild.getMetadata().getName())
+                .withUid(podFunctionBuild.getMetadata().getUid())
                 .withApiVersion(HasMetadata.getApiVersion(PodFunctionBuild.class))
                 .withController(true)
                 .withBlockOwnerDeletion(false)
@@ -165,6 +213,7 @@ public class FunctionBuildPodBuilderFileAssets implements BuilderFileAssets {
                 .withKind(HasMetadata.getKind(PodFunctionBuild.class))
                 .withName(podFunctionBuild.getMetadata().getName())
                 .withApiVersion(HasMetadata.getApiVersion(PodFunctionBuild.class))
+                .withUid(podFunctionBuild.getMetadata().getUid())
                 .withController(true)
                 .withBlockOwnerDeletion(false)
                 .endOwnerReference()

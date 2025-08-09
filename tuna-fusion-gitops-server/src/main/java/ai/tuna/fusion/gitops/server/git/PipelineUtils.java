@@ -35,6 +35,7 @@ public class PipelineUtils {
         PodFunctionBuildSpec spec = new PodFunctionBuildSpec();
         spec.setSourceArchive(sourceArchive);
         spec.setPodFunctionName(podFunction.getMetadata().getName());
+        spec.setTtlSecondsAfterFinished(60 * 10L);
         podFunctionBuild.setSpec(spec);
         podFunctionBuild.getMetadata().setName("%s-build-%s".formatted(agentDeployment.getMetadata().getName(), Instant.now().getEpochSecond()));
         podFunctionBuild.getMetadata().setNamespace(agentDeployment.getMetadata().getNamespace());

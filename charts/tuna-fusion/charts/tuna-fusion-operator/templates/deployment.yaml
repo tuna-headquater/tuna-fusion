@@ -25,7 +25,7 @@ spec:
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      serviceAccountName: {{ include "tuna-fusion-operator.serviceAccountName" . }}
+      serviceAccountName: {{ include "tuna-fusion-operator.operatorServiceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       containers:
@@ -36,7 +36,7 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy | default .Values.global.image.pullPolicy }}
           env:
             - name: JAVA_OPTS
-              value: "-Dspring.application.name={{include "tuna-fusion-operator.configmapName" .}} -Dspring.config.import=kubernetes: -Doperator.propertyLoggerEnabled={{.Values.app.propertyLogger}} -Doperator.builderServiceAccountName={{include "tuna-fusion-executor.serviceAccountName" .}} -Doperator.runtimeServiceAccount=default -Doperator.sharedArchivePvcName={{include "shared.archivePvcName" .}}"
+              value: "-Dspring.application.name={{include "tuna-fusion-operator.configmapName" .}} -Dspring.config.import=kubernetes: -Doperator.propertyLoggerEnabled={{.Values.app.propertyLogger}} -Doperator.builderServiceAccountName={{include "tuna-fusion-operator.operatorServiceAccountName" .}} -Doperator.runtimeServiceAccount={{include "tuna-fusion-operator.runtimeServiceAccountName" .}} -Doperator.sharedArchivePvcName={{include "shared.archivePvcName" .}}"
           ports:
             - name: http
               containerPort: {{ .Values.app.serverPort }}

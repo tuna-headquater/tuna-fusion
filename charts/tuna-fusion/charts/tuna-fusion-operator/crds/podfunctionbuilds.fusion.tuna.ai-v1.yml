@@ -88,11 +88,16 @@ spec:
                         type: "string"
                     type: "object"
                 type: "object"
+              ttlSecondsAfterFinished:
+                type: "integer"
             required:
             - "sourceArchive"
             type: "object"
           status:
             properties:
+              completionTime:
+                format: "date-time"
+                type: "string"
               deployArchive:
                 properties:
                   filesystemFolderSource:
