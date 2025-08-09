@@ -1,8 +1,8 @@
 global:
   image:
     pullPolicy: IfNotPresent
-    tag: "1754730088"
-  clusterScoped: false
+    tag: "1754752208"
+  clusterScoped: true
   additionalWatchedNamespaces: [ ]
   executor:
     servicePort: 8080
