@@ -1,5 +1,6 @@
 package ai.tuna.fusion.kubernetes.operator.podpool.reconciler;
 
+import ai.tuna.fusion.kubernetes.operator.podpool.dr.PodFunctionBuildConfigMapsDependentResource;
 import ai.tuna.fusion.kubernetes.operator.podpool.dr.PodFunctionBuildJobDependentResource;
 import ai.tuna.fusion.metadata.crd.PodPoolResourceUtils;
 import ai.tuna.fusion.metadata.crd.ResourceUtils;
@@ -31,7 +32,8 @@ import static ai.tuna.fusion.metadata.crd.podpool.PodFunctionBuildStatus.Phase.S
 @Component
 @ControllerConfiguration(name = "podFunctionBuildReconciler")
 @Workflow(dependents = {
-        @Dependent(type = PodFunctionBuildJobDependentResource.class),
+        @Dependent(type = PodFunctionBuildConfigMapsDependentResource.class, name = "pfbConfigMaps"),
+        @Dependent(type = PodFunctionBuildJobDependentResource.class, dependsOn = "pfbConfigMaps", name = "pfbJob"),
 })
 public class PodFunctionBuildReconciler implements Reconciler<PodFunctionBuild>, Cleaner<PodFunctionBuild> {
     public static final String SELECTOR = "fusion.tuna.ai/managed-by-pfb";

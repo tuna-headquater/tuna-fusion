@@ -134,4 +134,12 @@ public class PodPoolResourceUtils {
         return PodFunctionBuild.ARCHIVE_ROOT_PATH.resolve("sources").resolve(resource.getMetadata().getUid()).toString();
     }
 
+    public static String workspaceConfigMapName(PodFunctionBuild podFunctionBuild) {
+        return podFunctionBuild.getMetadata().getName() + "-workspace-file-assets";
+    }
+
+    public static String sourcePathConfigMapName(PodFunctionBuild podFunctionBuild) {
+        return podFunctionBuild.getMetadata().getName() + "-deploy-archive-file-assets";
+    }
+
 }
