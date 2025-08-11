@@ -15,6 +15,6 @@ logging:
     ai.tuna.fusion: debug
 executor:
   informers:
-    clusterScoped: false
+    clusterScoped: true
     namespaces:
-      - tuna-system-dev
+      - *

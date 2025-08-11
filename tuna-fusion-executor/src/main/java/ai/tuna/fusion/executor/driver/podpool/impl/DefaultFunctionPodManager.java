@@ -65,50 +65,59 @@ public class DefaultFunctionPodManager implements FunctionPodManager {
 
     @Scheduled(fixedRate = 1000 * 30)
     private void cleanupOrphanPods() {
-        for (var podPool: podPoolResources.podPool().getStore().list()) {
-            var podPoolKey = ResourceUtils.computeResourceMetaKey(podPool);
-            var t1 = Instant.now().toEpochMilli();
-            var client = podPoolResources.getKubernetesClient();
-            var specializedPods = PodPoolResourceUtils.listSpecializedPods(podPool, client);
-            var outdatedCount = 0;
-            var expiredCount = 0;
-            var counterLimitReachedCount = 0;
-            for (var pod : specializedPods) {
-                try {
-                    var isOutdatedBuild = hasOutdatedBuild(pod, podPool);
-                    var isExpired = isExpiredPod(pod, podPool);
-                    var isCounterExceeded = isCounterExceeded(pod, podPool);
-                    if (isOutdatedBuild) {
-                        outdatedCount++;
-                    }
-                    if (isExpired) {
-                        expiredCount++;
-                    }
-                    if (isCounterExceeded) {
-                        counterLimitReachedCount++;
-                    }
-                    if (isOutdatedBuild || isExpired || isCounterExceeded) {
-                        var access = podAccessCache.getIfPresent(cacheKey(pod));
-                        var cached = Objects.nonNull(access);
-                        log.info("[cleanupOrphanPods] podPool={}, pod={}, cached={}, isCounterExceeded={}, isOutdatedBuild={}, isExpired={}", podPool.getMetadata().getName(), pod.getMetadata().getName(), cached, isCounterExceeded, isOutdatedBuild, isExpired);
-                        if (cached) {
-                            doDisposeAccess(access.getPodAccess());
-                        } else {
-                            doDisposeAccess(PodAccess.builder()
-                                    .namespace(pod.getMetadata().getNamespace())
-                                    .selectedPod(pod)
-                                    .functionName(pod.getMetadata().getLabels().get(PodPool.SPECIALIZED_POD_FUNCTION_NAME_LABEL_VALUE))
-                                    .functionBuildUid(pod.getMetadata().getLabels().get(PodPool.SPECIALIZED_POD_FUNCTION_BUILD_ID_LABEL_VALUE))
-                                    .podPoolName(podPool.getMetadata().getName())
-                                    .build());
-                        }
-                    }
-                } catch (Exception e) {
-                    log.error("Exception occurred during checking specialized pod {}: {}", pod, e.getMessage(), e);
-                }
-            }
-            log.info("[cleanupOrphanPods] PodPool {}, specializedPods.size()={}, outdated={}, expired={}, counterLimitReached={}, elapsed={}ms", podPoolKey, specializedPods.size(), outdatedCount, expiredCount, counterLimitReachedCount, Instant.now().toEpochMilli() - t1);
+        var podPoolInformers = podPoolResources.podPool().getSharedIndexInformers();
+        if (podPoolInformers.isEmpty()) {
+            log.info("[cleanupOrphanPods] No podPool informer found");
+            return;
         }
+        for (var sharedInformer : podPoolInformers) {
+            for (var podPool: sharedInformer.getStore().list()) {
+                var podPoolKey = ResourceUtils.computeResourceMetaKey(podPool);
+                var t1 = Instant.now().toEpochMilli();
+                var client = podPoolResources.getKubernetesClient();
+                var specializedPods = PodPoolResourceUtils.listSpecializedPods(podPool, client);
+                var outdatedCount = 0;
+                var expiredCount = 0;
+                var counterLimitReachedCount = 0;
+                for (var pod : specializedPods) {
+                    try {
+                        var isOutdatedBuild = hasOutdatedBuild(pod, podPool);
+                        var isExpired = isExpiredPod(pod, podPool);
+                        var isCounterExceeded = isCounterExceeded(pod, podPool);
+                        if (isOutdatedBuild) {
+                            outdatedCount++;
+                        }
+                        if (isExpired) {
+                            expiredCount++;
+                        }
+                        if (isCounterExceeded) {
+                            counterLimitReachedCount++;
+                        }
+                        if (isOutdatedBuild || isExpired || isCounterExceeded) {
+                            var access = podAccessCache.getIfPresent(cacheKey(pod));
+                            var cached = Objects.nonNull(access);
+                            log.info("[cleanupOrphanPods] podPool={}, pod={}, cached={}, isCounterExceeded={}, isOutdatedBuild={}, isExpired={}", podPool.getMetadata().getName(), pod.getMetadata().getName(), cached, isCounterExceeded, isOutdatedBuild, isExpired);
+                            if (cached) {
+                                doDisposeAccess(access.getPodAccess());
+                            } else {
+                                doDisposeAccess(PodAccess.builder()
+                                        .namespace(pod.getMetadata().getNamespace())
+                                        .selectedPod(pod)
+                                        .functionName(pod.getMetadata().getLabels().get(PodPool.SPECIALIZED_POD_FUNCTION_NAME_LABEL_VALUE))
+                                        .functionBuildUid(pod.getMetadata().getLabels().get(PodPool.SPECIALIZED_POD_FUNCTION_BUILD_ID_LABEL_VALUE))
+                                        .podPoolName(podPool.getMetadata().getName())
+                                        .build());
+                            }
+                        }
+                    } catch (Exception e) {
+                        log.error("Exception occurred during checking specialized pod {}: {}", pod, e.getMessage(), e);
+                    }
+                }
+                log.info("[cleanupOrphanPods] PodPool {}, specializedPods.size()={}, outdated={}, expired={}, counterLimitReached={}, elapsed={}ms", podPoolKey, specializedPods.size(), outdatedCount, expiredCount, counterLimitReachedCount, Instant.now().toEpochMilli() - t1);
+            }
+        }
+
+
     }
 
     /**

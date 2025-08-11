@@ -33,7 +33,11 @@ public class PodFunctionExecutorController {
     public Mono<PagedContent<PodFunctionListItem>> listPodFunctions(@PathVariable String namespace) {
         return Mono.create(sink -> {
             List<PodFunctionListItem> list = new ArrayList<>();
-            var functions = podPoolResources.podFunction().getStore().list();
+            var functions = podPoolResources.podFunction()
+                    .getSharedIndexInformer(namespace)
+                    .orElseThrow()
+                    .getStore()
+                    .list();
             for (var podFunction : functions) {
                 var podPool = ResourceUtils.getMatchedOwnerReferenceResourceName(podFunction, PodPool.class)
                         .flatMap(name -> podPoolResources.queryPodPool(namespace, name))

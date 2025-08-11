@@ -6,6 +6,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Set;
 
 /**
  * @author robinqu
@@ -24,6 +25,7 @@ public class GitOpsServerProperties {
     }
 
     private String defaultBranch = "refs/heads/master";
+    private Set<String> watchedNamespaces;
 
     @Data
     public static class SourceArchiveHandlerProperties {

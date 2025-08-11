@@ -8,6 +8,7 @@ import ai.tuna.fusion.metadata.crd.agent.AgentEnvironmentSpec;
 import ai.tuna.fusion.metadata.crd.podpool.PodFunction;
 import ai.tuna.fusion.metadata.crd.podpool.PodFunctionBuild;
 import ai.tuna.fusion.metadata.crd.podpool.PodFunctionBuildStatus;
+import com.google.common.base.Preconditions;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
@@ -19,9 +20,13 @@ import org.eclipse.jgit.transport.resolver.ServiceNotEnabledException;
 import org.springframework.util.CollectionUtils;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
+
+import static ai.tuna.fusion.metadata.informer.impl.ResourceInformersWrapper.ALL_NAMESPACE_IDENTIFIER;
 
 /**
  * @author robinqu
@@ -33,14 +38,21 @@ public class CustomReceivePackFactory implements ReceivePackFactory<HttpServletR
 
     private final SourceArchiveHandler sourceArchiveHandler;
 
-    public CustomReceivePackFactory(KubernetesClient kubernetesClient, SourceArchiveHandler sourceArchiveHandler) {
+    private final Set<String> watchedNamespaces;
+
+    public CustomReceivePackFactory(KubernetesClient kubernetesClient, SourceArchiveHandler sourceArchiveHandler, Set<String> watchedNamespaces) {
         this.kubernetesClient = kubernetesClient;
         this.sourceArchiveHandler = sourceArchiveHandler;
+        this.watchedNamespaces = watchedNamespaces;
+        Preconditions.checkState(
+                (watchedNamespaces.size()==1 && watchedNamespaces.contains(ALL_NAMESPACE_IDENTIFIER)) || !watchedNamespaces.isEmpty(),
+                "watchedNamespaces should contain at least one namespace or '*' for all namespaces."
+        );
     }
 
     @Override
     public ReceivePack create(HttpServletRequest req, Repository db) throws ServiceNotEnabledException {
-        GitRequestContextUtil.initializeRequestAttributes(kubernetesClient, req);
+        GitRequestContextUtil.initializeRequestAttributes(kubernetesClient, req, this.watchedNamespaces);
         var agentDeployment = GitRequestContextUtil.getAgentDeployment().orElseThrow(()-> new ServiceNotEnabledException("AgentDeployment is not associated with this Git repository URL."));
         var agentEnvironment = GitRequestContextUtil.getAgentEnvironment().orElseThrow(()-> new ServiceNotEnabledException("AgentEnvironment is associated with this Git repository URL."));
         // TODO check permissions

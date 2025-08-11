@@ -1,56 +1,102 @@
 package ai.tuna.fusion.metadata.informer.impl;
 
+import com.google.common.base.Preconditions;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.client.KubernetesClient;
+import io.fabric8.kubernetes.client.dsl.Informable;
 import io.fabric8.kubernetes.client.informers.SharedIndexInformer;
-import io.fabric8.kubernetes.client.informers.SharedInformerFactory;
 import lombok.Getter;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author robinqu
  */
 @Slf4j
 public abstract class AbstractResourceOperations {
-    private final List<SharedIndexInformer<?>> informers;
-    private final SharedInformerFactory informerFactory;
+
+    private final List<ResourceInformersWrapper<? extends HasMetadata>> informersWrapper;
 
     @Getter
     private final KubernetesClient kubernetesClient;
 
-    public AbstractResourceOperations(KubernetesClient kubernetesClient) {
+    private final InformerProperties informerProperties;
+
+    public AbstractResourceOperations(KubernetesClient kubernetesClient, InformerProperties informerProperties) {
+        this.informerProperties = informerProperties;
         this.kubernetesClient = kubernetesClient;
-        this.informers = new ArrayList<>();
-        this.informerFactory = kubernetesClient.informers();
+        this.informersWrapper = new ArrayList<>();
+        Preconditions.checkNotNull(informerProperties);
+        Preconditions.checkNotNull(informerProperties.getClusterScoped(), "should assign informer.clusterScoped");
+        if (informerProperties.getClusterScoped()) {
+            Preconditions.checkState(informerProperties.getNamespaces() == null || informerProperties.getNamespaces().isEmpty(), "should leave informer.namespaces empty");
+        } else {
+            Preconditions.checkNotNull(informerProperties.getNamespaces(), "should assign informer.namespaces");
+            Preconditions.checkArgument(!informerProperties.getNamespaces().isEmpty(), "should assign informer.namespaces");
+        }
     }
 
     @SneakyThrows
     public synchronized void start() {
-        informers.addAll(createInformers());
-        log.info("Start {} with {} informers", getClass().getName(), informers.size());
-        informerFactory.startAllRegisteredInformers().get(10, TimeUnit.SECONDS);
+        if (!informersWrapper.isEmpty()) {
+            throw new IllegalStateException("informers should be empty before started.");
+        }
+        configureInformers();
+        informersWrapper.forEach(ResourceInformersWrapper::start);
     }
+
 
     public synchronized void stop() {
-        log.info("Stop {} with {} informers", getClass().getName(), informers.size());
-        informerFactory.stopAllRegisteredInformers();
-        informers.clear();
+        log.info("Stop {} with {} informers", getClass().getName(), informersWrapper.size());
+        informersWrapper.forEach(ResourceInformersWrapper::stop);
+        informersWrapper.clear();
     }
 
-    public boolean isRunning() {
-        return informers.stream().allMatch(SharedIndexInformer::isRunning);
+    protected abstract void configureInformers();
+
+    protected <T extends HasMetadata> void prepareInformers(Class<T> clazz) {
+        if (informerProperties.getClusterScoped()) {
+            log.info("[createInformer] Create informer for {} in all namespaces", clazz.getSimpleName());
+            informersWrapper.add(
+                    new ResourceInformersWrapper<>(
+                            createInformer(kubernetesClient.resources(clazz)
+                                    .inAnyNamespace()),
+                        clazz
+                    )
+            );
+        } else {
+            var sharedInformers = informerProperties.getNamespaces().stream().collect(Collectors.toMap(ns -> ns, ns -> {
+                log.info("[createInformer] Create informer for {} in namespace {}", clazz.getSimpleName(), ns);
+                return createInformer(
+                        kubernetesClient.resources(clazz).inNamespace(ns)
+                );
+            }));
+            informersWrapper.add(
+                    new ResourceInformersWrapper<>(sharedInformers, clazz)
+            );
+        }
     }
 
-    protected abstract List<SharedIndexInformer<?>> createInformers();
+    private  <T extends HasMetadata> SharedIndexInformer<T> createInformer(Informable<T> informable) {
+        return Optional.ofNullable(informerProperties.getInformerListLimit())
+                .map(informable::withLimit)
+                .orElse(informable)
+                .runnableInformer(0);
+    }
 
-    protected <T extends HasMetadata> SharedIndexInformer<T> createInformer(Class<T> clazz) {
-        log.info("[createInformer] Create informer for {} in all namespaces", clazz.getSimpleName());
-        return informerFactory.sharedIndexInformerFor(clazz, 30*1000);
+    public <T extends HasMetadata> Optional<SharedIndexInformer<T>> getSharedInformer(Class<T> clazz, String namespace) {
+        return getInformersWrapper(clazz)
+                .flatMap(wrapper -> wrapper.getSharedIndexInformer(namespace));
+    }
+
+    public <T extends HasMetadata> Optional<ResourceInformersWrapper<T>> getInformersWrapper(Class<T> clazz) {
+        //noinspection unchecked
+        return informersWrapper.stream().filter(wrapper -> wrapper.getResourceType().equals(clazz))
+                .findFirst()
+                .map(wrapper -> (ResourceInformersWrapper<T>)wrapper);
     }
 
 }

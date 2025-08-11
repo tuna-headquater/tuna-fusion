@@ -8,108 +8,102 @@ import ai.tuna.fusion.metadata.informer.PodPoolResources;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.client.KubernetesClient;
-import io.fabric8.kubernetes.client.informers.SharedIndexInformer;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.List;
 import java.util.Optional;
-import java.util.stream.Stream;
 
 /**
  * @author robinqu
  */
 @Slf4j
 public class DefaultPodPoolResources extends AbstractResourceOperations implements PodPoolResources {
-    private SharedIndexInformer<PodPool> podPoolSharedIndexInformer;
-    private SharedIndexInformer<Pod> podSharedIndexInformer;
-    private SharedIndexInformer<Service> serviceSharedIndexInformer;
-    private SharedIndexInformer<PodFunction> podFunctionSharedIndexInformer;
-    private SharedIndexInformer<PodFunctionBuild> podFunctionBuildSharedIndexInformer;
 
-    public DefaultPodPoolResources(KubernetesClient kubernetesClient) {
-        super(kubernetesClient);
+    public DefaultPodPoolResources(KubernetesClient kubernetesClient, InformerProperties informerProperties) {
+        super(kubernetesClient, informerProperties);
     }
 
     @Override
-    protected List<SharedIndexInformer<?>> createInformers() {
-        this.podPoolSharedIndexInformer = createInformer(PodPool.class);
-        this.podSharedIndexInformer = createInformer(Pod.class);
-        this.serviceSharedIndexInformer = createInformer(Service.class);
-        this.podFunctionSharedIndexInformer = createInformer(PodFunction.class);
-        this.podFunctionBuildSharedIndexInformer = createInformer(PodFunctionBuild.class);
-        return List.of(
-                podPoolSharedIndexInformer,
-                podSharedIndexInformer,
-                serviceSharedIndexInformer,
-                podFunctionSharedIndexInformer,
-                podFunctionBuildSharedIndexInformer
-        );
-    }
-
-    @Override
-    public SharedIndexInformer<PodPool> podPool() {
-        return podPoolSharedIndexInformer;
-    }
-
-    @Override
-    public SharedIndexInformer<Pod> pod() {
-        return podSharedIndexInformer;
-    }
-
-    @Override
-    public SharedIndexInformer<Service> service() {
-        return serviceSharedIndexInformer;
-    }
-
-    @Override
-    public SharedIndexInformer<PodFunction> podFunction() {
-        return podFunctionSharedIndexInformer;
+    protected void configureInformers() {
+        prepareInformers(PodPool.class);
+        prepareInformers(Pod.class);
+        prepareInformers(Service.class);
+        prepareInformers(PodFunction.class);
+        prepareInformers(PodFunctionBuild.class);
     }
 
 
     @Override
-    public SharedIndexInformer<PodFunctionBuild> podFunctionBuild() {
-        return podFunctionBuildSharedIndexInformer;
+    public ResourceInformersWrapper<PodPool> podPool() {
+        return getInformersWrapper(PodPool.class).orElseThrow();
+    }
+
+    @Override
+    public ResourceInformersWrapper<Pod> pod() {
+        return getInformersWrapper(Pod.class).orElseThrow();
+    }
+
+    @Override
+    public ResourceInformersWrapper<Service> service() {
+        return getInformersWrapper(Service.class).orElseThrow();
+    }
+
+    @Override
+    public ResourceInformersWrapper<PodFunction> podFunction() {
+        return getInformersWrapper(PodFunction.class).orElseThrow();
+    }
+
+    @Override
+    public ResourceInformersWrapper<PodFunctionBuild> podFunctionBuild() {
+        return getInformersWrapper(PodFunctionBuild.class).orElseThrow();
     }
 
     @Override
     public Optional<PodPool> queryPodPool(String namespace, String podPoolName) {
         log.debug("[queryPodPool] {}/{}", namespace, podPoolName);
-        return ResourceUtils.getResourceFromInformer(podPoolSharedIndexInformer, namespace, podPoolName);
+        return ResourceUtils.getResourceFromInformer(
+                getSharedInformer(PodPool.class, namespace).orElseThrow(),
+                namespace,
+                podPoolName
+        );
     }
 
     @Override
     public Optional<Pod> queryPod(String namespace, String podName) {
         log.debug("[queryPod] {}/{}", namespace, podName);
-        return ResourceUtils.getResourceFromInformer(podSharedIndexInformer, namespace, podName);
+        return ResourceUtils.getResourceFromInformer(
+                getSharedInformer(Pod.class, namespace).orElseThrow(),
+                namespace,
+                podName
+        );
     }
 
     @Override
     public Optional<PodFunction> queryPodFunction(String namespace, String podFunctionName) {
         log.debug("[queryPodFunction] {}/{}", namespace, podFunctionName);
-        return ResourceUtils.getResourceFromInformer(podFunctionSharedIndexInformer, namespace, podFunctionName);
+        return ResourceUtils.getResourceFromInformer(
+                getSharedInformer(PodFunction.class, namespace).orElseThrow(),
+                namespace,
+                podFunctionName
+        );
     }
 
     @Override
     public Optional<Service> queryPodPoolService(String namespace, String svcName) {
         log.debug("[queryPodPoolService] {}/{}", namespace, svcName);
-        return ResourceUtils.getResourceFromInformer(serviceSharedIndexInformer, namespace, svcName);
+        return ResourceUtils.getResourceFromInformer(
+                getSharedInformer(Service.class, namespace).orElseThrow(),
+                namespace,
+                svcName
+        );
     }
-
 
     @Override
     public Optional<PodFunctionBuild> queryPodFunctionBuild(String namespace, String podFunctionBuildName) {
         log.debug("[queryPodFunctionBuild] {}/{}", namespace, podFunctionBuildName);
-        return ResourceUtils.getResourceFromInformer(podFunctionBuildSharedIndexInformer, namespace, podFunctionBuildName);
-    }
-
-    @Override
-    public boolean isRunning() {
-        return Stream.of(
-                podPoolSharedIndexInformer,
-                podSharedIndexInformer,
-                serviceSharedIndexInformer,
-                podFunctionSharedIndexInformer
-        ).allMatch(SharedIndexInformer::isRunning);
+        return ResourceUtils.getResourceFromInformer(
+                getSharedInformer(PodFunctionBuild.class, namespace).orElseThrow(),
+                namespace,
+                podFunctionBuildName
+        );
     }
 }

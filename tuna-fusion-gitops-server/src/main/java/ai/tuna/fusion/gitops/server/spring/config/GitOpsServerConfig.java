@@ -22,7 +22,11 @@ public class GitOpsServerConfig {
 
     @Bean
     public CustomReceivePackFactory customReceivePackFactory(KubernetesClient kubernetesClient, GitOpsServerProperties properties) {
-        return new CustomReceivePackFactory(kubernetesClient, sourceArchiveHandler(properties));
+        return new CustomReceivePackFactory(
+                kubernetesClient,
+                sourceArchiveHandler(properties),
+                properties.getWatchedNamespaces()
+        );
     }
 
     private SourceArchiveHandler sourceArchiveHandler(GitOpsServerProperties properties) {
@@ -53,16 +57,4 @@ public class GitOpsServerConfig {
         registration.setLoadOnStartup(1);
         return registration;
     }
-
-//    @Bean
-//    public S3Client s3Client(GitOpsServerProperties properties) {
-//        return S3Client.builder()
-//                .region(Region.AWS_GLOBAL)
-//                .endpointProvider(endpointParams -> CompletableFuture.completedFuture(Endpoint.builder()
-//                        .url(URI.create(properties.getS3Properties().getEndpointUrl() + "/" + Optional.ofNullable(endpointParams.bucket()).orElse("")))
-//                        .build()))
-//                .credentialsProvider(()-> AwsBasicCredentials.create(properties.getS3Properties().getAccessKey(), properties.getS3Properties().getAccessSecret()))
-//                .build();
-//    }
-
 }

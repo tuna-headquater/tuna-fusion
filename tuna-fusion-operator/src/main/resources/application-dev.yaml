@@ -3,3 +3,25 @@ server:
 logging:
   level:
     ai.tuna.fusion: debug
+javaoperatorsdk:
+  reconcilers:
+    agentDeploymentReconciler:
+      clusterScoped: false
+      namespaces:
+        - tuna-system-dev
+    agentEnvironmentReconciler:
+      clusterScoped: false
+      namespaces:
+        - tuna-system-dev
+    podFunctionBuildReconciler:
+      clusterScoped: false
+      namespaces:
+        - tuna-system-dev
+    podFunctionReconciler:
+      clusterScoped: false
+      namespaces:
+        - tuna-system-dev
+    podPoolReconciler:
+      clusterScoped: false
+      namespaces:
+        - tuna-system-dev

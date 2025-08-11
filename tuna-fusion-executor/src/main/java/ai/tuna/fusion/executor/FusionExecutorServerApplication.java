@@ -4,6 +4,7 @@ import ai.tuna.fusion.common.ConfigurationUtils;
 import ai.tuna.fusion.common.PropertiesLogger;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 /**
@@ -11,6 +12,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
  */
 @SpringBootApplication
 @EnableScheduling
+@EnableConfigurationProperties(value = ExecutorProperties.class)
 public class FusionExecutorServerApplication {
     public static void main(String[] args) {
         boolean propertyLoggerEnabled = Boolean.parseBoolean(ConfigurationUtils.getStaticValue("executor.propertyLoggerEnabled", "false"));

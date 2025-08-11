@@ -10,4 +10,12 @@ data:
     logging:
       level:
         ai.tuna.fusion: {{.Values.app.loggingLevel}}
-{{- end }}
+    executor:
+      informers:
+        clusterScoped: {{.Values.global.clusterScoped}}
+        namespaces:
+        - {{.Release.Namespace}}
+        {{- range .Values.global.additionalWatchedNamespaces }}
+        - {{ . }}
+        {{- end }}
+    {{- end }}

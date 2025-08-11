@@ -28,4 +28,4 @@ gitops:
       zip-repository-root: /tmp
       http-server-base-url: "http://host.docker.internal:8081"
   watched-namespaces:
-    - tuna-system-dev
+    - *

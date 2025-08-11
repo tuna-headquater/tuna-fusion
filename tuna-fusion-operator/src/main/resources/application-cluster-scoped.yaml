@@ -1,0 +1,17 @@
+server:
+  port: 8080
+logging:
+  level:
+    ai.tuna.fusion: debug
+javaoperatorsdk:
+  reconcilers:
+    agentDeploymentReconciler:
+      clusterScoped: true
+    agentEnvironmentReconciler:
+      clusterScoped: true
+    podFunctionBuildReconciler:
+      clusterScoped: true
+    podFunctionReconciler:
+      clusterScoped: true
+    podPoolReconciler:
+      clusterScoped: true

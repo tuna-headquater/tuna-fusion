@@ -2,20 +2,26 @@ package ai.tuna.fusion.gitops.server.spring;
 
 import ai.tuna.fusion.metadata.crd.agent.AgentDeployment;
 import ai.tuna.fusion.metadata.crd.agent.AgentEnvironment;
+import ai.tuna.fusion.metadata.informer.impl.ResourceInformersWrapper;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import jakarta.servlet.ServletRequest;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.Strings;
 import org.eclipse.jgit.http.server.ServletUtils;
 import org.eclipse.jgit.transport.ReceivePack;
 import org.eclipse.jgit.transport.resolver.ServiceNotEnabledException;
 import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * @author robinqu
  */
+@Slf4j
 public class GitRequestContextUtil {
 
     public record URLParams (String namespace, String agentDeploymentName) {}
@@ -37,8 +43,17 @@ public class GitRequestContextUtil {
 
     public static void initializeRequestAttributes(
             KubernetesClient kubernetesClient,
-            ServletRequest request) throws ServiceNotEnabledException {
+            ServletRequest request,
+            Set<String> watchedNamespaces
+            ) throws ServiceNotEnabledException {
         var params = parseUrlParams(request);
+        if (watchedNamespaces.size()==1 && watchedNamespaces.contains(ResourceInformersWrapper.ALL_NAMESPACE_IDENTIFIER)) {
+            log.info("GitOps server is accepting push in all namespaces.");
+        } else {
+            if(!watchedNamespaces.contains(params.namespace())) {
+                throw new ServiceNotEnabledException("Namespace %s is not watched by GitOps server".formatted(params.namespace));
+            }
+        }
         var agentDeployment = kubernetesClient.resources(AgentDeployment.class)
                 .inNamespace(params.namespace)
                 .withName(params.agentDeploymentName)
