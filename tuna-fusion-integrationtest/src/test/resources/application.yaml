@@ -5,3 +5,39 @@ logging:
 integration-test:
   kubernetes:
     provider-type: AutoDetect
+
+javaoperatorsdk:
+  reconcilers:
+    agentDeploymentReconciler:
+      clusterScoped: false
+      namespaces: []
+    agentEnvironmentReconciler:
+      clusterScoped: false
+      namespaces: []
+    podFunctionBuildReconciler:
+      clusterScoped: false
+      namespaces: []
+    podFunctionReconciler:
+      clusterScoped: false
+      namespaces: []
+    podPoolReconciler:
+      clusterScoped: false
+      namespaces: []
+
+
+executor:
+  informers:
+    clusterScoped: false
+    namespaces: []
+
+gitops:
+  #  source-archive-handler:
+  #    type: FolderOnFilesystem
+  #    folder-on-filesystem:
+  #      local-source-archive-root-path: /tmp
+  source-archive-handler:
+    type: ZipArchiveOnLocalHttpServer
+    zip-archive-on-local-http-server:
+      zip-repository-root: /tmp
+      http-server-base-url: "http://host.docker.internal:8081"
+  watched-namespaces: []

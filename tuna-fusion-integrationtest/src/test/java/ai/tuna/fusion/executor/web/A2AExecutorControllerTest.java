@@ -3,6 +3,7 @@ package ai.tuna.fusion.executor.web;
 import ai.tuna.fusion.IntegrationTest;
 import ai.tuna.fusion.TestResourceGroups;
 import ai.tuna.fusion.intgrationtest.TestResourceContext;
+import ai.tuna.fusion.metadata.a2a.AgentCard;
 import io.a2a.spec.*;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
@@ -44,7 +45,7 @@ public class A2AExecutorControllerTest extends IntegrationTest {
                 .expectBody(AgentCard.class)
                 .value(agentCard -> {
                     assertThat(agentCard).isNotNull();
-                    assertThat(agentCard.name()).isEqualTo("agent1");
+                    assertThat(agentCard.getName()).isEqualTo("agent1");
                 });
 
 

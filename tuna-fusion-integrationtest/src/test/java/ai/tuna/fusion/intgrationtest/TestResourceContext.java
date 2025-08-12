@@ -67,7 +67,7 @@ public record TestResourceContext(KubernetesClient client, String targetNamespac
         if (Objects.nonNull(deploy)) {
             log.info("deploy.status={}", deploy.getStatus());
         }
-        return deploy != null && svc != null && Optional.ofNullable(deploy.getStatus()).map(DeploymentStatus::getAvailableReplicas).orElse(0) == podPool.getSpec().getPoolSize();
+        return deploy != null && svc != null && Optional.ofNullable(deploy.getStatus()).map(DeploymentStatus::getAvailableReplicas).orElse(0).equals(podPool.getSpec().getPoolSize());
     }
 
     private boolean checkCondition(PodFunction podFunction) {
@@ -78,7 +78,15 @@ public record TestResourceContext(KubernetesClient client, String targetNamespac
         var build = ResourceUtils.getKubernetesResource(client, podFunctionBuild.getMetadata().getName(), podFunctionBuild.getMetadata().getNamespace(), PodFunctionBuild.class).orElseThrow();
         return Optional.ofNullable(build.getStatus())
                 .map(PodFunctionBuildStatus::getPhase)
-                .map(phase -> phase == PodFunctionBuildStatus.Phase.Succeeded || phase == PodFunctionBuildStatus.Phase.Failed)
+                .map(phase -> {
+                    if (phase == PodFunctionBuildStatus.Phase.Succeeded) {
+                        return true;
+                    }
+                    if (phase == PodFunctionBuildStatus.Phase.Failed) {
+                        log.info("PodFunctionBuildStatus failed with logs:\n {}", build.getStatus().getJobPod().getLogs());
+                    }
+                    return false;
+                })
                 .orElse(false);
     }
 

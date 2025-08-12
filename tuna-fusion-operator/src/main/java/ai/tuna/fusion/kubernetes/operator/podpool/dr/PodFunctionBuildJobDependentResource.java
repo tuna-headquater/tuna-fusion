@@ -21,6 +21,7 @@ import io.javaoperatorsdk.operator.processing.dependent.kubernetes.KubernetesDep
 import io.javaoperatorsdk.operator.processing.dependent.kubernetes.KubernetesDependentResource;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Collections;
 import java.util.Optional;
 
 import static ai.tuna.fusion.metadata.crd.PodPoolResourceUtils.*;
@@ -86,7 +87,8 @@ public class PodFunctionBuildJobDependentResource extends KubernetesDependentRes
                 )
                 // mount configmaps for PF
                 .addAllToVolumeMounts(
-                        podFunction.getSpec().getConfigmaps().stream().map(configmapReference -> new VolumeMountBuilder()
+                        Optional.ofNullable(podFunction.getSpec().getConfigmaps()).orElse(Collections.emptyList())
+                                .stream().map(configmapReference -> new VolumeMountBuilder()
                                 .withName(configmapVolumeName(configmapReference.getName()))
                                 .withReadOnly(true)
                                 .withMountPath("/configmaps/%s/%s".formatted(ns, configmapReference.getName()))
@@ -94,7 +96,9 @@ public class PodFunctionBuildJobDependentResource extends KubernetesDependentRes
                         ).toList()
                 )
                 // mount secrets for PF
-                .addAllToVolumeMounts(podFunction.getSpec().getSecrets().stream().map(secretReference -> new VolumeMountBuilder()
+                .addAllToVolumeMounts(
+                        Optional.ofNullable(podFunction.getSpec().getSecrets()).orElse(Collections.emptyList())
+                        .stream().map(secretReference -> new VolumeMountBuilder()
                         .withReadOnly(true)
                         .withName(secretVolumeName(secretReference.getName()))
                         .withMountPath("/secrets/%s/%s".formatted(ns, secretReference.getName()))
@@ -116,7 +120,8 @@ public class PodFunctionBuildJobDependentResource extends KubernetesDependentRes
                 .endContainer()
                 // volumes for configmap in PF
                 .addAllToVolumes(
-                        podFunction.getSpec().getConfigmaps().stream().map(configmapReference -> new VolumeBuilder()
+                        Optional.ofNullable(podFunction.getSpec().getConfigmaps()).orElse(Collections.emptyList())
+                                .stream().map(configmapReference -> new VolumeBuilder()
                                 .withName(configmapVolumeName(configmapReference.getName()))
                                 .withNewConfigMap()
                                 .withName(configmapReference.getName())
@@ -127,15 +132,16 @@ public class PodFunctionBuildJobDependentResource extends KubernetesDependentRes
                 )
                 // volumes for secrets in PF
                 .addAllToVolumes(
-                        podFunction.getSpec().getSecrets().stream().map(secretReference ->
-                        new VolumeBuilder()
-                                .withName(secretVolumeName(secretReference.getName()))
-                                .withNewSecret()
-                                .withSecretName(secretReference.getName())
-                                .withOptional(true)
-                                .endSecret()
-                                .build()
-                                ).toList()
+                        Optional.ofNullable(podFunction.getSpec().getSecrets()).orElse(Collections.emptyList())
+                                .stream().map(secretReference ->
+                                new VolumeBuilder()
+                                        .withName(secretVolumeName(secretReference.getName()))
+                                        .withNewSecret()
+                                        .withSecretName(secretReference.getName())
+                                        .withOptional(true)
+                                        .endSecret()
+                                        .build()
+                                        ).toList()
                 )
                 // declare archive volume
                 .addNewVolume()
