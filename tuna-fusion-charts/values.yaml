@@ -1,7 +1,7 @@
 global:
   image:
     pullPolicy: IfNotPresent
-    tag: "1754983608"
+    tag: "1754999180"
   clusterScoped: true
   additionalWatchedNamespaces: [ ]
   executor:

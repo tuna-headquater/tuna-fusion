@@ -60,8 +60,7 @@ metadata:
   name: $ns
 EOF
 
-
-if [ "$target" = "local" ] ; then
+# we have to create cluster role, service account and cluster role binding before creating workload payload like a PodFunctionBuild
 cat <<EOF | kubectl apply -n "$ns" -f -
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
@@ -129,7 +128,6 @@ roleRef:
   name: $cluster_role_name
   apiGroup: rbac.authorization.k8s.io
 
-
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -142,10 +140,9 @@ spec:
   resources:
     requests:
       storage: 1Gi
-EOF
-fi
 
-cat <<EOF | kubectl apply -n "$ns" -f -
+---
+
 apiVersion: fusion.tuna.ai/v1
 kind: AgentEnvironment
 metadata:
@@ -203,7 +200,6 @@ spec:
     taskStore:
       provider: InMemory
   entrypoint: app.handle
-
 
 ---
 
