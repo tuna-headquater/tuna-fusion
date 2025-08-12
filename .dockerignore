@@ -59,3 +59,4 @@ Dockerfile
 
 # maven build
 target/
+build-all-images.sh

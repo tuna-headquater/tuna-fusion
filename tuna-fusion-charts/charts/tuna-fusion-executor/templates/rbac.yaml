@@ -22,6 +22,7 @@ rules:
       - services
       - jobs
       - endpoints
+      - configmaps
     verbs:
         - get
         - list
@@ -90,6 +91,7 @@ rules:
       - services
       - jobs
       - endpoints
+      - configmaps
     verbs:
       - get
       - list
