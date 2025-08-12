@@ -108,6 +108,7 @@ public class ApiServerPodPoolConnectorImpl implements PodPoolConnector, Resource
         return PodAccess.builder()
                 .selectedPod(pod)
                 .uri(ResourceUtils.getPodUri(pod))
+                .podTtlInSeconds(podPool.getSpec().getTtlPerPod())
                 .functionBuildName(effectiveBuild.getMetadata().getName())
                 .functionBuildUid(effectiveBuild.getMetadata().getUid())
                 .functionName(function.getMetadata().getName())

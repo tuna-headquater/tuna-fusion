@@ -20,4 +20,5 @@ public class PodAccess {
     private String functionName;
     private String functionBuildName;
     private String functionBuildUid;
+    private Long podTtlInSeconds;
 }

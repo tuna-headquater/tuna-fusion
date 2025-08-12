@@ -65,6 +65,7 @@ public class DefaultFunctionPodManagerIT extends IntegrationTest {
         var checkedPod = ResourceUtils.getPod(kubernetesClient,
                 selectedPod.getMetadata().getNamespace(),
                 selectedPod.getMetadata().getName());
+        log.info("after max access. pod={}", checkedPod);
         var deleted = checkedPod
                 .map(pod -> StringUtils.isNoneBlank(pod.getMetadata().getDeletionTimestamp()))
                 .orElse(true);
@@ -72,11 +73,13 @@ public class DefaultFunctionPodManagerIT extends IntegrationTest {
 
         // another access would trigger rotation of selected pod
         try(var access = functionPodManager.requestAccess(fn1, podPool)) {
-            selectedPod = access.getPodAccess().getSelectedPod();
-            log.info("Selected pod {}", ResourceUtils.computeResourceMetaKey(selectedPod));
-            assertThat(selectedPod).isNotNull();
-            assertThat(podNamesSet.add(selectedPod.getMetadata().getName()))
+            var selectedPod2 = access.getPodAccess().getSelectedPod();
+            log.info("Selected pod {}", ResourceUtils.computeResourceMetaKey(selectedPod2));
+            assertThat(selectedPod2).isNotNull();
+            assertThat(podNamesSet.add(selectedPod2.getMetadata().getName()))
                     .isTrue();
+            // should have got another pod
+            assertThat(selectedPod2.getMetadata().getName()).isNotEqualTo(selectedPod.getMetadata().getName());
         }
     }
 

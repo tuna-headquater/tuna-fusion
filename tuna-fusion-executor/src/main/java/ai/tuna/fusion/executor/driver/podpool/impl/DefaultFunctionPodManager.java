@@ -81,9 +81,9 @@ public class DefaultFunctionPodManager implements FunctionPodManager {
                 var counterLimitReachedCount = 0;
                 for (var pod : specializedPods) {
                     try {
-                        var isOutdatedBuild = hasOutdatedBuild(pod, podPool);
-                        var isExpired = isExpiredPod(pod, podPool);
-                        var isCounterExceeded = isCounterExceeded(pod, podPool);
+                        var isOutdatedBuild = hasOutdatedBuild(pod);
+                        var isExpired = isExpiredPod(pod, podPool.getSpec().getTtlPerPod());
+                        var isCounterExceeded = isCounterExceeded(pod);
                         if (isOutdatedBuild) {
                             outdatedCount++;
                         }
@@ -97,17 +97,14 @@ public class DefaultFunctionPodManager implements FunctionPodManager {
                             var access = podAccessCache.getIfPresent(cacheKey(pod));
                             var cached = Objects.nonNull(access);
                             log.info("[cleanupOrphanPods] podPool={}, pod={}, cached={}, isCounterExceeded={}, isOutdatedBuild={}, isExpired={}", podPool.getMetadata().getName(), pod.getMetadata().getName(), cached, isCounterExceeded, isOutdatedBuild, isExpired);
-                            if (cached) {
-                                doDisposeAccess(access.getPodAccess());
-                            } else {
-                                doDisposeAccess(PodAccess.builder()
-                                        .namespace(pod.getMetadata().getNamespace())
-                                        .selectedPod(pod)
-                                        .functionName(pod.getMetadata().getLabels().get(PodPool.SPECIALIZED_POD_FUNCTION_NAME_LABEL_VALUE))
-                                        .functionBuildUid(pod.getMetadata().getLabels().get(PodPool.SPECIALIZED_POD_FUNCTION_BUILD_ID_LABEL_VALUE))
-                                        .podPoolName(podPool.getMetadata().getName())
-                                        .build());
-                            }
+                            doDisposeAccess(PodAccess.builder()
+                                    .namespace(pod.getMetadata().getNamespace())
+                                    .selectedPod(pod)
+                                    .podTtlInSeconds(podPool.getSpec().getTtlPerPod())
+                                    .functionName(pod.getMetadata().getLabels().get(PodPool.SPECIALIZED_POD_FUNCTION_NAME_LABEL_VALUE))
+                                    .functionBuildUid(pod.getMetadata().getLabels().get(PodPool.SPECIALIZED_POD_FUNCTION_BUILD_ID_LABEL_VALUE))
+                                    .podPoolName(podPool.getMetadata().getName())
+                                    .build());
                         }
                     } catch (Exception e) {
                         log.error("Exception occurred during checking specialized pod {}: {}", pod, e.getMessage(), e);
@@ -123,18 +120,18 @@ public class DefaultFunctionPodManager implements FunctionPodManager {
     /**
      * Check counter once more in case some CountedPodAccess is not closed properly
      */
-    private boolean isCounterExceeded(Pod pod, PodPool podPool) {
+    private boolean isCounterExceeded(Pod pod) {
         return Optional.ofNullable(podAccessCache.getIfPresent(cacheKey(pod)))
-                .map(countedPodAccess -> countedPodAccess.getUsageCount() != null && countedPodAccess.getUsageCount().intValue() > countedPodAccess.getMaxUsageCount())
+                .map(countedPodAccess -> countedPodAccess.getUsageCount() != null && countedPodAccess.getUsageCount().intValue() >= countedPodAccess.getMaxUsageCount())
                 .orElse(false);
     }
 
     /**
      * Evict pods that has out-dated build
      */
-    private boolean hasOutdatedBuild(Pod pod, PodPool podPool) {
+    private boolean hasOutdatedBuild(Pod pod) {
         return Optional.ofNullable(pod.getMetadata().getLabels().get(PodPool.SPECIALIZED_POD_FUNCTION_NAME_LABEL_VALUE))
-                .flatMap(fnName -> podPoolResources.queryPodFunction(podPool.getMetadata().getNamespace(), fnName))
+                .flatMap(fnName -> podPoolResources.queryPodFunction(pod.getMetadata().getNamespace(), fnName))
                 .map(CustomResource::getStatus)
                 .map(PodFunctionStatus::getEffectiveBuild)
                 .map(PodFunctionStatus.BuildInfo::getUid)
@@ -146,16 +143,20 @@ public class DefaultFunctionPodManager implements FunctionPodManager {
     /**
      * Limit the lifespan of a specialized pod
      */
-    private boolean isExpiredPod(Pod pod, PodPool podPool) {
-        var ttl = Optional.ofNullable(podPool.getSpec().getTtlPerPod())
+    private boolean isExpiredPod(Pod pod, Long ttlInSeconds) {
+        var ttl = Optional.ofNullable(ttlInSeconds)
                 .filter(v -> v > 0)
                 .orElse(TTL_IN_SECONDS_FOR_SPECIALIZED_POD);
         var creationTime = Instant.parse(pod.getMetadata().getCreationTimestamp());
         return creationTime.isBefore(Instant.now().minusSeconds(ttl));
     }
 
-    private boolean isOrphanPod(Pod pod, PodPool podPool) {
-        return isExpiredPod(pod, podPool) || isCounterExceeded(pod, podPool) || hasOutdatedBuild(pod, podPool);
+    private boolean shouldDisposePodAccess(PodAccess podAccess) {
+        var isExpired = isExpiredPod(podAccess.getSelectedPod(), podAccess.getPodTtlInSeconds());
+        var isCounterExceeded = isCounterExceeded(podAccess.getSelectedPod());
+        var isOutdated = hasOutdatedBuild(podAccess.getSelectedPod());
+        log.debug("[shouldDisposePodAccess] podAccess={}, isExpired={}, isCounterExceeded={}, isOutdated={}", podAccess, isExpired, isCounterExceeded, isOutdated);
+        return isExpired || isCounterExceeded || isOutdated;
     }
 
     @Override
@@ -183,13 +184,13 @@ public class DefaultFunctionPodManager implements FunctionPodManager {
                 throw new FunctionPodAccessException("Failed to request access to pod function " + function.getMetadata().getName(), podPool, function);
             }
 
-            if (!isOrphanPod(access.getPodAccess().getSelectedPod(), podPool)) {
+            if (!shouldDisposePodAccess(access.getPodAccess())) {
                 access.getUsageCount().incrementAndGet();
                 log.debug("[requestAccess] Access acquired: pod={}, usageCount={}, maxUsageCount={}", ResourceUtils.computeResourceMetaKey(access.getPodAccess().getSelectedPod()), access.getUsageCount(), access.getMaxUsageCount());
                 return access;
             } else {
                 try {
-                    disposeAccess(access);
+                    doDisposeAccess(access.getPodAccess());
                 } catch (FunctionPodDisposalException e) {
                     log.warn("[requestAccess] ignore exception when disposeAccess", e);
                 }
@@ -201,22 +202,19 @@ public class DefaultFunctionPodManager implements FunctionPodManager {
 
     @Override
     public void disposeAccess(CountedPodAccess countedPodAccess) throws FunctionPodDisposalException {
-        int count = countedPodAccess.getUsageCount().intValue();
-        int limit = countedPodAccess.getMaxUsageCount();
-        if (count<limit) {
-            return;
-        }
-        log.info("PodAccess is being evicted: {}", countedPodAccess);
         var access = countedPodAccess.getPodAccess();
-        var podKey = ResourceUtils.computeResourceMetaKey(access.getSelectedPod());
-        podAccessCache.invalidate(cacheKey(access));
-        doDisposeAccess(access);
-        log.info("Pod is evicted: {}", podKey);
+        if (shouldDisposePodAccess(access)) {
+            doDisposeAccess(access);
+        }
     }
 
     private void doDisposeAccess(PodAccess access) throws FunctionPodDisposalException {
+        log.info("PodAccess is being evicted: {}", access);
+        var podKey = ResourceUtils.computeResourceMetaKey(access.getSelectedPod());
+        podAccessCache.invalidate(cacheKey(access));
         var connector = podPoolConnectorFactory.get(access.getNamespace(), access.getPodPoolName());
         connector.disposeAccess(access);
+        log.info("Pod is evicted: {}", podKey);
     }
 
     @Override
