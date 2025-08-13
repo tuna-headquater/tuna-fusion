@@ -1,0 +1,53 @@
+site_name: Project tuna-fusion
+site_url: https://tuna-headquater.github.io/tuna-fusion
+repo_url: https://github.com/tuna-headquater/tuna-fusion
+repo_name: tuna-headquater/tuna-fusion
+
+nav:
+  - Home: index.md
+  - Installation: installation.md
+  - Concepts: concepts.md
+  - Architecture: architecture.md
+  - User Guide:
+    - RBAC permissions: user-guide/rbac-permissions.md
+    - Agent development in Python: user-guide/agent-in-python.md
+    - Agent developments in Java: user-guide/agent-in-java.md
+    - Tool development in Python: user-guide/tool-in-python.md
+    - Tool development in Java: user-guide/tool-in-java.md
+    - Tool integration without code: user-guide/tool-integration-without-code.md
+    - Observability: user-guide/observability.md
+  - Contributor Guide:
+    - Code guidelines: contributor-guide/code-guidelines.md
+    - Build and test: contributor-guide/build-and-test.md
+  - References:
+      - CRDs Reference: reference/crds-reference.md
+      - Helm chart reference: reference/helm-chart-reference.md
+      - Application Configuration Reference: reference/application-configuration-reference.md
+  - Releases: releases.md
+theme:
+  name: material
+  language: en
+  features:
+    - navigation.instant
+extra:
+  version:
+    provider: mike
+    default: latest
+plugins:
+#  - mermaid2
+  - mike
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - plantuml_markdown
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
