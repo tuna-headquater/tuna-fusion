@@ -49,7 +49,9 @@ helm version
 
 ## Installing using `helm`
 
-The Helm chart of `tuna-fusion` is located at `tuna-fusion-charts` folder. In the following section, we will install the chart locally without using a chart repository.
+!!! info
+
+    The Helm chart of `tuna-fusion` is located at `tuna-fusion-charts` folder of [tuna-fusion](https://github.com/tuna-headquater/tuna-fusion) repository. In the following section, we will install the chart locally without using a chart repository. We will publish to a public chart repository in the future.
 
 ### Namespaced scope installation 
 

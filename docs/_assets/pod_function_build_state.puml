@@ -4,7 +4,7 @@
 
 Pending -> Scheduled
 
-Scheduled: Underlying POD is created
+Scheduled: POD is being created
 
 Scheduled -> Running
 Running -> Succeeded

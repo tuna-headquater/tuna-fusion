@@ -18,8 +18,7 @@ columns 1
     block:agents
         AgentEnvironment
         AgentDeployment
-        ToolkitEnvironment
-        ToolkitDeployment
+        MCPServer
         ...
     end
     space
@@ -32,10 +31,11 @@ columns 1
         Pod
     end
 
-ToolkitEnvironment -- "provision" --> PodPool
+MCPServer -- "provision" --> PodPool
+MCPServer -- "provision" --> PodFunction
 AgentEnvironment -- "provision" --> PodPool
 AgentDeployment -- "provision" --> PodFunction
-ToolkitDeployment -- "provision" --> PodFunction
+
 PodFunction -- "claim" --> Pod
 PodPool -- "provision" --> Pod
 
@@ -45,8 +45,7 @@ In `tuan-fusion`, we offer several Kubernetes CRDs (Custom resource definitions)
 
 * `AgentEnvironment` defines how we build the agent source code and boostrap the agent instance. Under the hood, `AgentEnvironment` provides `PodTemplate`s for the builder job resource and runtime deployment resource.
 * `AgentDeployment` defines how a single agent behave. It contains the basic information like `AgentCard` and other configurations about A2A runtime.
-* Similar to `AgentEnvironment`, `ToolkitEnviornment` defines how we build the toolkit source code and boostrap the tool instance.
-* `ToolDeployment` defines a concrete tool instance. It contains the data schema for input and output and determines how the tool is executed, by invoking an existing HTTP API or running a piece of local code.
+* `MCPServer` defines a standalone MCP Server which can be accessed through `tuna-fusion-executor` gateway. It contains how the server should be created and bootstrapped. 
 
 You may notice CRs about Agent and Tools would translate to `PodPool` and `PodFunction`. These two CRDs are key components in `tuna-fusion` to enable provisioning resources in serverless flavor. That is:
 

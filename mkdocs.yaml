@@ -12,9 +12,9 @@ nav:
     - RBAC permissions: user-guide/rbac-permissions.md
     - Agent development in Python: user-guide/agent-in-python.md
     - Agent developments in Java: user-guide/agent-in-java.md
-    - Tool development in Python: user-guide/tool-in-python.md
-    - Tool development in Java: user-guide/tool-in-java.md
-    - Tool integration without code: user-guide/tool-integration-without-code.md
+    - MCP server development in Python: user-guide/mcp-in-python.md
+    - MCP server development in Java: user-guide/mcp-in-java.md
+    - Low-code MCP server development: user-guide/mcp-server-low-code.md
     - Observability: user-guide/observability.md
   - Contributor Guide:
     - Code guidelines: contributor-guide/code-guidelines.md
@@ -51,3 +51,5 @@ markdown_extensions:
         - name: mermaid
           class: mermaid
           format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true

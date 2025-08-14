@@ -56,11 +56,13 @@ So `exectuor` is the unified entrance for agent hosts like `CherryStudio` or any
 
 ## Other concepts
 
-* Tool related resources:
-      * `ToolkitEnvironment`: A `ToolkitEnvironment` resource defines how we build the tool source code and boostrap the tool instance.
-    * `ToolkitDeployment`: A `ToolkitDeployment` resource defines a concrete tool instance. Developers can choose to provide Swagger schema to integrate existing HTTP APIs as agent tools, or provide source code implementation as agent tools. In later case, `tuna-fusion` would provision necessary resources to run the tool.
+* `MCPServer` resource:
+  * Run existing MCP server provided by a `npm` or `pypi` package.
+  * Define source code of `FastMCP` server components and `tuna-fusion` would provision necessary resources to run as a MCP server.
+  * Define resources, prompts and tools statically and `tuna-fusion` would create a `FastMCP` server dynamic which will then bootstrapped with necessary resource.
 * Underlying resources:
     * `SourceArchive`: Original source code provided by developers.  It could be a Zip archive, or a folder on shared filesystem.
     * `DeploymentArchive`: The resulting archive of provided source code after build process. It could only be a Zip archive in deployments folder.
     * `PodPool`: It defines how to maintain Pod resources serve workload defined by `PodFunction` and how to build deployment archive for a `PodFunction`.
     * `PodFunction`: It contains runnable deployment build using runtime image specified in `PodPool`.
+    * `PodFunctionBuild`: It triggers a CI build for target resources like `AgentDeployment` and `MCPServer`. So it has to contains information about how to get the source code and the build recipes. 
