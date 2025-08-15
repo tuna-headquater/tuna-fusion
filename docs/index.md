@@ -34,12 +34,11 @@ columns 1
 
 
     MCPEnvironment -- "provision" --> PodPool
-MCPServer -- "provision" --> PodFunction
-AgentEnvironment -- "provision" --> PodPool
-AgentDeployment -- "provision" --> PodFunction
-
-PodFunction -- "claim" --> Pod
-PodPool -- "provision" --> Pod
+    MCPServer -- "provision" --> PodFunction
+    AgentEnvironment -- "provision" --> PodPool
+    AgentDeployment -- "provision" --> PodFunction
+    PodFunction -- "claim" --> Pod
+    PodPool -- "provision" --> Pod
 
 ```
 
@@ -49,9 +48,9 @@ In `tuan-fusion`, we offer several Kubernetes CRDs (Custom resource definitions)
 * `AgentDeployment` defines how a single agent behave. It contains the basic information like `AgentCard` and other configurations about A2A runtime.
 * Similar to `AgentEnvironment`, `MCPEnvironment` defines hwo we build MCP server source code and bootstrap mcp server instance.
 * `MCPServer` defines a standalone MCP Server which can be accessed through `tuna-fusion-executor` gateway. By different solutions to provide actual MCP components, we have three kinds of `MCPServer` templates:
-  * Static YAML definitions for prompts, resources backed by configmaps and PVCs and tools to integrate existing HTTP APs.
-  * Run MCP Server component provided by your source code.
-  * Run existing MCP server package from `pypi` and `npm`.
+    * Static YAML definitions for prompts, resources backed by configmaps and PVCs and tools to integrate existing HTTP APs.
+    * Run MCP Server component provided by your source code.
+    * Run existing MCP server package from `pypi` and `npm`.
 
 You may notice CRs about Agent and MCP server would translate to `PodPool` and `PodFunction`. These two CRDs are key components in `tuna-fusion` to enable provisioning resources in serverless flavor. That is:
 

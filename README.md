@@ -6,8 +6,8 @@ Opensource cloud-native agent runtime frameworks.
 
 * A2A protocol support: any existing agent implementations using LangChain, LangGraph, LLamaIndex, etc., can be easily adapted to `tuna-fusion` using standard `AgentExecutor` API provided by A2A SDK.
 * Multi-agent resource deployments: 
-  * Using custom resource to quickly deploy agent instances.
-  * GitOps CI/CD workflow for agents and tools.
+  * Using custom resource to quickly deploy agents and MCP servers.
+  * GitOps CI/CD workflow for agents and MCP servers.
 * Highly scalable serverless runtime: 
   * Run many kinds of agents in a single cluster
   * Run many sessions of a single agents concurrently in fully isolated containers.
@@ -29,4 +29,4 @@ Opensource cloud-native agent runtime frameworks.
 
 # License
 
-`tuna-fusion` is licensed under the Apache License 2.0 - see the LICENSE file for details
+`tuna-fusion` is licensed under the Apache License 2.0 - see the [LICENSE](./LICENSE) file for details

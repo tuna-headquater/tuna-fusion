@@ -14,7 +14,7 @@ class HelloWorldAgentExecutor(AgentExecutor):
         msg = new_agent_text_message(text="hello world", task_id=context.task_id)
         updater = TaskUpdater(event_queue, task.id, task.contextId)
 
-        # explict use timestamps without timezone info so that Java client can correctly parse them
+        # explicit use timestamps without timezone info so that Java client can correctly parse them
         try:
             await updater.update_status(state=TaskState.working,
                                         message=msg,

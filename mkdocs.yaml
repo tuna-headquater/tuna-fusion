@@ -29,6 +29,9 @@ theme:
   language: en
   features:
     - navigation.instant
+    - content.code.copy
+    - content.code.select
+    - content.code.annotate
 extra:
   version:
     provider: mike
