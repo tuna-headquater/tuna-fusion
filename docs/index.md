@@ -18,6 +18,7 @@ columns 1
     block:agents
         AgentEnvironment
         AgentDeployment
+        MCPEnvironment
         MCPServer
         ...
     end
@@ -31,7 +32,8 @@ columns 1
         Pod
     end
 
-MCPServer -- "provision" --> PodPool
+
+    MCPEnvironment -- "provision" --> PodPool
 MCPServer -- "provision" --> PodFunction
 AgentEnvironment -- "provision" --> PodPool
 AgentDeployment -- "provision" --> PodFunction
@@ -45,9 +47,13 @@ In `tuan-fusion`, we offer several Kubernetes CRDs (Custom resource definitions)
 
 * `AgentEnvironment` defines how we build the agent source code and boostrap the agent instance. Under the hood, `AgentEnvironment` provides `PodTemplate`s for the builder job resource and runtime deployment resource.
 * `AgentDeployment` defines how a single agent behave. It contains the basic information like `AgentCard` and other configurations about A2A runtime.
-* `MCPServer` defines a standalone MCP Server which can be accessed through `tuna-fusion-executor` gateway. It contains how the server should be created and bootstrapped. 
+* Similar to `AgentEnvironment`, `MCPEnvironment` defines hwo we build MCP server source code and bootstrap mcp server instance.
+* `MCPServer` defines a standalone MCP Server which can be accessed through `tuna-fusion-executor` gateway. By different solutions to provide actual MCP components, we have three kinds of `MCPServer` templates:
+  * Static YAML definitions for prompts, resources backed by configmaps and PVCs and tools to integrate existing HTTP APs.
+  * Run MCP Server component provided by your source code.
+  * Run existing MCP server package from `pypi` and `npm`.
 
-You may notice CRs about Agent and Tools would translate to `PodPool` and `PodFunction`. These two CRDs are key components in `tuna-fusion` to enable provisioning resources in serverless flavor. That is:
+You may notice CRs about Agent and MCP server would translate to `PodPool` and `PodFunction`. These two CRDs are key components in `tuna-fusion` to enable provisioning resources in serverless flavor. That is:
 
 * You don't care about how cloud resources are allocated to agent instances, the system would handle it for you.
 * Through Pod pooling, less resources are consumed when hosting a large collection of different agents. Pods are allocated just before the actual requests are received, and they are recycled after certain conditions are met.
@@ -57,13 +63,13 @@ You may notice CRs about Agent and Tools would translate to `PodPool` and `PodFu
 
 * Installation: [Installation](installation.md)
 * Dive deep into the design and architecture: 
-  * [Concepts](concepts.md)
-  * [Architecture](architecture.md)
+    * [Concepts](concepts.md)
+    * [Architecture](architecture.md)
 * Explore code samples
-  * Sample agent implementations: [tuna-headquarter/tuna-fusion-agent-samples](https://github.com/tuna-headquater/tuna-fusion-agent-samples)
+    * Sample agent implementations: [tuna-headquarter/tuna-fusion-agent-samples](https://github.com/tuna-headquater/tuna-fusion-agent-samples)
 * Learn how to contribute
-  * [Code guidelines](contributor-guide/code-guidelines.md)
-  * [Build and Test](contributor-guide/build-and-test.md)
+    * [Code guidelines](contributor-guide/code-guidelines.md)
+    * [Build and Test](contributor-guide/build-and-test.md)
 
 ## Community
 

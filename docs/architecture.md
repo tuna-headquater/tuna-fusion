@@ -392,6 +392,33 @@ flowchart
     
 ```
 
+### Builder Job Pod design
+
+Builder job is created during PodFunctionBuild reconciliation. It's responsible to run builder image where source code archive (`SourceArchive`) submitted by user in `PodFunctionBuild` resource is transformed into consumable artifacts by runtime image, aka `DeployArchive`.
+
+
+```mermaid
+flowchart
+    subgraph "Builder POD"
+        subgraph "Volumes"
+            configmap1["Configmap for workspace file assets mounted at /workspace"]
+            configmap2["Configmap for deploy-archive file assets mounted at /patch"]
+            configmap3["Configmaps referenced in PodFunction mounted at /configmaps/{namespace}/{configMapName}"]
+            secret1["Secrets referenced in PodFunction mounted at /secrets/{namespace}/{configMapName}"]
+            pvc1["Shared Archive PVC mouted at /archive"]
+        end
+        
+        builder-container --> configmap1
+        builder-container --> configmap2
+        builder-container --> configmap3
+        builder-container --> secret1
+        builder-container --> pvc1
+
+        builder-container --> envs["Injected env variables"]
+    end
+    
+```
+
 
 ### GitOps workflow for CI build
 

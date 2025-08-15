@@ -7,7 +7,7 @@ For `tuna-fusion` users, only a few concepts are needed to understand how `tuna-
 flowchart TB
     id1[Code push by developers]
     id2[Agent access by users]
-    id3[Fusion executor]
+    id3[tuna-fusion-executor]
     id4[AgentDeployment]
     
     subgraph "AgentEnvrinoment"
@@ -47,7 +47,7 @@ Many other aspects of agent are configured as well. For examples:
 * ...
 
 
-## `Fusion executor`
+## `tuna-fusion-executor`, or `exuector`
 
 `executor` is a built-in gateway services to access deployed workloads like agents and tools. In terms of agents, the `executor` service talk in standard A2A protocol. MCP protocol is also supported for deployed tools. What's more, you can opt to expose your agents using MCP protocol as well.
 
@@ -57,9 +57,9 @@ So `exectuor` is the unified entrance for agent hosts like `CherryStudio` or any
 ## Other concepts
 
 * `MCPServer` resource:
-  * Run existing MCP server provided by a `npm` or `pypi` package.
-  * Define source code of `FastMCP` server components and `tuna-fusion` would provision necessary resources to run as a MCP server.
-  * Define resources, prompts and tools statically and `tuna-fusion` would create a `FastMCP` server dynamic which will then bootstrapped with necessary resource.
+    * Run existing MCP server provided by a `npm` or `pypi` package.
+    * Define source code of `FastMCP` server components and `tuna-fusion` would provision necessary resources to run as a MCP server.
+    * Define resources, prompts and tools statically and `tuna-fusion` would create a `FastMCP` server dynamic which will then bootstrapped with necessary resource.
 * Underlying resources:
     * `SourceArchive`: Original source code provided by developers.  It could be a Zip archive, or a folder on shared filesystem.
     * `DeploymentArchive`: The resulting archive of provided source code after build process. It could only be a Zip archive in deployments folder.
