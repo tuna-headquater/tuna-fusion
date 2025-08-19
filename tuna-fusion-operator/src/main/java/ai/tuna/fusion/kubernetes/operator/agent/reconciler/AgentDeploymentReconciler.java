@@ -12,6 +12,8 @@ import io.javaoperatorsdk.operator.api.reconciler.dependent.Dependent;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+import java.util.Optional;
+
 
 /**
  * @author robinqu
@@ -44,8 +46,13 @@ public class AgentDeploymentReconciler implements Reconciler<AgentDeployment>, C
         if (driverType == AgentEnvironmentSpec.DriverType.PodPool) {
             context.getSecondaryResource(PodFunction.class).
                     ifPresent(podFunction -> {
+                        // query K8S API for PodFunction.status
+                        var latestPf = context.getClient().resource(podFunction)
+                                .get();
                         var podFunctionInfo = new AgentDeploymentStatus.PodFunctionInfo();
                         podFunctionInfo.setFunctionName(podFunction.getMetadata().getName());
+                        Optional.ofNullable(latestPf.getStatus())
+                                        .ifPresent(podFunctionInfo::setStatus);
                         status.setFunction(podFunctionInfo);
                     });
             status.setExecutorUrl(AgentResourceUtils.agentExternalUrl(resource, agentEnvironment));

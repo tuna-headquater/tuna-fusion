@@ -1,5 +1,6 @@
 package ai.tuna.fusion.metadata.crd.agent;
 
+import ai.tuna.fusion.metadata.crd.podpool.PodFunctionStatus;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
 
@@ -12,6 +13,7 @@ public class AgentDeploymentStatus {
     @Data
     public static class PodFunctionInfo {
         private String functionName;
+        private PodFunctionStatus status;
     }
 
     @Data
