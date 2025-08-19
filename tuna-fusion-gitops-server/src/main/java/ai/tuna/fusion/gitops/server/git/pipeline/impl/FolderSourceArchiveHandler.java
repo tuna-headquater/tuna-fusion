@@ -3,6 +3,7 @@ package ai.tuna.fusion.gitops.server.git.pipeline.impl;
 import ai.tuna.fusion.metadata.crd.podpool.PodFunction;
 import ai.tuna.fusion.metadata.crd.podpool.PodFunctionBuildSpec;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevWalk;
@@ -30,7 +31,7 @@ public class FolderSourceArchiveHandler extends BaseArchiveHandler {
     }
 
     @Override
-    public PodFunctionBuildSpec.SourceArchive createSourceArchive(ReceivePack receivePack, Collection<ReceiveCommand> commands, String defaultBranch) throws IOException {
+    public PodFunctionBuildSpec.SourceArchive createSourceArchive(ReceivePack receivePack, Collection<ReceiveCommand> commands, String defaultBranch, String subPath) throws IOException {
         Repository repo = receivePack.getRepository();
         var destinationPath = archiveRootPath.resolve(UUID.randomUUID().toString());
         log.info("[createSourceArchive] Creating repository snapshot at: {}", destinationPath);
@@ -47,6 +48,11 @@ public class FolderSourceArchiveHandler extends BaseArchiveHandler {
                     String path = treeWalk.getPathString();
                     if (path.startsWith(".git")) {
                         continue; // Skip .git directory
+                    }
+
+                    // If subPath is specified, only include files under that path
+                    if (StringUtils.isNoneBlank(subPath) && !path.startsWith(subPath + "/") && !path.equals(subPath)) {
+                        continue;
                     }
 
                     receivePack.sendMessage("Processing: " + path);
@@ -68,6 +74,7 @@ public class FolderSourceArchiveHandler extends BaseArchiveHandler {
         var sourceArchive = new PodFunctionBuildSpec.SourceArchive();
         var folderSource = new PodFunction.FilesystemFolderSource();
         folderSource.setPath(destinationPath.toString());
+        sourceArchive.setFilesystemFolderSource(folderSource);
         return sourceArchive;
     }
 }

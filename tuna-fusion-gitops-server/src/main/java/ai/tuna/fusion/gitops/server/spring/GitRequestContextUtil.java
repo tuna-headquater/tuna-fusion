@@ -6,6 +6,7 @@ import ai.tuna.fusion.metadata.informer.impl.ResourceInformersWrapper;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import jakarta.servlet.ServletRequest;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Strings;
 import org.eclipse.jgit.http.server.ServletUtils;
 import org.eclipse.jgit.transport.ReceivePack;
@@ -24,10 +25,12 @@ import java.util.Set;
 @Slf4j
 public class GitRequestContextUtil {
 
-    public record URLParams (String namespace, String agentDeploymentName) {}
+    public record URLParams (String namespace, String agentDeploymentName, String subPath) {}
 
     public static final String AgentEnvironmentName = "ai.tuna.fusion.gitops.server.agent-environment";
     public static final String AgentDeploymentName = "ai.tuna.fusion.gitops.server.agent-deployment";
+
+    public static final String URLParamsName = "ai.tuna.fusion.gitops.server.url-params";
 
     public static Optional<AgentEnvironment> getAgentEnvironment() {
         return Optional.ofNullable(
@@ -39,6 +42,10 @@ public class GitRequestContextUtil {
         return Optional.ofNullable(
                 (AgentDeployment) RequestContextHolder.currentRequestAttributes().getAttribute(AgentDeploymentName, RequestAttributes.SCOPE_REQUEST)
         );
+    }
+
+    public static Optional<URLParams> getGitURLParams() {
+        return Optional.ofNullable((URLParams) RequestContextHolder.currentRequestAttributes().getAttribute(URLParamsName, RequestAttributes.SCOPE_REQUEST));
     }
 
     public static void initializeRequestAttributes(
@@ -65,8 +72,9 @@ public class GitRequestContextUtil {
                 .inNamespace(params.namespace)
                 .withName(agentDeployment.getSpec().getEnvironmentName())
                 .get();
-        RequestContextHolder.currentRequestAttributes().setAttribute(AgentDeploymentName, agentDeployment, RequestAttributes.SCOPE_REQUEST);
+        RequestContextHolder.currentRequestAttributes().setAttribute(URLParamsName, agentDeployment, RequestAttributes.SCOPE_REQUEST);
         RequestContextHolder.currentRequestAttributes().setAttribute(AgentEnvironmentName, agentEnvironment, RequestAttributes.SCOPE_REQUEST);
+        RequestContextHolder.currentRequestAttributes().setAttribute(URLParamsName, params, RequestAttributes.SCOPE_REQUEST);
     }
 
     public static URLParams parseUrlParams(ServletRequest request) throws ServiceNotEnabledException {
@@ -79,31 +87,60 @@ public class GitRequestContextUtil {
         var receivePack = Optional.ofNullable(request.getAttribute(ServletUtils.ATTRIBUTE_HANDLER))
                 .map(h -> (ReceivePack) h);
 
+        String pathTemplate = "/repositories/namespaces/{namespace}/agents/{agentDeploymentName}/{*subPath}.git";
         // Validate URL starts with /repositories/
         if (!requestUri.startsWith("/repositories/")) {
-            throw new ServiceNotEnabledException("Invalid URL format. Expected pattern: /repositories/<namespace>/<agent-deployment-name>.git");
+            throw new ServiceNotEnabledException("Invalid URL format. Expected pattern: " + pathTemplate);
         }
 
+        // Split the request URI into segments
         String[] segments = requestUri.split("/");
 
-        // Ensure we have at least the required parts: "", "repositories", namespace, deployment.git
-        if (segments.length < 4) {
-            receivePack.ifPresent(rp -> rp.sendError("Invalid URL format. Expected pattern: /repositories/<namespace>/<agent-deployment-name>.git/*"));
-            throw new ServiceNotEnabledException("Invalid URL format. Expected pattern: /repositories/<namespace>/<agent-deployment-name>.git/*");
+        // Minimum required segments:
+        // "", "repositories", "namespaces", {namespace}, "agents", {agentDeploymentName}.git
+        // This is 6 segments
+        if (segments.length < 6) {
+            receivePack.ifPresent(rp -> rp.sendError("Invalid URL format. Expected pattern: " + pathTemplate));
+            throw new ServiceNotEnabledException("Invalid URL format. Expected pattern: " + pathTemplate);
         }
 
-        String namespace = segments[2];
-        String gitSegment = segments[3];
+        // Check that segments at index 2 and 4 are exactly "namespaces" and "agents"
+        if (!"namespaces".equals(segments[2]) || !"agents".equals(segments[4])) {
+            receivePack.ifPresent(rp -> rp.sendError("Invalid URL format. Expected pattern: " + pathTemplate));
+            throw new ServiceNotEnabledException("Invalid URL format. Expected pattern: " + pathTemplate);
+        }
 
-        // Ensure URL ends with .git
-        if (!gitSegment.endsWith(".git")) {
+        String namespace = segments[3];
+
+        // Handle subPath and agentDeploymentName
+        String agentDeploymentName;
+        String subPath = "";
+
+        // Get the last segment which should end with .git
+        String lastSegment = segments[segments.length - 1];
+
+        if (lastSegment.endsWith(".git")) {
+            agentDeploymentName = lastSegment.substring(0, lastSegment.length() - 4); // Remove .git suffix
+
+            // Build subPath if there are segments between agents and the last segment
+            if (segments.length > 6) {
+                // SubPath segments start from index 5 to segments.length - 2
+                StringBuilder subPathBuilder = new StringBuilder();
+                for (int i = 5; i < segments.length - 1; i++) {
+                    if (!subPathBuilder.isEmpty()) {
+                        subPathBuilder.append("/");
+                    }
+                    subPathBuilder.append(segments[i]);
+                }
+                subPath = subPathBuilder.toString();
+            }
+        } else {
             receivePack.ifPresent(rp -> rp.sendError("URL must end with .git extension"));
             throw new ServiceNotEnabledException("URL must end with .git extension");
         }
 
-        String agentDeploymentName = gitSegment.substring(0, gitSegment.length() - 4);
-
-        return new URLParams(namespace, agentDeploymentName);
+        return new URLParams(namespace, agentDeploymentName, subPath);
     }
+
 
 }

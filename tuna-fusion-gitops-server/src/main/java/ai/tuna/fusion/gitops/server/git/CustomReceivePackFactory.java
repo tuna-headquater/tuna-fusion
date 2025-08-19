@@ -53,18 +53,20 @@ public class CustomReceivePackFactory implements ReceivePackFactory<HttpServletR
     @Override
     public ReceivePack create(HttpServletRequest req, Repository db) throws ServiceNotEnabledException {
         GitRequestContextUtil.initializeRequestAttributes(kubernetesClient, req, this.watchedNamespaces);
+        var urlParams = GitRequestContextUtil.getGitURLParams().orElseThrow(()-> new ServiceNotEnabledException("Git URL params are not associated with this Git repository URL."));
         var agentDeployment = GitRequestContextUtil.getAgentDeployment().orElseThrow(()-> new ServiceNotEnabledException("AgentDeployment is not associated with this Git repository URL."));
         var agentEnvironment = GitRequestContextUtil.getAgentEnvironment().orElseThrow(()-> new ServiceNotEnabledException("AgentEnvironment is associated with this Git repository URL."));
+
         // TODO check permissions
 
         ReceivePack receivePack = new ReceivePack(db);
         receivePack.setPreReceiveHook((rp, commands) -> {
-            handlePreReceiveHook(agentEnvironment, agentDeployment, req, receivePack, commands);
+            handlePreReceiveHook(agentEnvironment, agentDeployment, urlParams.subPath(), receivePack, commands);
         });
         return receivePack;
     }
 
-    private void handlePreReceiveHook(AgentEnvironment agentEnvironment, AgentDeployment agentDeployment, HttpServletRequest req, ReceivePack receivePack, Collection<ReceiveCommand> commands) {
+    private void handlePreReceiveHook(AgentEnvironment agentEnvironment, AgentDeployment agentDeployment, String subPath, ReceivePack receivePack, Collection<ReceiveCommand> commands) {
         if (agentEnvironment.getSpec().getDriver().getType() != AgentEnvironmentSpec.DriverType.PodPool) {
             logError(receivePack, null, "❌ Only PodPool driver is supported now");
             return;
@@ -77,7 +79,7 @@ public class CustomReceivePackFactory implements ReceivePackFactory<HttpServletR
                 throw new RuntimeException("Current build is running for this AgentDeployment: " + podFunction.getStatus().getCurrentBuild().getName());
             }
 
-            var sourceArchive = sourceArchiveHandler.createSourceArchive(receivePack, commands, agentDeployment.getSpec().getGit().getWatchedBranchName());
+            var sourceArchive = sourceArchiveHandler.createSourceArchive(receivePack, commands, agentDeployment.getSpec().getGit().getWatchedBranchName(), subPath);
             logInfo(receivePack, "📦 SourceArchive for repository is created successfully: %s", sourceArchive);
 
             var functionBuild = PipelineUtils.createAgentFunctionBuild(kubernetesClient, agentDeployment, podFunction, sourceArchive);

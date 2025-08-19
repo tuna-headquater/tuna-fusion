@@ -5,6 +5,7 @@ import ai.tuna.fusion.gitops.server.spring.property.GitOpsServerProperties;
 import ai.tuna.fusion.metadata.crd.podpool.PodFunction;
 import ai.tuna.fusion.metadata.crd.podpool.PodFunctionBuildSpec;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevWalk;
@@ -41,7 +42,7 @@ public class LocalHttpZipArchiveSourceHandler extends BaseArchiveHandler {
     }
 
     @Override
-    public PodFunctionBuildSpec.SourceArchive createSourceArchive(ReceivePack receivePack, Collection<ReceiveCommand> commands, String defaultBranch) throws IOException {
+    public PodFunctionBuildSpec.SourceArchive createSourceArchive(ReceivePack receivePack, Collection<ReceiveCommand> commands, String defaultBranch, String subPath) throws IOException {
         Repository repo = receivePack.getRepository();
         var fileId = UUID.randomUUID().toString();
         File zipFile = zipRepositoryRoot.resolve(fileId + ".zip").toFile();
@@ -57,9 +58,17 @@ public class LocalHttpZipArchiveSourceHandler extends BaseArchiveHandler {
                 log.info("[createSourceArchive] Tree count after addTree: {}", treeWalk.getTreeCount());
 
                 while (treeWalk.next()) {
+                    String path = treeWalk.getPathString();
+                    // 如果subPath非空且不为空白，则检查当前路径是否以subPath开头
+                    if (StringUtils.isNotBlank(subPath)) {
+                        // 确保路径匹配是基于文件夹边界的，避免部分匹配
+                        if (!path.startsWith(subPath + "/") && !path.equals(subPath)) {
+                            continue;
+                        }
+                    }
                     addTreeEntryToZip(receivePack, treeWalk, zos);
                 }
-                log.debug("[createSourceArchive] Finished adding {} entries to zip", treeWalk.getPathString());
+                log.debug("[createSourceArchive] Finished adding entries to zip");
             }
         }
 

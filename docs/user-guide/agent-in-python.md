@@ -207,6 +207,7 @@ There are two ways to update agent deployments:
 
 Both solutions will trigger build pipeline to run automatically. As creating `PodFunctionBuild` for each update is tedious, we recommend using `tuna-fusion-gitops-server` to update code changes.
 
+#### Using virtual Git repository server
 
 To push updates using `git` client, we have to add a git remote first:
 
@@ -248,6 +249,33 @@ During the push, `tuna-fusion` will:
 1. Fetch updated git objects and create a snapshot archive of latest commit.
 2. Trigger a single execution of build pipeline. 
 3. Livestream the build logs to the user.
+
+
+#### Alternative way: Create `PodFunctionBuild` manually
+
+Example resource manifest:
+
+```yaml title="pod-function-build-1.yaml" linenums="1"
+apiVersion: fusion.tuna.ai/v1
+kind: PodFunctionBuild # (1)
+metadata:
+  name: test-pod-function-build-1 # (2) 
+spec:
+  podFunctionName: test-deploy-1 # (3)
+  sourceArchive:
+    httpZipSource:
+      url: https://gist.github.com/RobinQu/f8f755f8bb0807ad564662c637175d23/archive/e82defc2b563fbc9f36b49a94cc3b8b80e5be689.zip # (4)
+      sha256Checksum: 5aa97e2c44e86a9993ba3f4a450847b8c6912439bb83b1e1037ac9a5408df65f # (5)
+```
+
+1. `PodFunctionBuild` is a resource that triggers build process.
+2. Resource names should be unique across all builds.
+3. Reference the `PodFunction` we created earlier.
+4. Source archive is provided via HTTP URL. It should be accessible for `tuna-fusion` to download.
+5. SHA256 checksum for this URL. Build will fail if checksum failed.
+
+
+### Check status of `test-deploy-1` 
 
 After the push is processed, you can check the status of `AgentDeployment` by running:
 
