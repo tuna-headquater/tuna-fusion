@@ -43,7 +43,6 @@ public class AgentEnvironmentSpec {
         @Required
         private String baseUrl;
     }
-    @Required
     private Executor executor;
 
 

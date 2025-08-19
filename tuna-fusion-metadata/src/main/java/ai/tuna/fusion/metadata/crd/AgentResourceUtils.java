@@ -2,6 +2,7 @@ package ai.tuna.fusion.metadata.crd;
 
 import ai.tuna.fusion.metadata.crd.agent.AgentDeployment;
 import ai.tuna.fusion.metadata.crd.agent.AgentEnvironment;
+import ai.tuna.fusion.metadata.crd.agent.AgentEnvironmentSpec;
 import ai.tuna.fusion.metadata.crd.podpool.PodFunctionBuild;
 import ai.tuna.fusion.metadata.crd.podpool.PodFunctionSpec;
 import ai.tuna.fusion.metadata.crd.podpool.PodPool;
@@ -97,9 +98,9 @@ public class AgentResourceUtils {
      */
     private static final String AGENT_EXECUTOR_URL_TEMPLATE = "${baseUrl}/a2a/namespaces/${namespace}/agents/${agentDeploymentName}/";
     public static  String agentExternalUrl(AgentDeployment agentDeployment, AgentEnvironment agentEnvironment) {
-        var endpoint = agentEnvironment.getSpec().getExecutor();
+        var endpoint = Optional.ofNullable(agentEnvironment.getSpec().getExecutor()).map(AgentEnvironmentSpec.Executor::getBaseUrl).orElse("");
         var substitutor = new StringSubstitutor(Map.of(
-                "baseUrl", endpoint.getBaseUrl(),
+                "baseUrl", endpoint,
                 "namespace", agentDeployment.getMetadata().getNamespace(),
                 "agentEnvironmentName", agentEnvironment.getMetadata().getName(),
                 "agentDeploymentName", agentDeployment.getMetadata().getName()

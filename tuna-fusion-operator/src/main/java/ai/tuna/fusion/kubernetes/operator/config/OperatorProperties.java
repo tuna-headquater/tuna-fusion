@@ -1,5 +1,7 @@
 package ai.tuna.fusion.kubernetes.operator.config;
 
+import ai.tuna.fusion.metadata.crd.agent.AgentEnvironmentSpec;
+import io.fabric8.generator.annotation.Required;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
@@ -16,10 +18,10 @@ public class OperatorProperties {
         private String namespace = "default";
         private String identity = String.valueOf(ProcessHandle.current().pid());
     }
-
     private LeaderElection leaderElection;
     private String sharedArchivePvcName;
     private String builderServiceAccountName;
     private String runtimeServiceAccountName;
+    private AgentEnvironmentSpec.Executor executor;
 
 }
