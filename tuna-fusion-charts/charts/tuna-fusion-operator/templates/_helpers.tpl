@@ -79,14 +79,6 @@ Create the name of the service account to use
 {{- end }}
 {{- end }}
 
-{{- define "tuna-fusion-operator.namespacedRoleName" -}}
-{{- if .Values.namespacedRole.create }}
-{{- default (include "tuna-fusion-operator.fullname" .) .Values.namespacedRole.name }}
-{{- else }}
-{{- default "default" .Values.namespacedRole.name }}
-{{- end }}
-{{- end }}
-
 
 {{- define "tuna-fusion-operator.configmapName" -}}
 {{- default (include "tuna-fusion-operator.fullname" .) .Values.configmap.name }}
