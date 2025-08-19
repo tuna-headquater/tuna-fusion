@@ -6,8 +6,12 @@
 {{- default (printf "%s-executor-svc" .Release.Name | trunc 63 | trimSuffix "-") .Values.global.executor.serviceName}}
 {{- end }}
 
+{{- define "shared.operatorServiceName" }}
+{{- default (printf "%s-operator-svc" .Release.Name | trunc 63 | trimSuffix "-") .Values.global.operator.serviceName}}
+{{- end }}
+
 {{- define "shared.executorBaseUrl" -}}
-{{include "shared.exeuctorServiceName" .}}:{{.Values.global.executor.servicePort}}
+http://{{include "shared.exeuctorServiceName" .}}:{{.Values.global.executor.servicePort}}
 {{- end }}
 
 {{- define "shared.gitopsServerServiceName" }}
@@ -15,5 +19,5 @@
 {{- end }}
 
 {{- define "shared.gitopsServerBaseurl" -}}
-{{include "shared.gitopsServerServiceName" .}}:{{.Values.global.gitOpsServer.servicePort}}
+http://{{include "shared.gitopsServerServiceName" .}}:{{.Values.global.gitOpsServer.servicePort}}
 {{- end }}

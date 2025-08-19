@@ -1,7 +1,6 @@
 package ai.tuna.fusion.kubernetes.operator.config;
 
 import ai.tuna.fusion.metadata.crd.agent.AgentEnvironmentSpec;
-import io.fabric8.generator.annotation.Required;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 

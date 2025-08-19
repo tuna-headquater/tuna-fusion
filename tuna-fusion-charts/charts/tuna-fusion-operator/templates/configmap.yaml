@@ -54,3 +54,5 @@ data:
         namespace: {{.Release.Namespace}}
         identity: {{uuidv4}}
       sharedArchivePvcName: {{include "shared.archivePvcName" .}}
+      executor:
+        baseUrl: {{ include "shared.executorBaseUrl" . }}

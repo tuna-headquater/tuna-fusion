@@ -2962,7 +2962,6 @@ spec:
                 type: "object"
             required:
             - "driver"
-            - "executor"
             type: "object"
           status:
             properties:

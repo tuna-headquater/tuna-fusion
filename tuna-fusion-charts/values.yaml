@@ -5,10 +5,13 @@ global:
   clusterScoped: false
   additionalWatchedNamespaces: [ ]
   executor:
-    servicePort: 8080
+    servicePort: 80
+    serviceName: ""
+  operator:
+    servicePort: 80
     serviceName: ""
   gitOpsServer:
-    servicePort: 8080
+    servicePort: 80
     serviceName: ""
   archivePvc:
     accessMode: ReadWriteOnce

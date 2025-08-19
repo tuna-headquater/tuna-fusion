@@ -72,7 +72,7 @@ public class GitRequestContextUtil {
                 .inNamespace(params.namespace)
                 .withName(agentDeployment.getSpec().getEnvironmentName())
                 .get();
-        RequestContextHolder.currentRequestAttributes().setAttribute(URLParamsName, agentDeployment, RequestAttributes.SCOPE_REQUEST);
+        RequestContextHolder.currentRequestAttributes().setAttribute(AgentDeploymentName, agentDeployment, RequestAttributes.SCOPE_REQUEST);
         RequestContextHolder.currentRequestAttributes().setAttribute(AgentEnvironmentName, agentEnvironment, RequestAttributes.SCOPE_REQUEST);
         RequestContextHolder.currentRequestAttributes().setAttribute(URLParamsName, params, RequestAttributes.SCOPE_REQUEST);
     }
@@ -87,7 +87,7 @@ public class GitRequestContextUtil {
         var receivePack = Optional.ofNullable(request.getAttribute(ServletUtils.ATTRIBUTE_HANDLER))
                 .map(h -> (ReceivePack) h);
 
-        String pathTemplate = "/repositories/namespaces/{namespace}/agents/{agentDeploymentName}/{*subPath}.git";
+        String pathTemplate = "/repositories/namespaces/{namespace}/agents/{agentDeploymentName}/{*subPath}.git/*";
         // Validate URL starts with /repositories/
         if (!requestUri.startsWith("/repositories/")) {
             throw new ServiceNotEnabledException("Invalid URL format. Expected pattern: " + pathTemplate);
@@ -113,31 +113,42 @@ public class GitRequestContextUtil {
         String namespace = segments[3];
 
         // Handle subPath and agentDeploymentName
-        String agentDeploymentName;
+        String agentDeploymentName = "";
         String subPath = "";
 
-        // Get the last segment which should end with .git
-        String lastSegment = segments[segments.length - 1];
-
-        if (lastSegment.endsWith(".git")) {
-            agentDeploymentName = lastSegment.substring(0, lastSegment.length() - 4); // Remove .git suffix
-
-            // Build subPath if there are segments between agents and the last segment
-            if (segments.length > 6) {
-                // SubPath segments start from index 5 to segments.length - 2
-                StringBuilder subPathBuilder = new StringBuilder();
-                for (int i = 5; i < segments.length - 1; i++) {
-                    if (!subPathBuilder.isEmpty()) {
-                        subPathBuilder.append("/");
-                    }
+        boolean hasGitExtension = false;
+        StringBuilder subPathBuilder = new StringBuilder();
+        for(int i=5;i<segments.length-1;i++) {
+            var currentSegment = segments[i];
+            if (i==5) {
+                if (currentSegment.endsWith(".git")) {
+                    hasGitExtension = true;
+                    var agentDeploymentSegment = segments[5];
+                    agentDeploymentName = agentDeploymentSegment.substring(0, agentDeploymentSegment.length() - 4); // Remove .git suffix
+                    break;
+                } else {
+                    agentDeploymentName = segments[5];
+                }
+            } else { // subpath given and i>5
+                if (!subPathBuilder.isEmpty()) {
+                    subPathBuilder.append("/");
+                }
+                if (currentSegment.endsWith(".git")) { // lastSegment must end with `.git`
+                    hasGitExtension = true;
+                    subPathBuilder.append(currentSegment, 0, currentSegment.length() - 4);
+                    break;
+                } else {
                     subPathBuilder.append(segments[i]);
                 }
-                subPath = subPathBuilder.toString();
             }
-        } else {
+        }
+
+        if (!hasGitExtension) {
             receivePack.ifPresent(rp -> rp.sendError("URL must end with .git extension"));
             throw new ServiceNotEnabledException("URL must end with .git extension");
         }
+
+        subPath = subPathBuilder.toString();
 
         return new URLParams(namespace, agentDeploymentName, subPath);
     }

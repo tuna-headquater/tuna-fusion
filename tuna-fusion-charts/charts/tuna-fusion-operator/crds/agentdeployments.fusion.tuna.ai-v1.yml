@@ -265,6 +265,43 @@ spec:
                 properties:
                   functionName:
                     type: "string"
+                  status:
+                    properties:
+                      currentBuild:
+                        properties:
+                          name:
+                            type: "string"
+                          phase:
+                            enum:
+                            - "Failed"
+                            - "Pending"
+                            - "Running"
+                            - "Scheduled"
+                            - "Succeeded"
+                            type: "string"
+                          startTimestamp:
+                            type: "integer"
+                          uid:
+                            type: "string"
+                        type: "object"
+                      effectiveBuild:
+                        properties:
+                          name:
+                            type: "string"
+                          phase:
+                            enum:
+                            - "Failed"
+                            - "Pending"
+                            - "Running"
+                            - "Scheduled"
+                            - "Succeeded"
+                            type: "string"
+                          startTimestamp:
+                            type: "integer"
+                          uid:
+                            type: "string"
+                        type: "object"
+                    type: "object"
                 type: "object"
               lambda:
                 properties:

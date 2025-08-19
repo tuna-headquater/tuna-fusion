@@ -97,15 +97,16 @@ public class AgentResourceUtils {
      * A2A client would send RPC requests to this URL. Ending with a slash would have better results with route matching of current a2a-runtime implementations.
      */
     private static final String AGENT_EXECUTOR_URL_TEMPLATE = "${baseUrl}/a2a/namespaces/${namespace}/agents/${agentDeploymentName}/";
-    public static  String agentExternalUrl(AgentDeployment agentDeployment, AgentEnvironment agentEnvironment) {
-        var endpoint = Optional.ofNullable(agentEnvironment.getSpec().getExecutor()).map(AgentEnvironmentSpec.Executor::getBaseUrl).orElse("");
-        var substitutor = new StringSubstitutor(Map.of(
-                "baseUrl", endpoint,
-                "namespace", agentDeployment.getMetadata().getNamespace(),
-                "agentEnvironmentName", agentEnvironment.getMetadata().getName(),
-                "agentDeploymentName", agentDeployment.getMetadata().getName()
-        ));
-        return substitutor.replace(AGENT_EXECUTOR_URL_TEMPLATE);
+    public static Optional<String> agentExternalUrl(AgentDeployment agentDeployment, AgentEnvironment agentEnvironment) {
+        return Optional.ofNullable(agentEnvironment.getSpec().getExecutor()).map(AgentEnvironmentSpec.Executor::getBaseUrl).map(endpoint -> {
+            var substitutor = new StringSubstitutor(Map.of(
+                    "baseUrl", endpoint,
+                    "namespace", agentDeployment.getMetadata().getNamespace(),
+                    "agentEnvironmentName", agentEnvironment.getMetadata().getName(),
+                    "agentDeploymentName", agentDeployment.getMetadata().getName()
+            ));
+            return substitutor.replace(AGENT_EXECUTOR_URL_TEMPLATE);
+        });
     }
 
 }

@@ -1,7 +1,7 @@
 package ai.tuna.fusion.kubernetes.operator.agent.reconciler;
 
-import ai.tuna.fusion.metadata.crd.AgentResourceUtils;
 import ai.tuna.fusion.kubernetes.operator.agent.dr.AgentDeploymentPodFunctionDependentResource;
+import ai.tuna.fusion.metadata.crd.AgentResourceUtils;
 import ai.tuna.fusion.metadata.crd.ResourceUtils;
 import ai.tuna.fusion.metadata.crd.agent.AgentDeployment;
 import ai.tuna.fusion.metadata.crd.agent.AgentDeploymentStatus;
@@ -55,7 +55,8 @@ public class AgentDeploymentReconciler implements Reconciler<AgentDeployment>, C
                                         .ifPresent(podFunctionInfo::setStatus);
                         status.setFunction(podFunctionInfo);
                     });
-            status.setExecutorUrl(AgentResourceUtils.agentExternalUrl(resource, agentEnvironment));
+            AgentResourceUtils.agentExternalUrl(resource, agentEnvironment)
+                    .ifPresent(status::setExecutorUrl);
         }
         patch.setStatus(status);
         log.info("[reconcile] Patching status for Agent Deployment {}: {}", resource.getMetadata().getName(), status);

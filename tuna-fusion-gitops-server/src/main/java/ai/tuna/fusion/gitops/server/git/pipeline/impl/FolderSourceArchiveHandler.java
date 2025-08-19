@@ -34,7 +34,7 @@ public class FolderSourceArchiveHandler extends BaseArchiveHandler {
     public PodFunctionBuildSpec.SourceArchive createSourceArchive(ReceivePack receivePack, Collection<ReceiveCommand> commands, String defaultBranch, String subPath) throws IOException {
         Repository repo = receivePack.getRepository();
         var destinationPath = archiveRootPath.resolve(UUID.randomUUID().toString());
-        log.info("[createSourceArchive] Creating repository snapshot at: {}", destinationPath);
+        log.info("[createSourceArchive] defaultBranch={}, subPath={}, destinationPath={}", defaultBranch, subPath, destinationPath);
 
         try (RevWalk revWalk = new RevWalk(repo)) {
             var tree = filterCommands(revWalk, defaultBranch, commands);

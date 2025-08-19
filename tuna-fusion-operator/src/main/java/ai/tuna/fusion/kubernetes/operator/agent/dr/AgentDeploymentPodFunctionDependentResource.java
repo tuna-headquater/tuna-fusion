@@ -1,7 +1,8 @@
 package ai.tuna.fusion.kubernetes.operator.agent.dr;
 
-import ai.tuna.fusion.metadata.crd.AgentResourceUtils;
 import ai.tuna.fusion.kubernetes.operator.agent.reconciler.AgentDeploymentReconciler;
+import ai.tuna.fusion.metadata.crd.AgentResourceUtils;
+import ai.tuna.fusion.metadata.crd.ResourceUtils;
 import ai.tuna.fusion.metadata.crd.agent.AgentDeployment;
 import ai.tuna.fusion.metadata.crd.agent.AgentDeploymentSpec;
 import ai.tuna.fusion.metadata.crd.agent.AgentEnvironment;
@@ -19,13 +20,11 @@ import io.javaoperatorsdk.operator.processing.dependent.workflow.Condition;
 import lombok.SneakyThrows;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Optional;
 
 import static ai.tuna.fusion.metadata.crd.podpool.PodFunctionBuild.A2A_RUNTIME_FILENAME;
 import static ai.tuna.fusion.metadata.crd.podpool.PodFunctionBuild.AGENT_CARD_FILENAME;
-import static io.fabric8.kubernetes.api.model.HasMetadata.getApiVersion;
 
 /**
  * @author robinqu
@@ -72,7 +71,8 @@ public class AgentDeploymentPodFunctionDependentResource extends CRUDKubernetesD
     @SneakyThrows
     private PodFunction.FileAsset renderAgentCardJson(AgentEnvironment agentEnvironment, AgentDeployment agentDeployment)  {
         var originalAgentCard = agentDeployment.getSpec().getAgentCard();
-        var agentCard = originalAgentCard.toBuilder().url(AgentResourceUtils.agentExternalUrl(agentDeployment, agentEnvironment)).build();
+        var agentExecutorUrl = AgentResourceUtils.agentExternalUrl(agentDeployment, agentEnvironment).orElseThrow(()-> new IllegalStateException("Executor URL not configured for AgentDeployment: " + ResourceUtils.computeResourceMetaKey(agentDeployment)));
+        var agentCard = originalAgentCard.toBuilder().url(agentExecutorUrl).build();
         return PodFunction.FileAsset.builder()
                 .executable(false)
                 .targetDirectory(PodFunction.TargetDirectory.DEPLOY_ARCHIVE)

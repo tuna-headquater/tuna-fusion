@@ -46,7 +46,7 @@ public class LocalHttpZipArchiveSourceHandler extends BaseArchiveHandler {
         Repository repo = receivePack.getRepository();
         var fileId = UUID.randomUUID().toString();
         File zipFile = zipRepositoryRoot.resolve(fileId + ".zip").toFile();
-        log.info("[createSourceArchive] Creating Zip archive: {}", zipFile.getAbsolutePath());
+        log.info("[createSourceArchive] defaultBranch={}, subPath={}, zipFile={}", defaultBranch, subPath, zipFile.getAbsolutePath());
 
         try (RevWalk revWalk = new RevWalk(repo); ZipOutputStream zos = new ZipOutputStream(new BufferedOutputStream(new FileOutputStream(zipFile)))) {
             var tree = filterCommands(revWalk, defaultBranch, commands);
@@ -67,8 +67,8 @@ public class LocalHttpZipArchiveSourceHandler extends BaseArchiveHandler {
                         }
                     }
                     addTreeEntryToZip(receivePack, treeWalk, zos);
+                    log.debug("[createSourceArchive] Added: {}", path);
                 }
-                log.debug("[createSourceArchive] Finished adding entries to zip");
             }
         }
 
