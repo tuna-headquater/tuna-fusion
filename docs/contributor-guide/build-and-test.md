@@ -22,6 +22,14 @@ See `build-all-images.sh` for more details.
 ```
 
 
+## Build Helm chart
+
+Official charts are hosted on `ghcr.io/tuna-headquater`. To trigger push, please run `build-charts.sh`.
+
+```shell title="build-charts.sh"
+--8<-- "build-charts.sh"
+```
+
 ## Build docs
 
 This project employs [mkdocs](https://www.mkdocs.org/) to build documentation. And material theme is used for better experience, alongside other Markdown plugins:

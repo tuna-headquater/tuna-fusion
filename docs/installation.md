@@ -58,7 +58,7 @@ helm version
 For installation with default configurations, just run:
 
 ```shell
-helm upgrade --install -n tuna-fusion-system --create-namespace global-default ./tuna-fusion-charts
+helm upgrade --install -n tuna-fusion-system --create-namespace global-default oci://ghcr.io/tuna-headquater/tuna-fusion --version 0.1.0
 ```
 
 With default configurations, `tuna-fusion` will: 
@@ -69,7 +69,7 @@ With default configurations, `tuna-fusion` will:
 If related CRs would go to other namespaces, you can install `tuna-fusion` with following configurations: 
 
 ```shell
-helm upgrade ns-limited-test-1 ./tuna-fusion-charts \
+helm upgrade ns-limited-test-1 oci://ghcr.io/tuna-headquater/tuna-fusion --version 0.1.0 \
   --install -n tuna-fusion-system \
   --create-namespace \
   --set global.clusterScoped=false \
@@ -89,7 +89,7 @@ With such configurations, `tuna-fusion` will:
 Since we are using namespace scoped installations, multiple instance of `tuna-fusion` could co-exist with each other.  You can install another release watching `test-ns-3` only:
 
 ```shell
-helm upgrade --debug ns-limited-test-2 . \
+helm upgrade --debug ns-limited-test-2 oci://ghcr.io/tuna-headquater/tuna-fusion --version 0.1.0 \
   --install -n tuna-fusion-system \
   --create-namespace \
   --set global.clusterScoped=false \

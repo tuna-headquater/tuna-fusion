@@ -7,3 +7,5 @@ target
 
 .DS_Store
 fusion-a2a-env/test/*/state.json
+
+*.tgz
