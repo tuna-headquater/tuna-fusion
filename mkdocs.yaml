@@ -2,7 +2,6 @@ site_name: Project tuna-fusion
 site_url: https://tuna-headquater.github.io/tuna-fusion
 repo_url: https://github.com/tuna-headquater/tuna-fusion
 repo_name: tuna-headquater/tuna-fusion
-
 nav:
   - Home: index.md
   - Installation: installation.md
