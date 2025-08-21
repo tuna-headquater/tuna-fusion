@@ -9,3 +9,4 @@ target
 fusion-a2a-env/test/*/state.json
 
 *.tgz
+site

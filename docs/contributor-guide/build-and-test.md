@@ -42,3 +42,9 @@ To prepare build tools:
 ```shell
 pip install mkdocs mkdocs-material mkdocs-mermaid2-plugin plantuml-markdown mike
 ```
+
+To trigger multi-version publish
+
+```shell
+
+```

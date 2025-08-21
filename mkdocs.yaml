@@ -41,7 +41,10 @@ plugins:
 markdown_extensions:
   - admonition
   - pymdownx.details
-  - plantuml_markdown
+  - plantuml_markdown:
+      servers: # Servers to use for remote rendering, tried in order
+        - url: https://www.plantuml.com/plantuml
+          kroki: False
   - pymdownx.highlight:
       anchor_linenums: true
       line_spans: __span
