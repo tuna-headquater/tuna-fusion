@@ -101,7 +101,7 @@ helm upgrade --debug ns-limited-test-2 oci://ghcr.io/tuna-headquater/tuna-fusion
 In a more aggressive manner, you can install `tuna-fusion` in cluster scoped mode:
 
 ```shell
-helm upgrade --install -n tuna-fusion-system --create-namespace global-default ./tuna-fusion-charts --set global.clusterScoped=true 
+helm upgrade --install -n tuna-fusion-system --create-namespace global-default oci://ghcr.io/tuna-headquater/tuna-fusion --version 0.1.0 --set global.clusterScoped=true 
 ```
 
 With such configurations, `tuna-fusion` will:
