@@ -19,7 +19,7 @@ Opensource cloud-native agent runtime frameworks.
 
 * Explore documentation site: Visit project [homepage](https://tuna-headquater.github.io/tuna-fusion) for a complete overview, user guides and API references.
 * Use code samples to practice in actions: [tuna-headquarter/tuna-fusion-agent-samples](https://github.com/tuna-headquater/tuna-fusion-agent-samples)
-* See release notes: [https://github.com/tuna-headquater/tuna-fusion/releases]
+* See [release notes](https://github.com/tuna-headquater/tuna-fusion/releases)
 
 # Community
 

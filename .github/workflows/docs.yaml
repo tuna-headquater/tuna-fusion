@@ -28,7 +28,7 @@ jobs:
       contents: write
       actions: read
 
-    if: github.repository == 'tuna-headquater/tuna-fusion'
+#    if: github.repository == 'tuna-headquater/tuna-fusion'
 
     steps:
       - name: Checkout Code
