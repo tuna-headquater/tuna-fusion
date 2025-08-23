@@ -55,11 +55,11 @@ public class AgentDeploymentReconciler implements Reconciler<AgentDeployment>, C
                                         .ifPresent(podFunctionInfo::setStatus);
                         status.setFunction(podFunctionInfo);
                     });
-            AgentResourceUtils.agentExternalUrl(resource, agentEnvironment)
-                    .ifPresent(status::setExecutorUrl);
         }
+        AgentResourceUtils.agentExternalUrl(resource, agentEnvironment)
+                .ifPresent(status::setExecutorUrl);
         patch.setStatus(status);
-        log.info("[reconcile] Patching status for Agent Deployment {}: {}", resource.getMetadata().getName(), status);
+        log.info("[reconcile] Patching AgentDeployment {}: {}", resource.getMetadata().getName(), status);
         return UpdateControl.patchResourceAndStatus(patch);
     }
 }

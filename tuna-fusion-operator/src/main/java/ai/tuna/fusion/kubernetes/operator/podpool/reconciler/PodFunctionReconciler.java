@@ -20,6 +20,7 @@ import org.springframework.stereotype.Component;
 public class PodFunctionReconciler implements Reconciler<PodFunction> {
     @Override
     public UpdateControl<PodFunction> reconcile(PodFunction resource, Context<PodFunction> context) throws Exception {
+        log.debug("[reconcile] PodFunction={}", ResourceUtils.computeResourceMetaKey(resource));
         var podPool = PodPoolResourceUtils.getReferencedPodPool(resource, context.getClient()).orElseThrow();
         PodFunction patch = new PodFunction();
         patch.getMetadata().setName(resource.getMetadata().getName());

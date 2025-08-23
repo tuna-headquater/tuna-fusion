@@ -240,11 +240,9 @@ spec:
                     type: "string"
                 type: "object"
             required:
-            - "a2a"
             - "agentCard"
             - "entrypoint"
             - "environmentName"
-            - "git"
             type: "object"
           status:
             properties:

@@ -36,6 +36,7 @@ public class AgentEnvironmentSpec {
 
     @Required
     @ValidationRule(value = "has(self.podPoolSpec) || has(self.awsLambdaSpec) || has(self.alibabaCloudFunctionComputeSpec)", message = "driver must be included in resource definition.")
+    @ValidationRule(value = "oldSelf.type == self.type", message = "driver.type cannot be changed after creation.")
     private DriverSpec driver;
 
     @Data

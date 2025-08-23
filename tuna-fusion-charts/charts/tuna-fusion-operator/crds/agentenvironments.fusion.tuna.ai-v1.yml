@@ -2953,6 +2953,8 @@ spec:
                 x-kubernetes-validations:
                 - message: "driver must be included in resource definition."
                   rule: "has(self.podPoolSpec) || has(self.awsLambdaSpec) || has(self.alibabaCloudFunctionComputeSpec)"
+                - message: "driver.type cannot be changed after creation."
+                  rule: "oldSelf.type == self.type"
               executor:
                 properties:
                   baseUrl:

@@ -6,7 +6,10 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.fabric8.generator.annotation.Required;
 import io.fabric8.generator.annotation.ValidationRule;
 import io.fabric8.generator.annotation.ValidationRules;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.List;
 
@@ -25,15 +28,23 @@ public class AgentDeploymentSpec {
     private AgentCard agentCard;
 
     @Data
+    @Builder
+    @AllArgsConstructor
+    @NoArgsConstructor
     public static class GitOptions {
-        private String watchedBranchName = "refs/heads/main";
+        private String watchedBranchName;
     }
 
-    @Required
+    public static final GitOptions DefaultGitOptions = AgentDeploymentSpec.GitOptions.builder()
+            .watchedBranchName("refs/heads/main")
+            .build();
+
     private GitOptions git;
 
-
     @Data
+    @Builder
+    @AllArgsConstructor
+    @NoArgsConstructor
     public static class A2ARuntime {
         public enum TaskStoreProvider {
             Postgres,
@@ -43,6 +54,9 @@ public class AgentDeploymentSpec {
         }
 
         @Data
+        @Builder
+        @AllArgsConstructor
+        @NoArgsConstructor
         public static class TaskStore {
             /**
              * table name is auto-generated in operator
@@ -73,6 +87,9 @@ public class AgentDeploymentSpec {
         }
 
         @Data
+        @Builder
+        @AllArgsConstructor
+        @NoArgsConstructor
         public static class QueueManager {
             @Required
             private QueueManagerProvider provider;
@@ -81,6 +98,9 @@ public class AgentDeploymentSpec {
              * channel key prefix and registry key are auto-generated in operator
              */
             @Data
+            @Builder
+            @AllArgsConstructor
+            @NoArgsConstructor
             public static class RedisConfig {
                 @Required
                 private String redisUrl;
@@ -106,8 +126,17 @@ public class AgentDeploymentSpec {
         private QueueManager queueManager;
     }
 
-    @Required
-    private A2ARuntime a2a;
+    public static final A2ARuntime DEFAULT_A2A_RUNTIME = AgentDeploymentSpec.A2ARuntime.builder()
+            .queueManager(AgentDeploymentSpec.A2ARuntime.QueueManager.builder()
+                    .provider(AgentDeploymentSpec.A2ARuntime.QueueManagerProvider.InMemory)
+                    .build())
+            .taskStore(AgentDeploymentSpec.A2ARuntime.TaskStore.builder()
+                    .provider(AgentDeploymentSpec.A2ARuntime.TaskStoreProvider.InMemory)
+                    .build())
+            .build();
+
+    private A2ARuntime a2a = DEFAULT_A2A_RUNTIME;
+
 
     @Required
     private String entrypoint;

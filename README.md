@@ -24,7 +24,7 @@ Opensource cloud-native agent runtime frameworks.
 # Community
 
 * [GitHub discussion](https://github.com/tuna-headquater/tuna-fusion/discussions)
-* [Discord server](https://discord.gg/SkQsFgdC)
+* [Discord server](https://discord.gg/bxyUn4mk)
 
 
 # License

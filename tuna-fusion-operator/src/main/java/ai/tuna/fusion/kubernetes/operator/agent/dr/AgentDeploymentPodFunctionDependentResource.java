@@ -18,17 +18,20 @@ import io.javaoperatorsdk.operator.processing.dependent.kubernetes.CRUDKubernete
 import io.javaoperatorsdk.operator.processing.dependent.kubernetes.KubernetesDependent;
 import io.javaoperatorsdk.operator.processing.dependent.workflow.Condition;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Optional;
 
+import static ai.tuna.fusion.metadata.crd.agent.AgentDeploymentSpec.DEFAULT_A2A_RUNTIME;
 import static ai.tuna.fusion.metadata.crd.podpool.PodFunctionBuild.A2A_RUNTIME_FILENAME;
 import static ai.tuna.fusion.metadata.crd.podpool.PodFunctionBuild.AGENT_CARD_FILENAME;
 
 /**
  * @author robinqu
  */
+@Slf4j
 @KubernetesDependent(informer = @Informer(labelSelector = AgentDeploymentReconciler.SELECTOR))
 public class AgentDeploymentPodFunctionDependentResource extends CRUDKubernetesDependentResource<PodFunction, AgentDeployment> {
 
@@ -45,6 +48,7 @@ public class AgentDeploymentPodFunctionDependentResource extends CRUDKubernetesD
 
     @Override
     protected PodFunction desired(AgentDeployment primary, Context<AgentDeployment> context) {
+        log.debug("[desired] AgentDeployment={}", ResourceUtils.computeResourceMetaKey(primary));
         var podFunction = new PodFunction();
         podFunction.getMetadata().setName(AgentResourceUtils.computeFunctionName(primary));
         podFunction.getMetadata().setNamespace(primary.getMetadata().getNamespace());
@@ -83,7 +87,7 @@ public class AgentDeploymentPodFunctionDependentResource extends CRUDKubernetesD
 
     @SneakyThrows
     private PodFunction.FileAsset renderA2aRuntimeConfigJson(AgentDeployment agentDeployment) {
-        var a2a = agentDeployment.getSpec().getA2a();
+        var a2a = Optional.ofNullable(agentDeployment.getSpec().getA2a()).orElse(DEFAULT_A2A_RUNTIME);
         if (a2a.getQueueManager().getProvider() == AgentDeploymentSpec.A2ARuntime.QueueManagerProvider.Redis) {
             Optional.ofNullable(a2a.getQueueManager().getRedis())
                     .ifPresent(redis -> redis.setTaskRegistryKey("tuna.fusion.a2a.task.%s".formatted(agentDeployment.getMetadata().getName())));
@@ -99,5 +103,4 @@ public class AgentDeploymentPodFunctionDependentResource extends CRUDKubernetesD
                 .executable(false)
                 .build();
     }
-
 }

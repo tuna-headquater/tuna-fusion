@@ -20,12 +20,12 @@ import org.eclipse.jgit.transport.resolver.ServiceNotEnabledException;
 import org.springframework.util.CollectionUtils;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
+import static ai.tuna.fusion.metadata.crd.agent.AgentDeploymentSpec.DefaultGitOptions;
 import static ai.tuna.fusion.metadata.informer.impl.ResourceInformersWrapper.ALL_NAMESPACE_IDENTIFIER;
 
 /**
@@ -79,7 +79,8 @@ public class CustomReceivePackFactory implements ReceivePackFactory<HttpServletR
                 throw new RuntimeException("Current build is running for this AgentDeployment: " + podFunction.getStatus().getCurrentBuild().getName());
             }
 
-            var sourceArchive = sourceArchiveHandler.createSourceArchive(receivePack, commands, agentDeployment.getSpec().getGit().getWatchedBranchName(), subPath);
+            var gitOptions = Optional.ofNullable(agentDeployment.getSpec().getGit()).orElse(DefaultGitOptions);
+            var sourceArchive = sourceArchiveHandler.createSourceArchive(receivePack, commands, gitOptions.getWatchedBranchName(), subPath);
             logInfo(receivePack, "📦 SourceArchive for repository is created successfully: %s", sourceArchive);
 
             var functionBuild = PipelineUtils.createAgentFunctionBuild(kubernetesClient, agentDeployment, podFunction, sourceArchive);

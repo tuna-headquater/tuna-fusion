@@ -46,6 +46,11 @@ public class PodFunctionBuildReconciler implements Reconciler<PodFunctionBuild>,
 
     @Override
     public UpdateControl<PodFunctionBuild> reconcile(PodFunctionBuild resource, Context<PodFunctionBuild> context) {
+        var phase = resource.getStatus().getPhase();
+        if (phase==Failed || phase == Succeeded) {
+            log.debug("noUpdate for terminal PBF: {}", ResourceUtils.computeResourceMetaKey(resource));
+            return UpdateControl.noUpdate();
+        }
         var jobResource = context.getSecondaryResource(Job.class)
                 .orElse(null);
 
