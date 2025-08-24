@@ -83,6 +83,9 @@ spec:
             - "entrypoint"
             - "podPoolName"
             type: "object"
+            x-kubernetes-validations:
+            - message: "PodFunctionSpec.podPoolName cannot be changed"
+              rule: "oldSelf.podPoolName==self.podPoolName"
           status:
             properties:
               currentBuild:

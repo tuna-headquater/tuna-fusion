@@ -24,7 +24,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Optional;
 
-import static ai.tuna.fusion.metadata.crd.agent.AgentDeploymentSpec.DEFAULT_A2A_RUNTIME;
 import static ai.tuna.fusion.metadata.crd.podpool.PodFunctionBuild.A2A_RUNTIME_FILENAME;
 import static ai.tuna.fusion.metadata.crd.podpool.PodFunctionBuild.AGENT_CARD_FILENAME;
 
@@ -87,7 +86,7 @@ public class AgentDeploymentPodFunctionDependentResource extends CRUDKubernetesD
 
     @SneakyThrows
     private PodFunction.FileAsset renderA2aRuntimeConfigJson(AgentDeployment agentDeployment) {
-        var a2a = Optional.ofNullable(agentDeployment.getSpec().getA2a()).orElse(DEFAULT_A2A_RUNTIME);
+        var a2a = agentDeployment.getSpec().getA2a();
         if (a2a.getQueueManager().getProvider() == AgentDeploymentSpec.A2ARuntime.QueueManagerProvider.Redis) {
             Optional.ofNullable(a2a.getQueueManager().getRedis())
                     .ifPresent(redis -> redis.setTaskRegistryKey("tuna.fusion.a2a.task.%s".formatted(agentDeployment.getMetadata().getName())));

@@ -3,25 +3,34 @@ server:
 logging:
   level:
     ai.tuna.fusion: debug
+
 javaoperatorsdk:
   reconcilers:
     agentDeploymentReconciler:
       clusterScoped: false
       namespaces:
         - tuna-system-dev
+        - a2a-samples-ns
     agentEnvironmentReconciler:
       clusterScoped: false
       namespaces:
         - tuna-system-dev
+        - a2a-samples-ns
     podFunctionBuildReconciler:
       clusterScoped: false
       namespaces:
         - tuna-system-dev
+        - a2a-samples-ns
     podFunctionReconciler:
       clusterScoped: false
       namespaces:
         - tuna-system-dev
+        - a2a-samples-ns
     podPoolReconciler:
       clusterScoped: false
       namespaces:
         - tuna-system-dev
+        - a2a-samples-ns
+operator:
+  builderImage: "ghcr.io/tuna-headquater/fusion-a2a-env-builder:1756040491"
+  runtimeImage: "ghcr.io/tuna-headquater/fusion-a2a-fastapi-runtime:1756040491"

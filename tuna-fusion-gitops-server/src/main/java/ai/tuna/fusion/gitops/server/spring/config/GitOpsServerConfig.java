@@ -7,8 +7,10 @@ import ai.tuna.fusion.gitops.server.git.pipeline.impl.FolderSourceArchiveHandler
 import ai.tuna.fusion.gitops.server.git.pipeline.impl.LocalHttpZipArchiveSourceHandler;
 import ai.tuna.fusion.gitops.server.spring.property.GitOpsServerProperties;
 import io.fabric8.kubernetes.client.KubernetesClient;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.jgit.http.server.GitServlet;
+import org.eclipse.jgit.transport.resolver.FileResolver;
 import org.springframework.boot.web.servlet.ServletRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -45,7 +47,7 @@ public class GitOpsServerConfig {
             ) {
         GitServlet gitServlet = new GitServlet();
         gitServlet.setRepositoryResolver(new CustomRepositoryResolver(properties.getReposRootPath()));
-        // 启用 push 支持
+//        gitServlet.setRepositoryResolver(new FileResolver<>(properties.getReposRootPath().toFile(), true));
         gitServlet.setReceivePackFactory(customReceivePackFactory);
         return gitServlet;
     }

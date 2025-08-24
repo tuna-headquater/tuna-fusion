@@ -88,11 +88,16 @@ spec:
                         type: "string"
                     type: "object"
                 type: "object"
+              subPath:
+                type: "string"
               ttlSecondsAfterFinished:
                 type: "integer"
             required:
             - "sourceArchive"
             type: "object"
+            x-kubernetes-validations:
+            - message: "PodFunctionBuildSpec.podFunctionName cannot be changed"
+              rule: "oldSelf.podFunctionName==self.podFunctionName"
           status:
             properties:
               completionTime:

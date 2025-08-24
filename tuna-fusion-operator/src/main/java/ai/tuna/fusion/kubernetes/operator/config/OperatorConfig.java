@@ -1,5 +1,6 @@
 package ai.tuna.fusion.kubernetes.operator.config;
 
+import ai.tuna.fusion.common.ConfigurationUtils;
 import io.javaoperatorsdk.operator.api.config.ConfigurationServiceOverrider;
 import io.javaoperatorsdk.operator.api.config.LeaderElectionConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -27,6 +28,11 @@ public class OperatorConfig {
             configurationServiceOverrider.withLeaderElectionConfiguration(
                     new LeaderElectionConfiguration("leader-election-test", namespace, identity));
         };
+    }
+
+    @Bean
+    ConfigurationUtils configurationUtils() {
+        return new ConfigurationUtils();
     }
 
 }

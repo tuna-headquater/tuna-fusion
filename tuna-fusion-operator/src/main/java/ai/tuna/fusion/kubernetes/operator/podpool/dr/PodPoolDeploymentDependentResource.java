@@ -109,7 +109,7 @@ public class PodPoolDeploymentDependentResource extends CRUDKubernetesDependentR
                 .withServiceAccountName(serviceAccountName(podPool))
                 .addNewContainer()
                 .withName(podPool.getMetadata().getName() + "-container")
-                .withImage(podPool.getSpec().getRuntimeImage())
+                .withImage(Optional.ofNullable(podPool.getSpec().getRuntimeImage()).or(()-> ConfigurationUtils.getStaticValue("operator.runtimeImage")).orElseThrow())
                 .withNewReadinessProbe()
                 .withInitialDelaySeconds(1)
                 .withPeriodSeconds(5)

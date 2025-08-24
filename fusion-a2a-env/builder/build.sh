@@ -23,7 +23,7 @@ else
   fi
   if [ -f "$SOURCE_ARCHIVE_PATH"/pyproject.toml ]; then
     uv pip compile -o /tmp/requirements.txt "$SOURCE_ARCHIVE_PATH"/pyproject.toml
-    uv pip install --link-mode=copy -i "${PYPI_INDEX}" -r /tmp/requirements.txt/requirements.txt --target "$DEPLOY_ARCHIVE_PATH"
+    uv pip install --link-mode=copy -i "${PYPI_INDEX}" -r /tmp/requirements.txt --target "$DEPLOY_ARCHIVE_PATH"
   fi
 fi
 

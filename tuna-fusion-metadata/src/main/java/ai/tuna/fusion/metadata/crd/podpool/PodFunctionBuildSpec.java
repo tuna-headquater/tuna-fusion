@@ -2,6 +2,7 @@ package ai.tuna.fusion.metadata.crd.podpool;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.fabric8.generator.annotation.Required;
+import io.fabric8.generator.annotation.ValidationRule;
 import lombok.Data;
 
 import java.util.List;
@@ -11,6 +12,7 @@ import java.util.List;
  */
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
+@ValidationRule(value = "oldSelf.podFunctionName==self.podFunctionName", message = "PodFunctionBuildSpec.podFunctionName cannot be changed")
 public class PodFunctionBuildSpec {
 
     @Data
@@ -33,4 +35,5 @@ public class PodFunctionBuildSpec {
     private List<PodFunction.FileAsset> additionalFileAssets;
     private String podFunctionName;
     private Long ttlSecondsAfterFinished;
+    private String subPath;
 }

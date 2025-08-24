@@ -6,22 +6,21 @@ import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.errors.RepositoryNotFoundException;
 import org.eclipse.jgit.lib.Repository;
-import org.eclipse.jgit.transport.ServiceMayNotContinueException;
+import org.eclipse.jgit.lib.RepositoryCache;
 import org.eclipse.jgit.transport.resolver.RepositoryResolver;
-import org.eclipse.jgit.transport.resolver.ServiceNotAuthorizedException;
 import org.eclipse.jgit.transport.resolver.ServiceNotEnabledException;
+import org.eclipse.jgit.util.FS;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.UUID;
 
 /**
  * @author robinqu
  */
 @Slf4j
 public class CustomRepositoryResolver implements RepositoryResolver<HttpServletRequest> {
-    // 100MB
-    private static final long MAX_REPO_SIZE = 100 * 1024 * 1024;
 
     private final Path repositoriesRootPath;
 
@@ -37,21 +36,35 @@ public class CustomRepositoryResolver implements RepositoryResolver<HttpServletR
         if (isUnreasonableName(name)) {
             throw new RepositoryNotFoundException(name);
         }
-        File dir = repositoriesRootPath.resolve(UUID.randomUUID().toString()).resolve(name).toFile();
-        if (!dir.mkdirs()) {
-            throw new ServiceNotEnabledException("Failed to create temp repository");
+        var dir = repositoriesRootPath.resolve(name);
+        var dirFile = dir.toFile();
+        if (!Files.exists(dir)) {
+            if (!dirFile.mkdirs()) {
+                throw new RepositoryNotFoundException("Cannot create dir for new repo: " + dirFile);
+            }
+            dirFile.deleteOnExit();
+            log.info("[open] Attempt to init Git at {}", dirFile);
+            try (Git git = Git.init().setGitDir(dirFile).setBare(true).call()) {
+                var repo = git.getRepository();
+                repo.incrementOpen();
+                log.info("Successfully opened repository: {} ", name);
+                return repo;
+            } catch (GitAPIException e) {
+                log.error("Error opening repository: {}", name, e);
+                throw new ServiceNotEnabledException("Error opening repository: " + name, e);
+            }
         }
-        dir.deleteOnExit();
-        try (Git git = Git.init().setDirectory(dir).call()) {
-            // 打开仓库
-            var repo = git.getRepository();
-            repo.incrementOpen();
-            log.info("Successfully opened repository: {} ", name);
-            return repo;
-        } catch (GitAPIException e) {
-            log.error("Error opening repository: {}", name, e);
-            throw new RepositoryNotFoundException("Error opening repository: " + name, e);
+
+        try {
+            log.info("[open] Attempt to re-open Git at {}", dirFile);
+            return RepositoryCache.open(
+                    RepositoryCache.FileKey.exact(dirFile, FS.DETECTED),
+                    true
+            );
+        } catch (IOException e) {
+            throw new ServiceNotEnabledException("Cannot open repo at " + dir, e);
         }
+
     }
 
     private boolean isUnreasonableName(String name) {

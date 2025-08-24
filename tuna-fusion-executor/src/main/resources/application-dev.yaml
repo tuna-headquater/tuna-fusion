@@ -18,3 +18,4 @@ executor:
     clusterScoped: false
     namespaces:
       - tuna-system-dev
+      - a2a-samples-ns

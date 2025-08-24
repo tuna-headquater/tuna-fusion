@@ -2,19 +2,17 @@ package ai.tuna.fusion.gitops.server.spring;
 
 import ai.tuna.fusion.metadata.crd.agent.AgentDeployment;
 import ai.tuna.fusion.metadata.crd.agent.AgentEnvironment;
+import ai.tuna.fusion.metadata.crd.podpool.PodFunction;
 import ai.tuna.fusion.metadata.informer.impl.ResourceInformersWrapper;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import jakarta.servlet.ServletRequest;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.Strings;
 import org.eclipse.jgit.http.server.ServletUtils;
 import org.eclipse.jgit.transport.ReceivePack;
 import org.eclipse.jgit.transport.resolver.ServiceNotEnabledException;
 import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
 
-import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -25,27 +23,28 @@ import java.util.Set;
 @Slf4j
 public class GitRequestContextUtil {
 
-    public record URLParams (String namespace, String agentDeploymentName, String subPath) {}
-
-    public static final String AgentEnvironmentName = "ai.tuna.fusion.gitops.server.agent-environment";
-    public static final String AgentDeploymentName = "ai.tuna.fusion.gitops.server.agent-deployment";
-
-    public static final String URLParamsName = "ai.tuna.fusion.gitops.server.url-params";
+    public record URLParams (String namespace, String agentDeploymentName) {}
 
     public static Optional<AgentEnvironment> getAgentEnvironment() {
         return Optional.ofNullable(
-                (AgentEnvironment) RequestContextHolder.currentRequestAttributes().getAttribute(AgentEnvironmentName, RequestAttributes.SCOPE_REQUEST)
+                (AgentEnvironment) RequestContextHolder.currentRequestAttributes().getAttribute(AgentEnvironment.class.getName(), RequestAttributes.SCOPE_REQUEST)
         );
     }
 
     public static Optional<AgentDeployment> getAgentDeployment() {
         return Optional.ofNullable(
-                (AgentDeployment) RequestContextHolder.currentRequestAttributes().getAttribute(AgentDeploymentName, RequestAttributes.SCOPE_REQUEST)
+                (AgentDeployment) RequestContextHolder.currentRequestAttributes().getAttribute(AgentDeployment.class.getName(), RequestAttributes.SCOPE_REQUEST)
+        );
+    }
+
+    public static Optional<PodFunction> getPodFunction() {
+        return Optional.ofNullable(
+                (PodFunction) RequestContextHolder.currentRequestAttributes().getAttribute(PodFunction.class.getName(), RequestAttributes.SCOPE_REQUEST)
         );
     }
 
     public static Optional<URLParams> getGitURLParams() {
-        return Optional.ofNullable((URLParams) RequestContextHolder.currentRequestAttributes().getAttribute(URLParamsName, RequestAttributes.SCOPE_REQUEST));
+        return Optional.ofNullable((URLParams) RequestContextHolder.currentRequestAttributes().getAttribute(URLParams.class.getName(), RequestAttributes.SCOPE_REQUEST));
     }
 
     public static void initializeRequestAttributes(
@@ -72,9 +71,23 @@ public class GitRequestContextUtil {
                 .inNamespace(params.namespace)
                 .withName(agentDeployment.getSpec().getEnvironmentName())
                 .get();
-        RequestContextHolder.currentRequestAttributes().setAttribute(AgentDeploymentName, agentDeployment, RequestAttributes.SCOPE_REQUEST);
-        RequestContextHolder.currentRequestAttributes().setAttribute(AgentEnvironmentName, agentEnvironment, RequestAttributes.SCOPE_REQUEST);
-        RequestContextHolder.currentRequestAttributes().setAttribute(URLParamsName, params, RequestAttributes.SCOPE_REQUEST);
+        if (Objects.isNull(agentEnvironment)) {
+            throw new ServiceNotEnabledException("AgentEnvironment (name=%s,ns=%s) doesn't exist.".formatted(agentDeployment.getSpec().getEnvironmentName(), params.namespace));
+        }
+
+        var podFunction = kubernetesClient.resources(PodFunction.class)
+                .inNamespace(agentDeployment.getMetadata().getNamespace())
+                .withName(agentDeployment.getStatus().getFunction().getFunctionName())
+                .get();
+        if (Objects.isNull(podFunction)) {
+            throw new ServiceNotEnabledException("PodFunction (name=%s,ns=%s) doesn't exist.".formatted(agentDeployment.getStatus().getFunction().getFunctionName(), agentDeployment.getMetadata().getNamespace()));
+        }
+
+        RequestContextHolder.currentRequestAttributes().setAttribute(AgentDeployment.class.getName(), agentDeployment, RequestAttributes.SCOPE_REQUEST);
+        RequestContextHolder.currentRequestAttributes().setAttribute(AgentEnvironment.class.getName(), agentEnvironment, RequestAttributes.SCOPE_REQUEST);
+        RequestContextHolder.currentRequestAttributes().setAttribute(URLParams.class.getName(), params, RequestAttributes.SCOPE_REQUEST);
+        RequestContextHolder.currentRequestAttributes().setAttribute(PodFunction.class.getName(), podFunction, RequestAttributes.SCOPE_REQUEST);
+
     }
 
     public static URLParams parseUrlParams(ServletRequest request) throws ServiceNotEnabledException {
@@ -87,7 +100,7 @@ public class GitRequestContextUtil {
         var receivePack = Optional.ofNullable(request.getAttribute(ServletUtils.ATTRIBUTE_HANDLER))
                 .map(h -> (ReceivePack) h);
 
-        String pathTemplate = "/repositories/namespaces/{namespace}/agents/{agentDeploymentName}/{*subPath}.git/*";
+        String pathTemplate = "/repositories/namespaces/{namespace}/agents/{agentDeploymentName}.git/*";
         // Validate URL starts with /repositories/
         if (!requestUri.startsWith("/repositories/")) {
             throw new ServiceNotEnabledException("Invalid URL format. Expected pattern: " + pathTemplate);
@@ -114,43 +127,16 @@ public class GitRequestContextUtil {
 
         // Handle subPath and agentDeploymentName
         String agentDeploymentName = "";
-        String subPath = "";
-
-        boolean hasGitExtension = false;
-        StringBuilder subPathBuilder = new StringBuilder();
-        for(int i=5;i<segments.length-1;i++) {
-            var currentSegment = segments[i];
-            if (i==5) {
-                if (currentSegment.endsWith(".git")) {
-                    hasGitExtension = true;
-                    var agentDeploymentSegment = segments[5];
-                    agentDeploymentName = agentDeploymentSegment.substring(0, agentDeploymentSegment.length() - 4); // Remove .git suffix
-                    break;
-                } else {
-                    agentDeploymentName = segments[5];
-                }
-            } else { // subpath given and i>5
-                if (!subPathBuilder.isEmpty()) {
-                    subPathBuilder.append("/");
-                }
-                if (currentSegment.endsWith(".git")) { // lastSegment must end with `.git`
-                    hasGitExtension = true;
-                    subPathBuilder.append(currentSegment, 0, currentSegment.length() - 4);
-                    break;
-                } else {
-                    subPathBuilder.append(segments[i]);
-                }
-            }
-        }
-
-        if (!hasGitExtension) {
+        
+        // Extract agentDeploymentName from segments[5] by removing .git extension if present
+        String potentialAgentName = segments[5];
+        if (potentialAgentName.endsWith(".git")) {
+            agentDeploymentName = potentialAgentName.substring(0, potentialAgentName.length() - 4); // Remove .git
+        } else {
             receivePack.ifPresent(rp -> rp.sendError("URL must end with .git extension"));
             throw new ServiceNotEnabledException("URL must end with .git extension");
         }
-
-        subPath = subPathBuilder.toString();
-
-        return new URLParams(namespace, agentDeploymentName, subPath);
+        return new URLParams(namespace, agentDeploymentName);
     }
 
 

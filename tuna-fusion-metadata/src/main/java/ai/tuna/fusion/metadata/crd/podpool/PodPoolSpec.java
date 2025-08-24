@@ -13,19 +13,16 @@ import static ai.tuna.fusion.metadata.crd.podpool.PodPool.*;
  * @author robinqu
  */
 @Data
-@ValidationRule(value = "has(self.runtimePodSpec) || has(self.runtimeImage)")
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class PodPoolSpec {
     /**
      * The image of the runtime pod.
      */
-    @Required
     private String runtimeImage;
 
     /**
      * The image of the builder pod.
      */
-    @Required
     private String builderImage;
 
     /**

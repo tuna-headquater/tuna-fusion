@@ -56,3 +56,5 @@ data:
       sharedArchivePvcName: {{include "shared.archivePvcName" .}}
       executor:
         baseUrl: {{ include "shared.executorBaseUrl" . }}
+      builderImage: "ghcr.io/tuna-headquater/fusion-a2a-env-builder:{{.Values.global.image.tag}}"
+      runtimeImage: "ghcr.io/tuna-headquater/fusion-a2a-fastapi-runtime:{{.Values.global.image.tag}}"

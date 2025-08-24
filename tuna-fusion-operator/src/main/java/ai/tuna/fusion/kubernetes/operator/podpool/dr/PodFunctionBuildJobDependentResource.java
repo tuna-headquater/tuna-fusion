@@ -44,7 +44,9 @@ public class PodFunctionBuildJobDependentResource extends KubernetesDependentRes
         var sourcePatchPath = PodFunctionBuild.SOURCE_PATCH_PATH.toString();
         var builderImage = Optional.ofNullable(primary.getSpec().getEnvironmentOverrides())
                 .map(PodFunctionBuildSpec.EnvironmentOverrides::getBuilderImage)
-                .orElse(podPool.getSpec().getBuilderImage());
+                .or(()-> Optional.ofNullable(podPool.getSpec().getBuilderImage()))
+                .or(()-> ConfigurationUtils.getStaticValue("operator.builderImage"))
+                .orElseThrow();
         var fileAssetsBuilder = new FunctionBuildPodBuilderFileAssets(primary, podFunction, podPool);
         var ns = podFunction.getMetadata().getNamespace();
         return new JobBuilder()

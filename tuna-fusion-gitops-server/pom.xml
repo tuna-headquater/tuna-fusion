@@ -36,8 +36,13 @@
             <groupId>ai.tuna.fusion</groupId>
             <artifactId>tuna-fusion-server-deps</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
 
-<!--        <dependency>-->
+        <!--        <dependency>-->
 <!--            <groupId>software.amazon.awssdk</groupId>-->
 <!--            <artifactId>s3</artifactId>-->
 <!--        </dependency>-->

@@ -9,13 +9,19 @@ import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.OwnerReference;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
+import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Strings;
+import org.eclipse.jgit.transport.ReceivePack;
 
 import java.io.*;
+import java.nio.file.Path;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
@@ -122,6 +128,74 @@ public class PipelineUtils {
         }
 
         return hexString.toString();
+    }
+
+    public static void compressGitDirectory(Path sourceDir, Path outputZipPath) throws IOException {
+        compressDirectory(sourceDir.toString(), outputZipPath.toString(), ".git");
+    }
+
+    public static void compressDirectory(String sourceDirPath, String outputZipPath, String excludePath) throws IOException {
+        File sourceDirectory = new File(sourceDirPath);
+        if (!sourceDirectory.isDirectory()) {
+            throw new IllegalArgumentException("Source path must be a directory.");
+        }
+
+        try (FileOutputStream fos = new FileOutputStream(outputZipPath);
+             ZipArchiveOutputStream zaos = new ZipArchiveOutputStream(fos)) {
+            addDirectoryToZip(zaos, sourceDirectory, "", excludePath);
+        }
+    }
+
+    private static void addDirectoryToZip(ZipArchiveOutputStream zaos, File sourceDirectory, String entryPath, String excludePath) throws IOException {
+        for (File file : Objects.requireNonNull(sourceDirectory.listFiles())) {
+            String currentEntryPath = entryPath + file.getName();
+            
+            // Skip files/directories that start with the excludePath
+            if (excludePath != null && currentEntryPath.startsWith(excludePath)) {
+                continue;
+            }
+            
+            if (file.isDirectory()) {
+                // Add directory entry (important for empty directories)
+                zaos.putArchiveEntry(new ZipArchiveEntry(file, currentEntryPath + "/"));
+                zaos.closeArchiveEntry();
+                addDirectoryToZip(zaos, file, currentEntryPath + "/", excludePath); // Recurse
+            } else {
+                ZipArchiveEntry entry = new ZipArchiveEntry(file, currentEntryPath);
+                zaos.putArchiveEntry(entry);
+                try (FileInputStream fis = new FileInputStream(file)) {
+                    IOUtils.copy(fis, zaos); // Copy file content
+                }
+                zaos.closeArchiveEntry();
+            }
+        }
+    }
+    
+    // Overloaded method to maintain backward compatibility
+    private static void addDirectoryToZip(ZipArchiveOutputStream zaos, File sourceDirectory, String entryPath) throws IOException {
+        addDirectoryToZip(zaos, sourceDirectory, entryPath, null);
+    }
+
+    public static void logInfo(ReceivePack receivePack, String msg, Object... objects) {
+        var line = objects.length >0 ? msg.formatted(objects) : msg;
+        log.info(line);
+        receivePack.sendMessage(line);
+        try {
+            receivePack.getMessageOutputStream().flush();
+        } catch (IOException e) {
+            log.warn("Failed to flush message output stream", e);
+        }
+    }
+
+    public static void logError(ReceivePack receivePack, Exception ex, String msg, Object... objects) {
+        var line = objects.length > 0 ? msg.formatted(objects) : msg;
+        log.error(line, ex);
+        receivePack.sendError(line);
+        try {
+            receivePack.getMessageOutputStream().flush();
+        } catch (IOException e) {
+            log.warn("Failed to flush message output stream", e);
+        }
     }
 
 }

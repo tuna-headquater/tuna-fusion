@@ -2935,12 +2935,7 @@ spec:
                       ttlPerPod:
                         minimum: 60.0
                         type: "integer"
-                    required:
-                    - "builderImage"
-                    - "runtimeImage"
                     type: "object"
-                    x-kubernetes-validations:
-                    - rule: "has(self.runtimePodSpec) || has(self.runtimeImage)"
                   type:
                     enum:
                     - "AlibabaCloudFunctionCompute"

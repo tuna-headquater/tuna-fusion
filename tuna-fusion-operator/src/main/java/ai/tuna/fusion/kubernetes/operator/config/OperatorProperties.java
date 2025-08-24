@@ -21,6 +21,8 @@ public class OperatorProperties {
     private String sharedArchivePvcName;
     private String builderServiceAccountName;
     private String runtimeServiceAccountName;
+    private String runtimeImage;
+    private String builderImage;
     private AgentEnvironmentSpec.Executor executor;
 
 }

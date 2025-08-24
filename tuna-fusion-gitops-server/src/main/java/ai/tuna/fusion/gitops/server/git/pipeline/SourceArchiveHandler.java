@@ -1,5 +1,6 @@
 package ai.tuna.fusion.gitops.server.git.pipeline;
 
+import ai.tuna.fusion.metadata.crd.agent.AgentDeploymentSpec;
 import ai.tuna.fusion.metadata.crd.podpool.PodFunctionBuildSpec;
 import org.eclipse.jgit.revwalk.RevTree;
 import org.eclipse.jgit.revwalk.RevWalk;
@@ -14,7 +15,7 @@ import java.util.Collection;
  */
 public interface SourceArchiveHandler {
 
-    PodFunctionBuildSpec.SourceArchive createSourceArchive(ReceivePack receivePack, Collection<ReceiveCommand> commands, String defaultBranch, String subPath) throws IOException;
+    PodFunctionBuildSpec.SourceArchive createSourceArchive(ReceivePack receivePack, Collection<ReceiveCommand> commands, AgentDeploymentSpec.GitOptions options) throws IOException;
 
     RevTree filterCommands(RevWalk revWalk, String branchName, Collection<ReceiveCommand> commands) throws IOException;
 

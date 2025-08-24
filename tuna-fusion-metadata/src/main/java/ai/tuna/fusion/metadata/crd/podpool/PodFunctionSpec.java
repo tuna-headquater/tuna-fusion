@@ -2,6 +2,7 @@ package ai.tuna.fusion.metadata.crd.podpool;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.fabric8.generator.annotation.Required;
+import io.fabric8.generator.annotation.ValidationRule;
 import lombok.*;
 
 import java.util.List;
@@ -11,6 +12,7 @@ import java.util.List;
  */
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
+@ValidationRule(value = "oldSelf.podPoolName==self.podPoolName", message = "PodFunctionSpec.podPoolName cannot be changed")
 public class PodFunctionSpec {
 
     @Required
