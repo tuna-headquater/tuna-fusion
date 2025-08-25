@@ -79,10 +79,10 @@ async def configure_build_with_http_zip_source(http_zip_source: HttpZipSource):
 
             # extract file to source folder
             logger.info(f"Extracting source archive to {src_path}")
-            unzip(file, src_path)
+            # unzip(file, src_path)
 
-            # with zipfile.ZipFile(file, 'r') as zip_ref:
-            #     zip_ref.extractall(src_path)
+            with zipfile.ZipFile(file, 'r') as zip_ref:
+                zip_ref.extractall(src_path)
 
 
 async def configure_build_with_folder_source(src: FilesystemFolderSource):

@@ -41,7 +41,7 @@ public class PodPoolSpec {
     private Long ttlPerPod = TTL_IN_SECONDS_FOR_SPECIALIZED_POD;
 
     /**
-     * The pod spec of the runtime pod.
+     * The pod spec of the runtime pod. At present, only envs are used.
      */
     private PodSpec runtimePodSpec;
 

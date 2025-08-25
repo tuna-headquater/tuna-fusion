@@ -14,6 +14,7 @@ import io.javaoperatorsdk.operator.processing.dependent.kubernetes.KubernetesDep
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Optional;
 
 import static ai.tuna.fusion.metadata.crd.PodPoolResourceUtils.computeGenericPodSelectors;
@@ -35,44 +36,75 @@ public class PodPoolDeploymentDependentResource extends CRUDKubernetesDependentR
         var poolSize = Optional.ofNullable(primary.getSpec().getPoolSize())
                 .orElse(DEFAULT_POOL_SIZE);
 
-        var podSpec = Optional.ofNullable(primary.getSpec().getRuntimePodSpec()).map(templatePodSpec -> templatePodSpec.toBuilder().build()).orElseGet(()-> podSpec(primary));
+        var givenEnvs = Optional.ofNullable(primary.getSpec().getRuntimePodSpec()).map(ps -> ps.getContainers().getFirst()).map(Container::getEnv).orElse(Collections.emptyList());
 
-        podSpec.getVolumes().add(new VolumeBuilder()
-                .withName("archive-volume")
-                .withNewPersistentVolumeClaim()
-                .withClaimName(primary.getSpec().getArchivePvcName())
-                .endPersistentVolumeClaim()
-                .build());
-
-        var container = podSpec.getContainers().getFirst();
-        container.getVolumeMounts().add(new VolumeMountBuilder()
-                .withName("archive-volume")
-                .withReadOnly(true)
-                .withMountPath(PodFunctionBuild.ARCHIVE_ROOT_PATH.toString())
-                .build());
-        // clear ports for safety reasons
-        container.getPorts().clear();
-        // add http port
-        container.getPorts().add(new ContainerPortBuilder()
-                        .withContainerPort(PodPool.DEFAULT_RUNTIME_SERVICE_PORT)
-                        .withName("http")
-                        .withProtocol("TCP")
-                .build());
-        container.getEnv().addAll(Arrays.asList(
-                new EnvVarBuilder()
-                        .withName("MANAGED_BY_POD_POOL")
-                        .withValue("true")
-                        .build(),
-                new EnvVarBuilder()
-                        .withName("RUNTIME_SERVICE_PORT")
-                        .withValue(String.valueOf(PodPool.DEFAULT_RUNTIME_SERVICE_PORT))
-                        .build(),
-                new EnvVarBuilder()
-                        .withName("ARCHIVE_ROOT_PATH")
-                        .withValue(PodFunctionBuild.ARCHIVE_ROOT_PATH.toString())
-                        .build()
-        ));
-        podSpec.setSubdomain(PodPoolResourceUtils.computePodPoolServiceName(primary));
+        var podSpec = new PodSpecBuilder()
+                .withServiceAccountName(serviceAccountName(primary))
+                .addNewContainer()
+                .withName(primary.getMetadata().getName() + "-container")
+                .withImage(Optional.ofNullable(primary.getSpec().getRuntimeImage()).or(()-> ConfigurationUtils.getStaticValue("operator.runtimeImage")).orElseThrow())
+                .withNewReadinessProbe()
+                .withInitialDelaySeconds(1)
+                .withPeriodSeconds(5)
+                .withNewHttpGet()
+                .withNewPort()
+                .withValue(PodPool.DEFAULT_RUNTIME_SERVICE_PORT)
+                .endPort()
+                .withScheme("HTTP")
+                .withPath("/health")
+                .endHttpGet()
+                .endReadinessProbe()
+                .withNewLivenessProbe()
+                .withInitialDelaySeconds(3)
+                .withPeriodSeconds(10)
+                .withNewHttpGet()
+                .withNewPort()
+                .withValue(PodPool.DEFAULT_RUNTIME_SERVICE_PORT)
+                .endPort()
+                .withScheme("HTTP")
+                .withPath("/health")
+                .endHttpGet()
+                .endLivenessProbe()
+                .withVolumeMounts(
+                        new VolumeMountBuilder()
+                                .withName("archive-volume")
+                                .withReadOnly(true)
+                                .withMountPath(PodFunctionBuild.ARCHIVE_ROOT_PATH.toString())
+                                .build()
+                )
+                .withPorts(
+                        new ContainerPortBuilder()
+                                .withContainerPort(PodPool.DEFAULT_RUNTIME_SERVICE_PORT)
+                                .withName("http")
+                                .withProtocol("TCP")
+                                .build()
+                )
+                .addAllToEnv(givenEnvs)
+                .addToEnv(
+                        new EnvVarBuilder()
+                                .withName("MANAGED_BY_POD_POOL")
+                                .withValue("true")
+                                .build(),
+                        new EnvVarBuilder()
+                                .withName("RUNTIME_SERVICE_PORT")
+                                .withValue(String.valueOf(PodPool.DEFAULT_RUNTIME_SERVICE_PORT))
+                                .build(),
+                        new EnvVarBuilder()
+                                .withName("ARCHIVE_ROOT_PATH")
+                                .withValue(PodFunctionBuild.ARCHIVE_ROOT_PATH.toString())
+                                .build()
+                )
+                .endContainer()
+                .withVolumes(
+                        new VolumeBuilder()
+                                .withName("archive-volume")
+                                .withNewPersistentVolumeClaim()
+                                .withClaimName(primary.getSpec().getArchivePvcName())
+                                .endPersistentVolumeClaim()
+                                .build()
+                )
+                .withSubdomain(PodPoolResourceUtils.computePodPoolServiceName(primary))
+                .build();
 
         return new DeploymentBuilder()
                 .withNewMetadata()
@@ -101,38 +133,6 @@ public class PodPoolDeploymentDependentResource extends CRUDKubernetesDependentR
                 .withSpec(podSpec)
                 .endTemplate()
                 .endSpec()
-                .build();
-    }
-
-    private PodSpec podSpec(PodPool podPool) {
-        return new PodSpecBuilder()
-                .withServiceAccountName(serviceAccountName(podPool))
-                .addNewContainer()
-                .withName(podPool.getMetadata().getName() + "-container")
-                .withImage(Optional.ofNullable(podPool.getSpec().getRuntimeImage()).or(()-> ConfigurationUtils.getStaticValue("operator.runtimeImage")).orElseThrow())
-                .withNewReadinessProbe()
-                .withInitialDelaySeconds(1)
-                .withPeriodSeconds(5)
-                .withNewHttpGet()
-                .withNewPort()
-                .withValue(PodPool.DEFAULT_RUNTIME_SERVICE_PORT)
-                .endPort()
-                .withScheme("HTTP")
-                .withPath("/health")
-                .endHttpGet()
-                .endReadinessProbe()
-                .withNewLivenessProbe()
-                .withInitialDelaySeconds(3)
-                .withPeriodSeconds(10)
-                .withNewHttpGet()
-                .withNewPort()
-                .withValue(PodPool.DEFAULT_RUNTIME_SERVICE_PORT)
-                .endPort()
-                .withScheme("HTTP")
-                .withPath("/health")
-                .endHttpGet()
-                .endLivenessProbe()
-                .endContainer()
                 .build();
     }
 

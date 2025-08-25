@@ -68,11 +68,14 @@ public class LocalHttpZipArchiveSourceHandler extends BaseArchiveHandler {
             createLocalSnapshotFolder(receivePack, commands, gitOptions, destinationPath);
 
             log.info("[createSourceArchive] Create zip archive and compute checksum: {}", zipFile);
+            var sourcePath = destinationPath;
             if (StringUtils.isNoneBlank(subPath)) {
-                PipelineUtils.compressGitDirectory(destinationPath.resolve(subPath), zipFile);
-            } else {
-                PipelineUtils.compressGitDirectory(destinationPath, zipFile);
+                sourcePath = destinationPath.resolve(subPath);
+                if (!Files.exists(sourcePath)) {
+                    log.info("[createSourceArchive] Illegal subPath: {}", sourcePath);
+                }
             }
+            PipelineUtils.compressGitDirectory(sourcePath, zipFile);
             var sha256 = PipelineUtils.getSha256Checksum(zipFile.toString());
             zipSource.setSha256Checksum(sha256);
 

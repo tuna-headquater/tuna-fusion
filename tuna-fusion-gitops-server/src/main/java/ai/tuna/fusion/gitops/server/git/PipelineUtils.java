@@ -137,7 +137,7 @@ public class PipelineUtils {
     public static void compressDirectory(String sourceDirPath, String outputZipPath, String excludePath) throws IOException {
         File sourceDirectory = new File(sourceDirPath);
         if (!sourceDirectory.isDirectory()) {
-            throw new IllegalArgumentException("Source path must be a directory.");
+            throw new IllegalArgumentException("Source path must be a directory");
         }
 
         try (FileOutputStream fos = new FileOutputStream(outputZipPath);

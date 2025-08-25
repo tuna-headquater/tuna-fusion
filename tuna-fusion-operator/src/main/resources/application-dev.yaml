@@ -32,5 +32,5 @@ javaoperatorsdk:
         - tuna-system-dev
         - a2a-samples-ns
 operator:
-  builderImage: "ghcr.io/tuna-headquater/fusion-a2a-env-builder:1756040491"
-  runtimeImage: "ghcr.io/tuna-headquater/fusion-a2a-fastapi-runtime:1756040491"
+  builderImage: "ghcr.io/tuna-headquater/fusion-a2a-env-builder:1756135574"
+  runtimeImage: "ghcr.io/tuna-headquater/fusion-a2a-fastapi-runtime:1756135574"

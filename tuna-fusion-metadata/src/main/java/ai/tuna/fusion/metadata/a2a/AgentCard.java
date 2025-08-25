@@ -156,7 +156,6 @@ public class AgentCard {
 
     private String documentationUrl;
 
-    @Required
     private Provider provider;
 
     @Required

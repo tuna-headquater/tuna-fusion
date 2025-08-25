@@ -1,7 +1,7 @@
 FROM ubuntu:24.04
-ARG PYPI_INDEX=https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple
+ARG PYPI_INDEX=https://pypi.org/simple
 ENV PYPI_INDEX=${PYPI_INDEX}
-COPY --from=ghcr.io/astral-sh/uv:0.7.12 /uv /uvx /usr/local/bin/
+COPY --from=ghcr.io/astral-sh/uv:0.8.13 /uv /uvx /usr/local/bin/
 WORKDIR /app
 COPY pyproject.toml uv.lock .python-version /app/
 RUN uv sync -i ${PYPI_INDEX}

@@ -199,7 +199,6 @@ spec:
                 - "defaultOutputModes"
                 - "description"
                 - "name"
-                - "provider"
                 - "skills"
                 - "version"
                 type: "object"

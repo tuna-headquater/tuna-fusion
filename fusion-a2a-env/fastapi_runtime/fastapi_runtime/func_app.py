@@ -199,7 +199,7 @@ class FuncApp(FastAPI):
         # check whether the destination is a directory or a file
         if os.path.isdir(filepath):
             # add package directory path into module search path
-            sys.path.append(filepath)
+            sys.path = sys.path + [filepath, filepath + "/" + module_name]
 
             self.logger.debug('__package__ = "{}"'.format(__package__))
             if __package__:
