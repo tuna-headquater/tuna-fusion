@@ -1,16 +1,18 @@
 # tuna-fusion
 
-`tuna-fusion` is an opensource cloud-native agent runtime frameworks.
+`tuna-fusion` is an open-source, cloud-native agent runtime framework.
 
 ## Why `tuna-fusion` matters
 
-* Multi-agent deployment: In common practice, multiple agents are deployed to  fulfil a complex task. Unlike general web applications, different web routes are designed to decompose a complicated web application, a standalone agent is the minimum working unit to achieve this goal. And deployments of multiple agents brings up problems like build efficiency, deployment complexity, and resource management.
-* Session isolation: Current agent execution involves risky actions like autonomous code evaluation and filesystem operations. The agent runtime should have session-level isolation in mind to make sure nobody make agent to delete files owned by others.
-* Vertical integrations: A set of components including MCP tools, vector databases and prompt managements are needed for agents. Orchestration of these components is a challenge. Say, RBAC permission control of agents against MCP toolset, databases.
+* **Multi-agent deployment**: In practice, multiple agents are often deployed to fulfill complex tasks. Unlike traditional web applications where different routes decompose a large application, each standalone agent represents the smallest functional unit. Deploying multiple agents introduces challenges such as build inefficiency, deployment complexity, and resource management.
 
-In the bottom line, we need a new runtime framework to make agentic applications to work in real world enterprise scenarios.
+* **Session isolation**: Agent execution can involve risky operations like autonomous code evaluation and file system access. A robust agent runtime must ensure session-level isolation to prevent one agent from affecting another's resources.
 
-## `tuna-fusion`: a cloud-native approach for agent runtime
+* **Vertical integrations**: Agents rely on various components including MCP tools, vector databases, and prompt management systems. Orchestrating these elements poses significant challenges, such as implementing RBAC-based permissions for agents accessing MCP toolsets and databases.
+
+Ultimately, we need a new runtime framework that enables agentic applications to function effectively in real-world enterprise environments.
+
+## `tuna-fusion`: A cloud-native approach to agent runtime
 
 ```mermaid
 block-beta
@@ -42,36 +44,38 @@ columns 1
 
 ```
 
-In `tuan-fusion`, we offer several Kubernetes CRDs (Custom resource definitions) to abstract components involved in agentic applications. 
+In `tuna-fusion`, we introduce several Kubernetes CRDs (Custom Resource Definitions) to model the components used in agentic applications:
 
-* `AgentEnvironment` defines how we build the agent source code and boostrap the agent instance. Under the hood, `AgentEnvironment` provides `PodTemplate`s for the builder job resource and runtime deployment resource.
-* `AgentDeployment` defines how a single agent behave. It contains the basic information like `AgentCard` and other configurations about A2A runtime.
-* Similar to `AgentEnvironment`, `MCPEnvironment` defines hwo we build MCP server source code and bootstrap mcp server instance.
-* `MCPServer` defines a standalone MCP Server which can be accessed through `tuna-fusion-executor` gateway. By different solutions to provide actual MCP components, we have three kinds of `MCPServer` templates:
-    * Static YAML definitions for prompts, resources backed by configmaps and PVCs and tools to integrate existing HTTP APs.
-    * Run MCP Server component provided by your source code.
-    * Run existing MCP server package from `pypi` and `npm`.
+* **`AgentEnvironment`**: Defines how to build and bootstrap an agent instance. It provides `PodTemplate`s for both the builder job and the runtime deployment resources.
 
-You may notice CRs about Agent and MCP server would translate to `PodPool` and `PodFunction`. These two CRDs are key components in `tuna-fusion` to enable provisioning resources in serverless flavor. That is:
+* **`AgentDeployment`**: Describes the behavior of a single agent, including metadata such as `AgentCard` and configurations for A2A runtime.
 
-* You don't care about how cloud resources are allocated to agent instances, the system would handle it for you.
-* Through Pod pooling, less resources are consumed when hosting a large collection of different agents. Pods are allocated just before the actual requests are received, and they are recycled after certain conditions are met.
+* **`MCPEnvironment`**: Similar to `AgentEnvironment`, it specifies how to build and bootstrap an MCP server instance.
 
+* **`MCPServer`**: Represents a standalone MCP server accessible via the `tuna-fusion-executor` gateway. It supports three types of templates for providing MCP components:
+    * Static YAML definitions for prompts, resources (backed by ConfigMaps and PVCs), and tools for integrating existing HTTP APIs.
+    * Custom MCP server components built from your source code.
+    * Pre-packaged MCP servers from `pypi` or `npm`.
+
+You'll notice that the custom resources for Agents and MCP servers are translated into [PodPool](/tuna-fusion-metadata/src/main/java/ai/tuna/fusion/metadata/crd/podpool/PodPool.java) and [PodFunction](/tuna-fusion-metadata/src/main/java/ai/tuna/fusion/metadata/crd/podpool/PodFunction.java). These two CRDs are key enablers of serverless-style resource provisioning in `tuna-fusion`. This means:
+
+* You don't need to manage how cloud resources are allocated. `tuna-fusion` handles it automatically.
+* Through pod pooling, fewer resources are consumed when hosting many agents. Pods are allocated just before requests arrive and recycled afterward based on usage policies.
 
 ## Getting started with `tuna-fusion`
 
-* Installation: [Installation](installation.md)
-* Dive deep into the design and architecture: 
-    * [Concepts](concepts.md)
-    * [Architecture](architecture.md)
-* Explore code samples
-    * Sample agent implementations: [tuna-headquarter/tuna-fusion-agent-samples](https://github.com/tuna-headquater/tuna-fusion-agent-samples)
-* Learn how to contribute
-    * [Code guidelines](contributor-guide/code-guidelines.md)
-    * [Build and Test](contributor-guide/build-and-test.md)
+* **Installation**: [Installation Guide](installation.md)
+* **Dive into design and architecture**:
+    * [Core Concepts](concepts.md)
+    * [System Architecture](architecture.md)
+* **Explore code samples**:
+    * Sample agents: [tuna-headquarter/tuna-fusion-agent-samples](https://github.com/tuna-headquater/tuna-fusion-agent-samples)
+* **Contribute to the project**:
+    * [Code Guidelines](contributor-guide/code-guidelines.md)
+    * [Build and Test Instructions](contributor-guide/build-and-test.md)
 
 ## Community
 
-* [GitHub discussion](https://github.com/tuna-headquater/tuna-fusion/discussions)
-* [Discord server](https://discord.gg/SkQsFgdC)
+* [GitHub Discussions](https://github.com/tuna-headquater/tuna-fusion/discussions)
+* [Discord Server](https://discord.gg/SkQsFgdC)
 

@@ -215,19 +215,6 @@ To push updates using `git` client, we have to add a git remote first:
 git remote add test-deploy-1 http://tuna-fusion-gitops-server.default.svc.cluster.local/repositories/namespacs/default/agents/test-deploy-1.git
 ```
 
-
-!!! warning
-    
-    If you are using a clone of code sample repositoriy which contains a lot of sub-projects of agent samples. You can add remote with sub-project path, like this:
-    
-    ```
-    git remote add test-deploy-1 http://tuna-fusion-gitops-server.default.svc.cluster.local/repositories/namespacs/default/agents/test-deploy-1/hello_world.git
-    ```
-
-    Notice the `hello_world` part before `.git` above.
-
-
-
 !!! warning
 
     `tuna-fusion-gitops-server` won't persist the code data you commit. In fact, those updates will be discarded right after a git push is finished.
@@ -241,7 +228,7 @@ After a `remote` has been set, you can commence your first `push` to the virtual
 ```shell
 git add .
 git commit -am 'feat: first version of hello world'
-git push -u test-deploy-1
+git push test-deploy-1
 ```
 
 During the push, `tuna-fusion` will:
