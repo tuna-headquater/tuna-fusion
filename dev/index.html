@@ -16,7 +16,7 @@
       
       
       <link rel="icon" href="assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.17">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.18">
     
     
       
@@ -241,9 +241,9 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#tuna-fusion-a-cloud-native-approach-for-agent-runtime" class="md-nav__link">
+  <a href="#tuna-fusion-a-cloud-native-approach-to-agent-runtime" class="md-nav__link">
     <span class="md-ellipsis">
-      tuna-fusion: a cloud-native approach for agent runtime
+      tuna-fusion: A cloud-native approach to agent runtime
     </span>
   </a>
   
@@ -810,9 +810,9 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#tuna-fusion-a-cloud-native-approach-for-agent-runtime" class="md-nav__link">
+  <a href="#tuna-fusion-a-cloud-native-approach-to-agent-runtime" class="md-nav__link">
     <span class="md-ellipsis">
-      tuna-fusion: a cloud-native approach for agent runtime
+      tuna-fusion: A cloud-native approach to agent runtime
     </span>
   </a>
   
@@ -856,15 +856,21 @@
 
 
 <h1 id="tuna-fusion">tuna-fusion</h1>
-<p><code>tuna-fusion</code> is an opensource cloud-native agent runtime frameworks.</p>
+<p><code>tuna-fusion</code> is an open-source, cloud-native agent runtime framework.</p>
 <h2 id="why-tuna-fusion-matters">Why <code>tuna-fusion</code> matters</h2>
 <ul>
-<li>Multi-agent deployment: In common practice, multiple agents are deployed to  fulfil a complex task. Unlike general web applications, different web routes are designed to decompose a complicated web application, a standalone agent is the minimum working unit to achieve this goal. And deployments of multiple agents brings up problems like build efficiency, deployment complexity, and resource management.</li>
-<li>Session isolation: Current agent execution involves risky actions like autonomous code evaluation and filesystem operations. The agent runtime should have session-level isolation in mind to make sure nobody make agent to delete files owned by others.</li>
-<li>Vertical integrations: A set of components including MCP tools, vector databases and prompt managements are needed for agents. Orchestration of these components is a challenge. Say, RBAC permission control of agents against MCP toolset, databases.</li>
+<li>
+<p><strong>Multi-agent deployment</strong>: In practice, multiple agents are often deployed to fulfill complex tasks. Unlike traditional web applications where different routes decompose a large application, each standalone agent represents the smallest functional unit. Deploying multiple agents introduces challenges such as build inefficiency, deployment complexity, and resource management.</p>
+</li>
+<li>
+<p><strong>Session isolation</strong>: Agent execution can involve risky operations like autonomous code evaluation and file system access. A robust agent runtime must ensure session-level isolation to prevent one agent from affecting another's resources.</p>
+</li>
+<li>
+<p><strong>Vertical integrations</strong>: Agents rely on various components including MCP tools, vector databases, and prompt management systems. Orchestrating these elements poses significant challenges, such as implementing RBAC-based permissions for agents accessing MCP toolsets and databases.</p>
+</li>
 </ul>
-<p>In the bottom line, we need a new runtime framework to make agentic applications to work in real world enterprise scenarios.</p>
-<h2 id="tuna-fusion-a-cloud-native-approach-for-agent-runtime"><code>tuna-fusion</code>: a cloud-native approach for agent runtime</h2>
+<p>Ultimately, we need a new runtime framework that enables agentic applications to function effectively in real-world enterprise environments.</p>
+<h2 id="tuna-fusion-a-cloud-native-approach-to-agent-runtime"><code>tuna-fusion</code>: A cloud-native approach to agent runtime</h2>
 <pre class="mermaid"><code>block-beta
 columns 1
     block:agents
@@ -892,45 +898,53 @@ columns 1
     PodFunction -- "claim" --&gt; Pod
     PodPool -- "provision" --&gt; Pod
 </code></pre>
-<p>In <code>tuan-fusion</code>, we offer several Kubernetes CRDs (Custom resource definitions) to abstract components involved in agentic applications. </p>
+<p>In <code>tuna-fusion</code>, we introduce several Kubernetes CRDs (Custom Resource Definitions) to model the components used in agentic applications:</p>
 <ul>
-<li><code>AgentEnvironment</code> defines how we build the agent source code and boostrap the agent instance. Under the hood, <code>AgentEnvironment</code> provides <code>PodTemplate</code>s for the builder job resource and runtime deployment resource.</li>
-<li><code>AgentDeployment</code> defines how a single agent behave. It contains the basic information like <code>AgentCard</code> and other configurations about A2A runtime.</li>
-<li>Similar to <code>AgentEnvironment</code>, <code>MCPEnvironment</code> defines hwo we build MCP server source code and bootstrap mcp server instance.</li>
-<li><code>MCPServer</code> defines a standalone MCP Server which can be accessed through <code>tuna-fusion-executor</code> gateway. By different solutions to provide actual MCP components, we have three kinds of <code>MCPServer</code> templates:<ul>
-<li>Static YAML definitions for prompts, resources backed by configmaps and PVCs and tools to integrate existing HTTP APs.</li>
-<li>Run MCP Server component provided by your source code.</li>
-<li>Run existing MCP server package from <code>pypi</code> and <code>npm</code>.</li>
+<li>
+<p><strong><code>AgentEnvironment</code></strong>: Defines how to build and bootstrap an agent instance. It provides <code>PodTemplate</code>s for both the builder job and the runtime deployment resources.</p>
+</li>
+<li>
+<p><strong><code>AgentDeployment</code></strong>: Describes the behavior of a single agent, including metadata such as <code>AgentCard</code> and configurations for A2A runtime.</p>
+</li>
+<li>
+<p><strong><code>MCPEnvironment</code></strong>: Similar to <code>AgentEnvironment</code>, it specifies how to build and bootstrap an MCP server instance.</p>
+</li>
+<li>
+<p><strong><code>MCPServer</code></strong>: Represents a standalone MCP server accessible via the <code>tuna-fusion-executor</code> gateway. It supports three types of templates for providing MCP components:</p>
+<ul>
+<li>Static YAML definitions for prompts, resources (backed by ConfigMaps and PVCs), and tools for integrating existing HTTP APIs.</li>
+<li>Custom MCP server components built from your source code.</li>
+<li>Pre-packaged MCP servers from <code>pypi</code> or <code>npm</code>.</li>
 </ul>
 </li>
 </ul>
-<p>You may notice CRs about Agent and MCP server would translate to <code>PodPool</code> and <code>PodFunction</code>. These two CRDs are key components in <code>tuna-fusion</code> to enable provisioning resources in serverless flavor. That is:</p>
+<p>You'll notice that the custom resources for Agents and MCP servers are translated into <a href="/tuna-fusion-metadata/src/main/java/ai/tuna/fusion/metadata/crd/podpool/PodPool.java">PodPool</a> and <a href="/tuna-fusion-metadata/src/main/java/ai/tuna/fusion/metadata/crd/podpool/PodFunction.java">PodFunction</a>. These two CRDs are key enablers of serverless-style resource provisioning in <code>tuna-fusion</code>. This means:</p>
 <ul>
-<li>You don't care about how cloud resources are allocated to agent instances, the system would handle it for you.</li>
-<li>Through Pod pooling, less resources are consumed when hosting a large collection of different agents. Pods are allocated just before the actual requests are received, and they are recycled after certain conditions are met.</li>
+<li>You don't need to manage how cloud resources are allocated. <code>tuna-fusion</code> handles it automatically.</li>
+<li>Through pod pooling, fewer resources are consumed when hosting many agents. Pods are allocated just before requests arrive and recycled afterward based on usage policies.</li>
 </ul>
 <h2 id="getting-started-with-tuna-fusion">Getting started with <code>tuna-fusion</code></h2>
 <ul>
-<li>Installation: <a href="installation/">Installation</a></li>
-<li>Dive deep into the design and architecture: <ul>
-<li><a href="concepts/">Concepts</a></li>
-<li><a href="architecture/">Architecture</a></li>
+<li><strong>Installation</strong>: <a href="installation/">Installation Guide</a></li>
+<li><strong>Dive into design and architecture</strong>:<ul>
+<li><a href="concepts/">Core Concepts</a></li>
+<li><a href="architecture/">System Architecture</a></li>
 </ul>
 </li>
-<li>Explore code samples<ul>
-<li>Sample agent implementations: <a href="https://github.com/tuna-headquater/tuna-fusion-agent-samples">tuna-headquarter/tuna-fusion-agent-samples</a></li>
+<li><strong>Explore code samples</strong>:<ul>
+<li>Sample agents: <a href="https://github.com/tuna-headquater/tuna-fusion-agent-samples">tuna-headquarter/tuna-fusion-agent-samples</a></li>
 </ul>
 </li>
-<li>Learn how to contribute<ul>
-<li><a href="contributor-guide/code-guidelines/">Code guidelines</a></li>
-<li><a href="contributor-guide/build-and-test/">Build and Test</a></li>
+<li><strong>Contribute to the project</strong>:<ul>
+<li><a href="contributor-guide/code-guidelines/">Code Guidelines</a></li>
+<li><a href="contributor-guide/build-and-test/">Build and Test Instructions</a></li>
 </ul>
 </li>
 </ul>
 <h2 id="community">Community</h2>
 <ul>
-<li><a href="https://github.com/tuna-headquater/tuna-fusion/discussions">GitHub discussion</a></li>
-<li><a href="https://discord.gg/SkQsFgdC">Discord server</a></li>
+<li><a href="https://github.com/tuna-headquater/tuna-fusion/discussions">GitHub Discussions</a></li>
+<li><a href="https://discord.gg/SkQsFgdC">Discord Server</a></li>
 </ul>
 
 

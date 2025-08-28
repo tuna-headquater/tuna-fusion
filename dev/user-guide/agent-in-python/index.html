@@ -18,7 +18,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.17">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.18">
     
     
       
@@ -1279,20 +1279,13 @@
 </span></code></pre></div>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
-<p>If you are using a clone of code sample repositoriy which contains a lot of sub-projects of agent samples. You can add remote with sub-project path, like this:</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>git remote add test-deploy-1 http://tuna-fusion-gitops-server.default.svc.cluster.local/repositories/namespacs/default/agents/test-deploy-1/hello_world.git
-</span></code></pre></div>
-<p>Notice the <code>hello_world</code> part before <code>.git</code> above.</p>
-</div>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
 <p><code>tuna-fusion-gitops-server</code> won't persist the code data you commit. In fact, those updates will be discarded right after a git push is finished.</p>
 <p>Use virtual repositroies solely for CI pipelines not for traiditonal source code management.</p>
 </div>
 <p>After a <code>remote</code> has been set, you can commence your first <code>push</code> to the virtual repository:</p>
-<div class="language-shell highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>git<span class="w"> </span>add<span class="w"> </span>.
-</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>git<span class="w"> </span>commit<span class="w"> </span>-am<span class="w"> </span><span class="s1">&#39;feat: first version of hello world&#39;</span>
-</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>git<span class="w"> </span>push<span class="w"> </span>-u<span class="w"> </span>test-deploy-1
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>git<span class="w"> </span>add<span class="w"> </span>.
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>git<span class="w"> </span>commit<span class="w"> </span>-am<span class="w"> </span><span class="s1">&#39;feat: first version of hello world&#39;</span>
+</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>git<span class="w"> </span>push<span class="w"> </span>test-deploy-1
 </span></code></pre></div>
 <p>During the push, <code>tuna-fusion</code> will:</p>
 <ol>
@@ -1302,25 +1295,25 @@
 </ol>
 <h4 id="alternative-way-create-podfunctionbuild-manually">Alternative way: Create <code>PodFunctionBuild</code> manually</h4>
 <p>Example resource manifest:</p>
-<div class="language-yaml highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">pod-function-build-1.yaml</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-12-1"> 1</a></span>
-<span class="normal"><a href="#__codelineno-12-2"> 2</a></span>
-<span class="normal"><a href="#__codelineno-12-3"> 3</a></span>
-<span class="normal"><a href="#__codelineno-12-4"> 4</a></span>
-<span class="normal"><a href="#__codelineno-12-5"> 5</a></span>
-<span class="normal"><a href="#__codelineno-12-6"> 6</a></span>
-<span class="normal"><a href="#__codelineno-12-7"> 7</a></span>
-<span class="normal"><a href="#__codelineno-12-8"> 8</a></span>
-<span class="normal"><a href="#__codelineno-12-9"> 9</a></span>
-<span class="normal"><a href="#__codelineno-12-10">10</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1"></a><span class="nt">apiVersion</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">fusion.tuna.ai/v1</span>
-</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2"></a><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">PodFunctionBuild</span><span class="w"> </span><span class="c1"># (1)</span>
-</span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3"></a><span class="nt">metadata</span><span class="p">:</span>
-</span><span id="__span-12-4"><a id="__codelineno-12-4" name="__codelineno-12-4"></a><span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">test-pod-function-build-1</span><span class="w"> </span><span class="c1"># (2) </span>
-</span><span id="__span-12-5"><a id="__codelineno-12-5" name="__codelineno-12-5"></a><span class="nt">spec</span><span class="p">:</span>
-</span><span id="__span-12-6"><a id="__codelineno-12-6" name="__codelineno-12-6"></a><span class="w">  </span><span class="nt">podFunctionName</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">test-deploy-1</span><span class="w"> </span><span class="c1"># (3)</span>
-</span><span id="__span-12-7"><a id="__codelineno-12-7" name="__codelineno-12-7"></a><span class="w">  </span><span class="nt">sourceArchive</span><span class="p">:</span>
-</span><span id="__span-12-8"><a id="__codelineno-12-8" name="__codelineno-12-8"></a><span class="w">    </span><span class="nt">httpZipSource</span><span class="p">:</span>
-</span><span id="__span-12-9"><a id="__codelineno-12-9" name="__codelineno-12-9"></a><span class="w">      </span><span class="nt">url</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">https://gist.github.com/RobinQu/f8f755f8bb0807ad564662c637175d23/archive/e82defc2b563fbc9f36b49a94cc3b8b80e5be689.zip</span><span class="w"> </span><span class="c1"># (4)</span>
-</span><span id="__span-12-10"><a id="__codelineno-12-10" name="__codelineno-12-10"></a><span class="w">      </span><span class="nt">sha256Checksum</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5aa97e2c44e86a9993ba3f4a450847b8c6912439bb83b1e1037ac9a5408df65f</span><span class="w"> </span><span class="c1"># (5)</span>
+<div class="language-yaml highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">pod-function-build-1.yaml</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-11-1"> 1</a></span>
+<span class="normal"><a href="#__codelineno-11-2"> 2</a></span>
+<span class="normal"><a href="#__codelineno-11-3"> 3</a></span>
+<span class="normal"><a href="#__codelineno-11-4"> 4</a></span>
+<span class="normal"><a href="#__codelineno-11-5"> 5</a></span>
+<span class="normal"><a href="#__codelineno-11-6"> 6</a></span>
+<span class="normal"><a href="#__codelineno-11-7"> 7</a></span>
+<span class="normal"><a href="#__codelineno-11-8"> 8</a></span>
+<span class="normal"><a href="#__codelineno-11-9"> 9</a></span>
+<span class="normal"><a href="#__codelineno-11-10">10</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1"></a><span class="nt">apiVersion</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">fusion.tuna.ai/v1</span>
+</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2"></a><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">PodFunctionBuild</span><span class="w"> </span><span class="c1"># (1)</span>
+</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3"></a><span class="nt">metadata</span><span class="p">:</span>
+</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4"></a><span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">test-pod-function-build-1</span><span class="w"> </span><span class="c1"># (2) </span>
+</span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5"></a><span class="nt">spec</span><span class="p">:</span>
+</span><span id="__span-11-6"><a id="__codelineno-11-6" name="__codelineno-11-6"></a><span class="w">  </span><span class="nt">podFunctionName</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">test-deploy-1</span><span class="w"> </span><span class="c1"># (3)</span>
+</span><span id="__span-11-7"><a id="__codelineno-11-7" name="__codelineno-11-7"></a><span class="w">  </span><span class="nt">sourceArchive</span><span class="p">:</span>
+</span><span id="__span-11-8"><a id="__codelineno-11-8" name="__codelineno-11-8"></a><span class="w">    </span><span class="nt">httpZipSource</span><span class="p">:</span>
+</span><span id="__span-11-9"><a id="__codelineno-11-9" name="__codelineno-11-9"></a><span class="w">      </span><span class="nt">url</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">https://gist.github.com/RobinQu/f8f755f8bb0807ad564662c637175d23/archive/e82defc2b563fbc9f36b49a94cc3b8b80e5be689.zip</span><span class="w"> </span><span class="c1"># (4)</span>
+</span><span id="__span-11-10"><a id="__codelineno-11-10" name="__codelineno-11-10"></a><span class="w">      </span><span class="nt">sha256Checksum</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5aa97e2c44e86a9993ba3f4a450847b8c6912439bb83b1e1037ac9a5408df65f</span><span class="w"> </span><span class="c1"># (5)</span>
 </span></code></pre></div></td></tr></table></div>
 <ol>
 <li><code>PodFunctionBuild</code> is a resource that triggers build process.</li>
@@ -1331,186 +1324,186 @@
 </ol>
 <h3 id="check-status-of-test-deploy-1">Check status of <code>test-deploy-1</code></h3>
 <p>After the push is processed, you can check the status of <code>AgentDeployment</code> by running:</p>
-<div class="language-shell highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>kubectl<span class="w"> </span>get<span class="w"> </span>ad<span class="w"> </span>test-deploy-1
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>kubectl<span class="w"> </span>get<span class="w"> </span>ad<span class="w"> </span>test-deploy-1
 </span></code></pre></div>
 <p>Here <code>ad</code> is abbreviation of <code>AgentDeployment</code>, and <code>test-deploy-1</code> is the name of the <code>AgentDeployment</code> resource. In the <code>CURRENTBUILD</code> column you should see latest build in status of success. </p>
 <p>Before continue to next part, let's write down the link in <code>URL</code> column of deployed agent, which is the base URL for A2A Client.</p>
 <h3 id="visiting-your-first-agent">Visiting your first agent</h3>
 <p>To interact with <code>test-deploy-1</code> agent, you can use <a href="https://github.com/a2aproject/a2a-inspector">a2a-inspector</a> utility. Or just write a simple python script to send messages.</p>
 <p>In the following code, we demonstrate how to access <code>test-deploy-1</code> using <code>a2a-python</code> SDK.</p>
-<div class="language-python highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">client.py</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-14-1"> 1</a></span>
-<span class="normal"><a href="#__codelineno-14-2"> 2</a></span>
-<span class="normal"><a href="#__codelineno-14-3"> 3</a></span>
-<span class="normal"><a href="#__codelineno-14-4"> 4</a></span>
-<span class="normal"><a href="#__codelineno-14-5"> 5</a></span>
-<span class="normal"><a href="#__codelineno-14-6"> 6</a></span>
-<span class="normal"><a href="#__codelineno-14-7"> 7</a></span>
-<span class="normal"><a href="#__codelineno-14-8"> 8</a></span>
-<span class="normal"><a href="#__codelineno-14-9"> 9</a></span>
-<span class="normal"><a href="#__codelineno-14-10">10</a></span>
-<span class="normal"><a href="#__codelineno-14-11">11</a></span>
-<span class="normal"><a href="#__codelineno-14-12">12</a></span>
-<span class="normal"><a href="#__codelineno-14-13">13</a></span>
-<span class="normal"><a href="#__codelineno-14-14">14</a></span>
-<span class="normal"><a href="#__codelineno-14-15">15</a></span>
-<span class="normal"><a href="#__codelineno-14-16">16</a></span>
-<span class="normal"><a href="#__codelineno-14-17">17</a></span>
-<span class="normal"><a href="#__codelineno-14-18">18</a></span>
-<span class="normal"><a href="#__codelineno-14-19">19</a></span>
-<span class="normal"><a href="#__codelineno-14-20">20</a></span>
-<span class="normal"><a href="#__codelineno-14-21">21</a></span>
-<span class="normal"><a href="#__codelineno-14-22">22</a></span>
-<span class="normal"><a href="#__codelineno-14-23">23</a></span>
-<span class="normal"><a href="#__codelineno-14-24">24</a></span>
-<span class="normal"><a href="#__codelineno-14-25">25</a></span>
-<span class="normal"><a href="#__codelineno-14-26">26</a></span>
-<span class="normal"><a href="#__codelineno-14-27">27</a></span>
-<span class="normal"><a href="#__codelineno-14-28">28</a></span>
-<span class="normal"><a href="#__codelineno-14-29">29</a></span>
-<span class="normal"><a href="#__codelineno-14-30">30</a></span>
-<span class="normal"><a href="#__codelineno-14-31">31</a></span>
-<span class="normal"><a href="#__codelineno-14-32">32</a></span>
-<span class="normal"><a href="#__codelineno-14-33">33</a></span>
-<span class="normal"><a href="#__codelineno-14-34">34</a></span>
-<span class="normal"><a href="#__codelineno-14-35">35</a></span>
-<span class="normal"><a href="#__codelineno-14-36">36</a></span>
-<span class="normal"><a href="#__codelineno-14-37">37</a></span>
-<span class="normal"><a href="#__codelineno-14-38">38</a></span>
-<span class="normal"><a href="#__codelineno-14-39">39</a></span>
-<span class="normal"><a href="#__codelineno-14-40">40</a></span>
-<span class="normal"><a href="#__codelineno-14-41">41</a></span>
-<span class="normal"><a href="#__codelineno-14-42">42</a></span>
-<span class="normal"><a href="#__codelineno-14-43">43</a></span>
-<span class="normal"><a href="#__codelineno-14-44">44</a></span>
-<span class="normal"><a href="#__codelineno-14-45">45</a></span>
-<span class="normal"><a href="#__codelineno-14-46">46</a></span>
-<span class="normal"><a href="#__codelineno-14-47">47</a></span>
-<span class="normal"><a href="#__codelineno-14-48">48</a></span>
-<span class="normal"><a href="#__codelineno-14-49">49</a></span>
-<span class="normal"><a href="#__codelineno-14-50">50</a></span>
-<span class="normal"><a href="#__codelineno-14-51">51</a></span>
-<span class="normal"><a href="#__codelineno-14-52">52</a></span>
-<span class="normal"><a href="#__codelineno-14-53">53</a></span>
-<span class="normal"><a href="#__codelineno-14-54">54</a></span>
-<span class="normal"><a href="#__codelineno-14-55">55</a></span>
-<span class="normal"><a href="#__codelineno-14-56">56</a></span>
-<span class="normal"><a href="#__codelineno-14-57">57</a></span>
-<span class="normal"><a href="#__codelineno-14-58">58</a></span>
-<span class="normal"><a href="#__codelineno-14-59">59</a></span>
-<span class="normal"><a href="#__codelineno-14-60">60</a></span>
-<span class="normal"><a href="#__codelineno-14-61">61</a></span>
-<span class="normal"><a href="#__codelineno-14-62">62</a></span>
-<span class="normal"><a href="#__codelineno-14-63">63</a></span>
-<span class="normal"><a href="#__codelineno-14-64">64</a></span>
-<span class="normal"><a href="#__codelineno-14-65">65</a></span>
-<span class="normal"><a href="#__codelineno-14-66">66</a></span>
-<span class="normal"><a href="#__codelineno-14-67">67</a></span>
-<span class="normal"><a href="#__codelineno-14-68">68</a></span>
-<span class="normal"><a href="#__codelineno-14-69">69</a></span>
-<span class="normal"><a href="#__codelineno-14-70">70</a></span>
-<span class="normal"><a href="#__codelineno-14-71">71</a></span>
-<span class="normal"><a href="#__codelineno-14-72">72</a></span>
-<span class="normal"><a href="#__codelineno-14-73">73</a></span>
-<span class="normal"><a href="#__codelineno-14-74">74</a></span>
-<span class="normal"><a href="#__codelineno-14-75">75</a></span>
-<span class="normal"><a href="#__codelineno-14-76">76</a></span>
-<span class="normal"><a href="#__codelineno-14-77">77</a></span>
-<span class="normal"><a href="#__codelineno-14-78">78</a></span>
-<span class="normal"><a href="#__codelineno-14-79">79</a></span>
-<span class="normal"><a href="#__codelineno-14-80">80</a></span>
-<span class="normal"><a href="#__codelineno-14-81">81</a></span>
-<span class="normal"><a href="#__codelineno-14-82">82</a></span>
-<span class="normal"><a href="#__codelineno-14-83">83</a></span>
-<span class="normal"><a href="#__codelineno-14-84">84</a></span>
-<span class="normal"><a href="#__codelineno-14-85">85</a></span>
-<span class="normal"><a href="#__codelineno-14-86">86</a></span>
-<span class="normal"><a href="#__codelineno-14-87">87</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
-</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2"></a>
-</span><span id="__span-14-3"><a id="__codelineno-14-3" name="__codelineno-14-3"></a><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span>
-</span><span id="__span-14-4"><a id="__codelineno-14-4" name="__codelineno-14-4"></a><span class="kn">from</span><span class="w"> </span><span class="nn">uuid</span><span class="w"> </span><span class="kn">import</span> <span class="n">uuid4</span>
-</span><span id="__span-14-5"><a id="__codelineno-14-5" name="__codelineno-14-5"></a>
-</span><span id="__span-14-6"><a id="__codelineno-14-6" name="__codelineno-14-6"></a><span class="kn">import</span><span class="w"> </span><span class="nn">httpx</span>
-</span><span id="__span-14-7"><a id="__codelineno-14-7" name="__codelineno-14-7"></a>
-</span><span id="__span-14-8"><a id="__codelineno-14-8" name="__codelineno-14-8"></a><span class="kn">from</span><span class="w"> </span><span class="nn">a2a.client</span><span class="w"> </span><span class="kn">import</span> <span class="n">A2ACardResolver</span><span class="p">,</span> <span class="n">A2AClient</span>
-</span><span id="__span-14-9"><a id="__codelineno-14-9" name="__codelineno-14-9"></a><span class="kn">from</span><span class="w"> </span><span class="nn">a2a.types</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-</span><span id="__span-14-10"><a id="__codelineno-14-10" name="__codelineno-14-10"></a>    <span class="n">AgentCard</span><span class="p">,</span>
-</span><span id="__span-14-11"><a id="__codelineno-14-11" name="__codelineno-14-11"></a>    <span class="n">MessageSendParams</span><span class="p">,</span>
-</span><span id="__span-14-12"><a id="__codelineno-14-12" name="__codelineno-14-12"></a>    <span class="n">SendMessageRequest</span><span class="p">,</span>
-</span><span id="__span-14-13"><a id="__codelineno-14-13" name="__codelineno-14-13"></a>    <span class="n">SendStreamingMessageRequest</span><span class="p">,</span>
-</span><span id="__span-14-14"><a id="__codelineno-14-14" name="__codelineno-14-14"></a><span class="p">)</span>
-</span><span id="__span-14-15"><a id="__codelineno-14-15" name="__codelineno-14-15"></a>
-</span><span id="__span-14-16"><a id="__codelineno-14-16" name="__codelineno-14-16"></a>
-</span><span id="__span-14-17"><a id="__codelineno-14-17" name="__codelineno-14-17"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="__span-14-18"><a id="__codelineno-14-18" name="__codelineno-14-18"></a>    <span class="n">PUBLIC_AGENT_CARD_PATH</span> <span class="o">=</span> <span class="s1">&#39;/.well-known/agent.json&#39;</span>
-</span><span id="__span-14-19"><a id="__codelineno-14-19" name="__codelineno-14-19"></a>
-</span><span id="__span-14-20"><a id="__codelineno-14-20" name="__codelineno-14-20"></a>    <span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">)</span> <span class="c1"># (1)</span>
-</span><span id="__span-14-21"><a id="__codelineno-14-21" name="__codelineno-14-21"></a>    <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>  <span class="c1"># Get a logger instance</span>
-</span><span id="__span-14-22"><a id="__codelineno-14-22" name="__codelineno-14-22"></a>
-</span><span id="__span-14-23"><a id="__codelineno-14-23" name="__codelineno-14-23"></a>    <span class="n">base_url</span> <span class="o">=</span> <span class="s1">&#39;http://tuna-fusion-executor.default.svc.cluster.local/a2a/namespaces/default/agents/test-deploy-1&#39;</span> <span class="c1"># (2)</span>
-</span><span id="__span-14-24"><a id="__codelineno-14-24" name="__codelineno-14-24"></a>
-</span><span id="__span-14-25"><a id="__codelineno-14-25" name="__codelineno-14-25"></a>    <span class="k">async</span> <span class="k">with</span> <span class="n">httpx</span><span class="o">.</span><span class="n">AsyncClient</span><span class="p">()</span> <span class="k">as</span> <span class="n">httpx_client</span><span class="p">:</span>
-</span><span id="__span-14-26"><a id="__codelineno-14-26" name="__codelineno-14-26"></a>        <span class="c1"># Initialize A2ACardResolver</span>
-</span><span id="__span-14-27"><a id="__codelineno-14-27" name="__codelineno-14-27"></a>        <span class="n">resolver</span> <span class="o">=</span> <span class="n">A2ACardResolver</span><span class="p">(</span>
-</span><span id="__span-14-28"><a id="__codelineno-14-28" name="__codelineno-14-28"></a>            <span class="n">httpx_client</span><span class="o">=</span><span class="n">httpx_client</span><span class="p">,</span>
-</span><span id="__span-14-29"><a id="__codelineno-14-29" name="__codelineno-14-29"></a>            <span class="n">base_url</span><span class="o">=</span><span class="n">base_url</span><span class="p">,</span> <span class="c1"># (3)</span>
-</span><span id="__span-14-30"><a id="__codelineno-14-30" name="__codelineno-14-30"></a>        <span class="p">)</span>
-</span><span id="__span-14-31"><a id="__codelineno-14-31" name="__codelineno-14-31"></a>
-</span><span id="__span-14-32"><a id="__codelineno-14-32" name="__codelineno-14-32"></a>        <span class="k">try</span><span class="p">:</span>
-</span><span id="__span-14-33"><a id="__codelineno-14-33" name="__codelineno-14-33"></a>            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
-</span><span id="__span-14-34"><a id="__codelineno-14-34" name="__codelineno-14-34"></a>                <span class="sa">f</span><span class="s1">&#39;Attempting to fetch public agent card from: </span><span class="si">{</span><span class="n">base_url</span><span class="si">}{</span><span class="n">PUBLIC_AGENT_CARD_PATH</span><span class="si">}</span><span class="s1">&#39;</span>
-</span><span id="__span-14-35"><a id="__codelineno-14-35" name="__codelineno-14-35"></a>            <span class="p">)</span>
-</span><span id="__span-14-36"><a id="__codelineno-14-36" name="__codelineno-14-36"></a>            <span class="n">final_agent_card_to_use</span> <span class="o">=</span> <span class="p">(</span>
-</span><span id="__span-14-37"><a id="__codelineno-14-37" name="__codelineno-14-37"></a>                <span class="k">await</span> <span class="n">resolver</span><span class="o">.</span><span class="n">get_agent_card</span><span class="p">()</span>
-</span><span id="__span-14-38"><a id="__codelineno-14-38" name="__codelineno-14-38"></a>            <span class="p">)</span>  <span class="c1"># Fetches from default public path</span>
-</span><span id="__span-14-39"><a id="__codelineno-14-39" name="__codelineno-14-39"></a>            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Successfully fetched public agent card:&#39;</span><span class="p">)</span>
-</span><span id="__span-14-40"><a id="__codelineno-14-40" name="__codelineno-14-40"></a>            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
-</span><span id="__span-14-41"><a id="__codelineno-14-41" name="__codelineno-14-41"></a>                <span class="n">final_agent_card_to_use</span><span class="o">.</span><span class="n">model_dump_json</span><span class="p">(</span><span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">exclude_none</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-</span><span id="__span-14-42"><a id="__codelineno-14-42" name="__codelineno-14-42"></a>            <span class="p">)</span>
-</span><span id="__span-14-43"><a id="__codelineno-14-43" name="__codelineno-14-43"></a>            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
-</span><span id="__span-14-44"><a id="__codelineno-14-44" name="__codelineno-14-44"></a>                <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">Using PUBLIC agent card for client initialization (default).&#39;</span>
-</span><span id="__span-14-45"><a id="__codelineno-14-45" name="__codelineno-14-45"></a>            <span class="p">)</span>
-</span><span id="__span-14-46"><a id="__codelineno-14-46" name="__codelineno-14-46"></a>        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-</span><span id="__span-14-47"><a id="__codelineno-14-47" name="__codelineno-14-47"></a>            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
-</span><span id="__span-14-48"><a id="__codelineno-14-48" name="__codelineno-14-48"></a>                <span class="sa">f</span><span class="s1">&#39;Critical error fetching public agent card: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">exc_info</span><span class="o">=</span><span class="kc">True</span>
-</span><span id="__span-14-49"><a id="__codelineno-14-49" name="__codelineno-14-49"></a>            <span class="p">)</span>
-</span><span id="__span-14-50"><a id="__codelineno-14-50" name="__codelineno-14-50"></a>            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
-</span><span id="__span-14-51"><a id="__codelineno-14-51" name="__codelineno-14-51"></a>                <span class="s1">&#39;Failed to fetch the public agent card. Cannot continue.&#39;</span>
-</span><span id="__span-14-52"><a id="__codelineno-14-52" name="__codelineno-14-52"></a>            <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
-</span><span id="__span-14-53"><a id="__codelineno-14-53" name="__codelineno-14-53"></a>
-</span><span id="__span-14-54"><a id="__codelineno-14-54" name="__codelineno-14-54"></a>        <span class="n">client</span> <span class="o">=</span> <span class="n">A2AClient</span><span class="p">(</span>
-</span><span id="__span-14-55"><a id="__codelineno-14-55" name="__codelineno-14-55"></a>            <span class="n">httpx_client</span><span class="o">=</span><span class="n">httpx_client</span><span class="p">,</span> <span class="n">agent_card</span><span class="o">=</span><span class="n">final_agent_card_to_use</span>
-</span><span id="__span-14-56"><a id="__codelineno-14-56" name="__codelineno-14-56"></a>        <span class="p">)</span>
-</span><span id="__span-14-57"><a id="__codelineno-14-57" name="__codelineno-14-57"></a>        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;A2AClient initialized.&#39;</span><span class="p">)</span>
-</span><span id="__span-14-58"><a id="__codelineno-14-58" name="__codelineno-14-58"></a>
-</span><span id="__span-14-59"><a id="__codelineno-14-59" name="__codelineno-14-59"></a>        <span class="n">send_message_payload</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
-</span><span id="__span-14-60"><a id="__codelineno-14-60" name="__codelineno-14-60"></a>            <span class="s1">&#39;message&#39;</span><span class="p">:</span> <span class="p">{</span>
-</span><span id="__span-14-61"><a id="__codelineno-14-61" name="__codelineno-14-61"></a>                <span class="s1">&#39;role&#39;</span><span class="p">:</span> <span class="s1">&#39;user&#39;</span><span class="p">,</span>
-</span><span id="__span-14-62"><a id="__codelineno-14-62" name="__codelineno-14-62"></a>                <span class="s1">&#39;parts&#39;</span><span class="p">:</span> <span class="p">[</span>
-</span><span id="__span-14-63"><a id="__codelineno-14-63" name="__codelineno-14-63"></a>                    <span class="p">{</span><span class="s1">&#39;kind&#39;</span><span class="p">:</span> <span class="s1">&#39;text&#39;</span><span class="p">,</span> <span class="s1">&#39;text&#39;</span><span class="p">:</span> <span class="s1">&#39;how much is 10 USD in INR?&#39;</span><span class="p">}</span>
-</span><span id="__span-14-64"><a id="__codelineno-14-64" name="__codelineno-14-64"></a>                <span class="p">],</span>
-</span><span id="__span-14-65"><a id="__codelineno-14-65" name="__codelineno-14-65"></a>                <span class="s1">&#39;messageId&#39;</span><span class="p">:</span> <span class="n">uuid4</span><span class="p">()</span><span class="o">.</span><span class="n">hex</span><span class="p">,</span>
-</span><span id="__span-14-66"><a id="__codelineno-14-66" name="__codelineno-14-66"></a>            <span class="p">},</span>
-</span><span id="__span-14-67"><a id="__codelineno-14-67" name="__codelineno-14-67"></a>        <span class="p">}</span>
-</span><span id="__span-14-68"><a id="__codelineno-14-68" name="__codelineno-14-68"></a>        <span class="n">request</span> <span class="o">=</span> <span class="n">SendMessageRequest</span><span class="p">(</span> <span class="c1"># (4)</span>
-</span><span id="__span-14-69"><a id="__codelineno-14-69" name="__codelineno-14-69"></a>            <span class="nb">id</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">uuid4</span><span class="p">()),</span> <span class="n">params</span><span class="o">=</span><span class="n">MessageSendParams</span><span class="p">(</span><span class="o">**</span><span class="n">send_message_payload</span><span class="p">)</span>
-</span><span id="__span-14-70"><a id="__codelineno-14-70" name="__codelineno-14-70"></a>        <span class="p">)</span>
-</span><span id="__span-14-71"><a id="__codelineno-14-71" name="__codelineno-14-71"></a>
-</span><span id="__span-14-72"><a id="__codelineno-14-72" name="__codelineno-14-72"></a>        <span class="n">response</span> <span class="o">=</span> <span class="k">await</span> <span class="n">client</span><span class="o">.</span><span class="n">send_message</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
-</span><span id="__span-14-73"><a id="__codelineno-14-73" name="__codelineno-14-73"></a>        <span class="nb">print</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">model_dump</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s1">&#39;json&#39;</span><span class="p">,</span> <span class="n">exclude_none</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
-</span><span id="__span-14-74"><a id="__codelineno-14-74" name="__codelineno-14-74"></a>
-</span><span id="__span-14-75"><a id="__codelineno-14-75" name="__codelineno-14-75"></a>        <span class="n">streaming_request</span> <span class="o">=</span> <span class="n">SendStreamingMessageRequest</span><span class="p">(</span>
-</span><span id="__span-14-76"><a id="__codelineno-14-76" name="__codelineno-14-76"></a>            <span class="nb">id</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">uuid4</span><span class="p">()),</span> <span class="n">params</span><span class="o">=</span><span class="n">MessageSendParams</span><span class="p">(</span><span class="o">**</span><span class="n">send_message_payload</span><span class="p">)</span>
-</span><span id="__span-14-77"><a id="__codelineno-14-77" name="__codelineno-14-77"></a>        <span class="p">)</span>
-</span><span id="__span-14-78"><a id="__codelineno-14-78" name="__codelineno-14-78"></a>
-</span><span id="__span-14-79"><a id="__codelineno-14-79" name="__codelineno-14-79"></a>        <span class="n">stream_response</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">send_message_streaming</span><span class="p">(</span><span class="n">streaming_request</span><span class="p">)</span>
-</span><span id="__span-14-80"><a id="__codelineno-14-80" name="__codelineno-14-80"></a>
-</span><span id="__span-14-81"><a id="__codelineno-14-81" name="__codelineno-14-81"></a>        <span class="k">async</span> <span class="k">for</span> <span class="n">chunk</span> <span class="ow">in</span> <span class="n">stream_response</span><span class="p">:</span> <span class="c1"># (5)</span>
-</span><span id="__span-14-82"><a id="__codelineno-14-82" name="__codelineno-14-82"></a>            <span class="nb">print</span><span class="p">(</span><span class="n">chunk</span><span class="o">.</span><span class="n">model_dump</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s1">&#39;json&#39;</span><span class="p">,</span> <span class="n">exclude_none</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
-</span><span id="__span-14-83"><a id="__codelineno-14-83" name="__codelineno-14-83"></a>
-</span><span id="__span-14-84"><a id="__codelineno-14-84" name="__codelineno-14-84"></a>
-</span><span id="__span-14-85"><a id="__codelineno-14-85" name="__codelineno-14-85"></a><span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
-</span><span id="__span-14-86"><a id="__codelineno-14-86" name="__codelineno-14-86"></a>    <span class="kn">import</span><span class="w"> </span><span class="nn">asyncio</span>
-</span><span id="__span-14-87"><a id="__codelineno-14-87" name="__codelineno-14-87"></a>    <span class="n">asyncio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">main</span><span class="p">())</span>
+<div class="language-python highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">client.py</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-13-1"> 1</a></span>
+<span class="normal"><a href="#__codelineno-13-2"> 2</a></span>
+<span class="normal"><a href="#__codelineno-13-3"> 3</a></span>
+<span class="normal"><a href="#__codelineno-13-4"> 4</a></span>
+<span class="normal"><a href="#__codelineno-13-5"> 5</a></span>
+<span class="normal"><a href="#__codelineno-13-6"> 6</a></span>
+<span class="normal"><a href="#__codelineno-13-7"> 7</a></span>
+<span class="normal"><a href="#__codelineno-13-8"> 8</a></span>
+<span class="normal"><a href="#__codelineno-13-9"> 9</a></span>
+<span class="normal"><a href="#__codelineno-13-10">10</a></span>
+<span class="normal"><a href="#__codelineno-13-11">11</a></span>
+<span class="normal"><a href="#__codelineno-13-12">12</a></span>
+<span class="normal"><a href="#__codelineno-13-13">13</a></span>
+<span class="normal"><a href="#__codelineno-13-14">14</a></span>
+<span class="normal"><a href="#__codelineno-13-15">15</a></span>
+<span class="normal"><a href="#__codelineno-13-16">16</a></span>
+<span class="normal"><a href="#__codelineno-13-17">17</a></span>
+<span class="normal"><a href="#__codelineno-13-18">18</a></span>
+<span class="normal"><a href="#__codelineno-13-19">19</a></span>
+<span class="normal"><a href="#__codelineno-13-20">20</a></span>
+<span class="normal"><a href="#__codelineno-13-21">21</a></span>
+<span class="normal"><a href="#__codelineno-13-22">22</a></span>
+<span class="normal"><a href="#__codelineno-13-23">23</a></span>
+<span class="normal"><a href="#__codelineno-13-24">24</a></span>
+<span class="normal"><a href="#__codelineno-13-25">25</a></span>
+<span class="normal"><a href="#__codelineno-13-26">26</a></span>
+<span class="normal"><a href="#__codelineno-13-27">27</a></span>
+<span class="normal"><a href="#__codelineno-13-28">28</a></span>
+<span class="normal"><a href="#__codelineno-13-29">29</a></span>
+<span class="normal"><a href="#__codelineno-13-30">30</a></span>
+<span class="normal"><a href="#__codelineno-13-31">31</a></span>
+<span class="normal"><a href="#__codelineno-13-32">32</a></span>
+<span class="normal"><a href="#__codelineno-13-33">33</a></span>
+<span class="normal"><a href="#__codelineno-13-34">34</a></span>
+<span class="normal"><a href="#__codelineno-13-35">35</a></span>
+<span class="normal"><a href="#__codelineno-13-36">36</a></span>
+<span class="normal"><a href="#__codelineno-13-37">37</a></span>
+<span class="normal"><a href="#__codelineno-13-38">38</a></span>
+<span class="normal"><a href="#__codelineno-13-39">39</a></span>
+<span class="normal"><a href="#__codelineno-13-40">40</a></span>
+<span class="normal"><a href="#__codelineno-13-41">41</a></span>
+<span class="normal"><a href="#__codelineno-13-42">42</a></span>
+<span class="normal"><a href="#__codelineno-13-43">43</a></span>
+<span class="normal"><a href="#__codelineno-13-44">44</a></span>
+<span class="normal"><a href="#__codelineno-13-45">45</a></span>
+<span class="normal"><a href="#__codelineno-13-46">46</a></span>
+<span class="normal"><a href="#__codelineno-13-47">47</a></span>
+<span class="normal"><a href="#__codelineno-13-48">48</a></span>
+<span class="normal"><a href="#__codelineno-13-49">49</a></span>
+<span class="normal"><a href="#__codelineno-13-50">50</a></span>
+<span class="normal"><a href="#__codelineno-13-51">51</a></span>
+<span class="normal"><a href="#__codelineno-13-52">52</a></span>
+<span class="normal"><a href="#__codelineno-13-53">53</a></span>
+<span class="normal"><a href="#__codelineno-13-54">54</a></span>
+<span class="normal"><a href="#__codelineno-13-55">55</a></span>
+<span class="normal"><a href="#__codelineno-13-56">56</a></span>
+<span class="normal"><a href="#__codelineno-13-57">57</a></span>
+<span class="normal"><a href="#__codelineno-13-58">58</a></span>
+<span class="normal"><a href="#__codelineno-13-59">59</a></span>
+<span class="normal"><a href="#__codelineno-13-60">60</a></span>
+<span class="normal"><a href="#__codelineno-13-61">61</a></span>
+<span class="normal"><a href="#__codelineno-13-62">62</a></span>
+<span class="normal"><a href="#__codelineno-13-63">63</a></span>
+<span class="normal"><a href="#__codelineno-13-64">64</a></span>
+<span class="normal"><a href="#__codelineno-13-65">65</a></span>
+<span class="normal"><a href="#__codelineno-13-66">66</a></span>
+<span class="normal"><a href="#__codelineno-13-67">67</a></span>
+<span class="normal"><a href="#__codelineno-13-68">68</a></span>
+<span class="normal"><a href="#__codelineno-13-69">69</a></span>
+<span class="normal"><a href="#__codelineno-13-70">70</a></span>
+<span class="normal"><a href="#__codelineno-13-71">71</a></span>
+<span class="normal"><a href="#__codelineno-13-72">72</a></span>
+<span class="normal"><a href="#__codelineno-13-73">73</a></span>
+<span class="normal"><a href="#__codelineno-13-74">74</a></span>
+<span class="normal"><a href="#__codelineno-13-75">75</a></span>
+<span class="normal"><a href="#__codelineno-13-76">76</a></span>
+<span class="normal"><a href="#__codelineno-13-77">77</a></span>
+<span class="normal"><a href="#__codelineno-13-78">78</a></span>
+<span class="normal"><a href="#__codelineno-13-79">79</a></span>
+<span class="normal"><a href="#__codelineno-13-80">80</a></span>
+<span class="normal"><a href="#__codelineno-13-81">81</a></span>
+<span class="normal"><a href="#__codelineno-13-82">82</a></span>
+<span class="normal"><a href="#__codelineno-13-83">83</a></span>
+<span class="normal"><a href="#__codelineno-13-84">84</a></span>
+<span class="normal"><a href="#__codelineno-13-85">85</a></span>
+<span class="normal"><a href="#__codelineno-13-86">86</a></span>
+<span class="normal"><a href="#__codelineno-13-87">87</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2"></a>
+</span><span id="__span-13-3"><a id="__codelineno-13-3" name="__codelineno-13-3"></a><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span>
+</span><span id="__span-13-4"><a id="__codelineno-13-4" name="__codelineno-13-4"></a><span class="kn">from</span><span class="w"> </span><span class="nn">uuid</span><span class="w"> </span><span class="kn">import</span> <span class="n">uuid4</span>
+</span><span id="__span-13-5"><a id="__codelineno-13-5" name="__codelineno-13-5"></a>
+</span><span id="__span-13-6"><a id="__codelineno-13-6" name="__codelineno-13-6"></a><span class="kn">import</span><span class="w"> </span><span class="nn">httpx</span>
+</span><span id="__span-13-7"><a id="__codelineno-13-7" name="__codelineno-13-7"></a>
+</span><span id="__span-13-8"><a id="__codelineno-13-8" name="__codelineno-13-8"></a><span class="kn">from</span><span class="w"> </span><span class="nn">a2a.client</span><span class="w"> </span><span class="kn">import</span> <span class="n">A2ACardResolver</span><span class="p">,</span> <span class="n">A2AClient</span>
+</span><span id="__span-13-9"><a id="__codelineno-13-9" name="__codelineno-13-9"></a><span class="kn">from</span><span class="w"> </span><span class="nn">a2a.types</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+</span><span id="__span-13-10"><a id="__codelineno-13-10" name="__codelineno-13-10"></a>    <span class="n">AgentCard</span><span class="p">,</span>
+</span><span id="__span-13-11"><a id="__codelineno-13-11" name="__codelineno-13-11"></a>    <span class="n">MessageSendParams</span><span class="p">,</span>
+</span><span id="__span-13-12"><a id="__codelineno-13-12" name="__codelineno-13-12"></a>    <span class="n">SendMessageRequest</span><span class="p">,</span>
+</span><span id="__span-13-13"><a id="__codelineno-13-13" name="__codelineno-13-13"></a>    <span class="n">SendStreamingMessageRequest</span><span class="p">,</span>
+</span><span id="__span-13-14"><a id="__codelineno-13-14" name="__codelineno-13-14"></a><span class="p">)</span>
+</span><span id="__span-13-15"><a id="__codelineno-13-15" name="__codelineno-13-15"></a>
+</span><span id="__span-13-16"><a id="__codelineno-13-16" name="__codelineno-13-16"></a>
+</span><span id="__span-13-17"><a id="__codelineno-13-17" name="__codelineno-13-17"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="__span-13-18"><a id="__codelineno-13-18" name="__codelineno-13-18"></a>    <span class="n">PUBLIC_AGENT_CARD_PATH</span> <span class="o">=</span> <span class="s1">&#39;/.well-known/agent.json&#39;</span>
+</span><span id="__span-13-19"><a id="__codelineno-13-19" name="__codelineno-13-19"></a>
+</span><span id="__span-13-20"><a id="__codelineno-13-20" name="__codelineno-13-20"></a>    <span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">)</span> <span class="c1"># (1)</span>
+</span><span id="__span-13-21"><a id="__codelineno-13-21" name="__codelineno-13-21"></a>    <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>  <span class="c1"># Get a logger instance</span>
+</span><span id="__span-13-22"><a id="__codelineno-13-22" name="__codelineno-13-22"></a>
+</span><span id="__span-13-23"><a id="__codelineno-13-23" name="__codelineno-13-23"></a>    <span class="n">base_url</span> <span class="o">=</span> <span class="s1">&#39;http://tuna-fusion-executor.default.svc.cluster.local/a2a/namespaces/default/agents/test-deploy-1&#39;</span> <span class="c1"># (2)</span>
+</span><span id="__span-13-24"><a id="__codelineno-13-24" name="__codelineno-13-24"></a>
+</span><span id="__span-13-25"><a id="__codelineno-13-25" name="__codelineno-13-25"></a>    <span class="k">async</span> <span class="k">with</span> <span class="n">httpx</span><span class="o">.</span><span class="n">AsyncClient</span><span class="p">()</span> <span class="k">as</span> <span class="n">httpx_client</span><span class="p">:</span>
+</span><span id="__span-13-26"><a id="__codelineno-13-26" name="__codelineno-13-26"></a>        <span class="c1"># Initialize A2ACardResolver</span>
+</span><span id="__span-13-27"><a id="__codelineno-13-27" name="__codelineno-13-27"></a>        <span class="n">resolver</span> <span class="o">=</span> <span class="n">A2ACardResolver</span><span class="p">(</span>
+</span><span id="__span-13-28"><a id="__codelineno-13-28" name="__codelineno-13-28"></a>            <span class="n">httpx_client</span><span class="o">=</span><span class="n">httpx_client</span><span class="p">,</span>
+</span><span id="__span-13-29"><a id="__codelineno-13-29" name="__codelineno-13-29"></a>            <span class="n">base_url</span><span class="o">=</span><span class="n">base_url</span><span class="p">,</span> <span class="c1"># (3)</span>
+</span><span id="__span-13-30"><a id="__codelineno-13-30" name="__codelineno-13-30"></a>        <span class="p">)</span>
+</span><span id="__span-13-31"><a id="__codelineno-13-31" name="__codelineno-13-31"></a>
+</span><span id="__span-13-32"><a id="__codelineno-13-32" name="__codelineno-13-32"></a>        <span class="k">try</span><span class="p">:</span>
+</span><span id="__span-13-33"><a id="__codelineno-13-33" name="__codelineno-13-33"></a>            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+</span><span id="__span-13-34"><a id="__codelineno-13-34" name="__codelineno-13-34"></a>                <span class="sa">f</span><span class="s1">&#39;Attempting to fetch public agent card from: </span><span class="si">{</span><span class="n">base_url</span><span class="si">}{</span><span class="n">PUBLIC_AGENT_CARD_PATH</span><span class="si">}</span><span class="s1">&#39;</span>
+</span><span id="__span-13-35"><a id="__codelineno-13-35" name="__codelineno-13-35"></a>            <span class="p">)</span>
+</span><span id="__span-13-36"><a id="__codelineno-13-36" name="__codelineno-13-36"></a>            <span class="n">final_agent_card_to_use</span> <span class="o">=</span> <span class="p">(</span>
+</span><span id="__span-13-37"><a id="__codelineno-13-37" name="__codelineno-13-37"></a>                <span class="k">await</span> <span class="n">resolver</span><span class="o">.</span><span class="n">get_agent_card</span><span class="p">()</span>
+</span><span id="__span-13-38"><a id="__codelineno-13-38" name="__codelineno-13-38"></a>            <span class="p">)</span>  <span class="c1"># Fetches from default public path</span>
+</span><span id="__span-13-39"><a id="__codelineno-13-39" name="__codelineno-13-39"></a>            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Successfully fetched public agent card:&#39;</span><span class="p">)</span>
+</span><span id="__span-13-40"><a id="__codelineno-13-40" name="__codelineno-13-40"></a>            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+</span><span id="__span-13-41"><a id="__codelineno-13-41" name="__codelineno-13-41"></a>                <span class="n">final_agent_card_to_use</span><span class="o">.</span><span class="n">model_dump_json</span><span class="p">(</span><span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">exclude_none</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span id="__span-13-42"><a id="__codelineno-13-42" name="__codelineno-13-42"></a>            <span class="p">)</span>
+</span><span id="__span-13-43"><a id="__codelineno-13-43" name="__codelineno-13-43"></a>            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+</span><span id="__span-13-44"><a id="__codelineno-13-44" name="__codelineno-13-44"></a>                <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">Using PUBLIC agent card for client initialization (default).&#39;</span>
+</span><span id="__span-13-45"><a id="__codelineno-13-45" name="__codelineno-13-45"></a>            <span class="p">)</span>
+</span><span id="__span-13-46"><a id="__codelineno-13-46" name="__codelineno-13-46"></a>        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+</span><span id="__span-13-47"><a id="__codelineno-13-47" name="__codelineno-13-47"></a>            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+</span><span id="__span-13-48"><a id="__codelineno-13-48" name="__codelineno-13-48"></a>                <span class="sa">f</span><span class="s1">&#39;Critical error fetching public agent card: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">exc_info</span><span class="o">=</span><span class="kc">True</span>
+</span><span id="__span-13-49"><a id="__codelineno-13-49" name="__codelineno-13-49"></a>            <span class="p">)</span>
+</span><span id="__span-13-50"><a id="__codelineno-13-50" name="__codelineno-13-50"></a>            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+</span><span id="__span-13-51"><a id="__codelineno-13-51" name="__codelineno-13-51"></a>                <span class="s1">&#39;Failed to fetch the public agent card. Cannot continue.&#39;</span>
+</span><span id="__span-13-52"><a id="__codelineno-13-52" name="__codelineno-13-52"></a>            <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
+</span><span id="__span-13-53"><a id="__codelineno-13-53" name="__codelineno-13-53"></a>
+</span><span id="__span-13-54"><a id="__codelineno-13-54" name="__codelineno-13-54"></a>        <span class="n">client</span> <span class="o">=</span> <span class="n">A2AClient</span><span class="p">(</span>
+</span><span id="__span-13-55"><a id="__codelineno-13-55" name="__codelineno-13-55"></a>            <span class="n">httpx_client</span><span class="o">=</span><span class="n">httpx_client</span><span class="p">,</span> <span class="n">agent_card</span><span class="o">=</span><span class="n">final_agent_card_to_use</span>
+</span><span id="__span-13-56"><a id="__codelineno-13-56" name="__codelineno-13-56"></a>        <span class="p">)</span>
+</span><span id="__span-13-57"><a id="__codelineno-13-57" name="__codelineno-13-57"></a>        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;A2AClient initialized.&#39;</span><span class="p">)</span>
+</span><span id="__span-13-58"><a id="__codelineno-13-58" name="__codelineno-13-58"></a>
+</span><span id="__span-13-59"><a id="__codelineno-13-59" name="__codelineno-13-59"></a>        <span class="n">send_message_payload</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+</span><span id="__span-13-60"><a id="__codelineno-13-60" name="__codelineno-13-60"></a>            <span class="s1">&#39;message&#39;</span><span class="p">:</span> <span class="p">{</span>
+</span><span id="__span-13-61"><a id="__codelineno-13-61" name="__codelineno-13-61"></a>                <span class="s1">&#39;role&#39;</span><span class="p">:</span> <span class="s1">&#39;user&#39;</span><span class="p">,</span>
+</span><span id="__span-13-62"><a id="__codelineno-13-62" name="__codelineno-13-62"></a>                <span class="s1">&#39;parts&#39;</span><span class="p">:</span> <span class="p">[</span>
+</span><span id="__span-13-63"><a id="__codelineno-13-63" name="__codelineno-13-63"></a>                    <span class="p">{</span><span class="s1">&#39;kind&#39;</span><span class="p">:</span> <span class="s1">&#39;text&#39;</span><span class="p">,</span> <span class="s1">&#39;text&#39;</span><span class="p">:</span> <span class="s1">&#39;how much is 10 USD in INR?&#39;</span><span class="p">}</span>
+</span><span id="__span-13-64"><a id="__codelineno-13-64" name="__codelineno-13-64"></a>                <span class="p">],</span>
+</span><span id="__span-13-65"><a id="__codelineno-13-65" name="__codelineno-13-65"></a>                <span class="s1">&#39;messageId&#39;</span><span class="p">:</span> <span class="n">uuid4</span><span class="p">()</span><span class="o">.</span><span class="n">hex</span><span class="p">,</span>
+</span><span id="__span-13-66"><a id="__codelineno-13-66" name="__codelineno-13-66"></a>            <span class="p">},</span>
+</span><span id="__span-13-67"><a id="__codelineno-13-67" name="__codelineno-13-67"></a>        <span class="p">}</span>
+</span><span id="__span-13-68"><a id="__codelineno-13-68" name="__codelineno-13-68"></a>        <span class="n">request</span> <span class="o">=</span> <span class="n">SendMessageRequest</span><span class="p">(</span> <span class="c1"># (4)</span>
+</span><span id="__span-13-69"><a id="__codelineno-13-69" name="__codelineno-13-69"></a>            <span class="nb">id</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">uuid4</span><span class="p">()),</span> <span class="n">params</span><span class="o">=</span><span class="n">MessageSendParams</span><span class="p">(</span><span class="o">**</span><span class="n">send_message_payload</span><span class="p">)</span>
+</span><span id="__span-13-70"><a id="__codelineno-13-70" name="__codelineno-13-70"></a>        <span class="p">)</span>
+</span><span id="__span-13-71"><a id="__codelineno-13-71" name="__codelineno-13-71"></a>
+</span><span id="__span-13-72"><a id="__codelineno-13-72" name="__codelineno-13-72"></a>        <span class="n">response</span> <span class="o">=</span> <span class="k">await</span> <span class="n">client</span><span class="o">.</span><span class="n">send_message</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
+</span><span id="__span-13-73"><a id="__codelineno-13-73" name="__codelineno-13-73"></a>        <span class="nb">print</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">model_dump</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s1">&#39;json&#39;</span><span class="p">,</span> <span class="n">exclude_none</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+</span><span id="__span-13-74"><a id="__codelineno-13-74" name="__codelineno-13-74"></a>
+</span><span id="__span-13-75"><a id="__codelineno-13-75" name="__codelineno-13-75"></a>        <span class="n">streaming_request</span> <span class="o">=</span> <span class="n">SendStreamingMessageRequest</span><span class="p">(</span>
+</span><span id="__span-13-76"><a id="__codelineno-13-76" name="__codelineno-13-76"></a>            <span class="nb">id</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">uuid4</span><span class="p">()),</span> <span class="n">params</span><span class="o">=</span><span class="n">MessageSendParams</span><span class="p">(</span><span class="o">**</span><span class="n">send_message_payload</span><span class="p">)</span>
+</span><span id="__span-13-77"><a id="__codelineno-13-77" name="__codelineno-13-77"></a>        <span class="p">)</span>
+</span><span id="__span-13-78"><a id="__codelineno-13-78" name="__codelineno-13-78"></a>
+</span><span id="__span-13-79"><a id="__codelineno-13-79" name="__codelineno-13-79"></a>        <span class="n">stream_response</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">send_message_streaming</span><span class="p">(</span><span class="n">streaming_request</span><span class="p">)</span>
+</span><span id="__span-13-80"><a id="__codelineno-13-80" name="__codelineno-13-80"></a>
+</span><span id="__span-13-81"><a id="__codelineno-13-81" name="__codelineno-13-81"></a>        <span class="k">async</span> <span class="k">for</span> <span class="n">chunk</span> <span class="ow">in</span> <span class="n">stream_response</span><span class="p">:</span> <span class="c1"># (5)</span>
+</span><span id="__span-13-82"><a id="__codelineno-13-82" name="__codelineno-13-82"></a>            <span class="nb">print</span><span class="p">(</span><span class="n">chunk</span><span class="o">.</span><span class="n">model_dump</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s1">&#39;json&#39;</span><span class="p">,</span> <span class="n">exclude_none</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+</span><span id="__span-13-83"><a id="__codelineno-13-83" name="__codelineno-13-83"></a>
+</span><span id="__span-13-84"><a id="__codelineno-13-84" name="__codelineno-13-84"></a>
+</span><span id="__span-13-85"><a id="__codelineno-13-85" name="__codelineno-13-85"></a><span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+</span><span id="__span-13-86"><a id="__codelineno-13-86" name="__codelineno-13-86"></a>    <span class="kn">import</span><span class="w"> </span><span class="nn">asyncio</span>
+</span><span id="__span-13-87"><a id="__codelineno-13-87" name="__codelineno-13-87"></a>    <span class="n">asyncio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">main</span><span class="p">())</span>
 </span></code></pre></div></td></tr></table></div>
 <ol>
 <li>Configure logging to show INFO level messages</li>
