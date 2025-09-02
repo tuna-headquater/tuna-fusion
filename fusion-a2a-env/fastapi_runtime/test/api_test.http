@@ -1,0 +1,36 @@
+### Specialize with simple web function
+POST localhost:8888/specialize
+Content-Type: application/json
+
+{
+  "appType": "WebApp",
+  "entrypoint": "server.handle",
+  "deployArchive": {
+    "filesystemFolderSource": {
+      "path": "../test/web_hello_world"
+    }
+  }
+}
+
+
+### Test simple web function
+GET localhost:8888/
+
+
+### Specialize with simple agent app
+POST localhost:8888/specialize
+Content-Type: application/json
+
+{
+  "appType": "AgentApp",
+  "entrypoint": "app.HelloWorldAgentExecutor",
+  "deployArchive": {
+    "filesystemFolderSource": {
+      "path": "../test/a2a_hello_world"
+    }
+  }
+}
+
+
+### Get agent card of loaded A2A app
+GET localhost:8888/.well-known/agent-card.json

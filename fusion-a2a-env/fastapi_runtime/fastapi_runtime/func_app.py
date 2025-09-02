@@ -4,22 +4,18 @@ import json
 import logging
 import os
 import sys
-from typing import Callable, Optional, Any
+import time
+from typing import Callable, Optional
 
 from a2a.server.agent_execution import AgentExecutor
-from a2a.server.apps.jsonrpc.fastapi_app import JSONRPCApplication
-from a2a.server.events.in_memory_queue_manager import InMemoryQueueManager
-from a2a.server.request_handlers import DefaultRequestHandler
-from a2a.server.tasks import InMemoryTaskStore
 from a2a.types import AgentCard
-from fastapi import FastAPI, Request, Response, HTTPException
+from fastapi import Request, Response, HTTPException, FastAPI
 from pydantic import ValidationError
-from redis.asyncio import Redis
-from starlette.applications import Starlette
+from starlette.routing import Mount
+from starlette.types import ASGIApp
 
-from fastapi_runtime.database_task_store import DatabaseTaskStore
-from fastapi_runtime.models import A2ARuntimeConfig, SpecializeRequest, AppType
-from fastapi_runtime.redis_queue_manager import RedisQueueManager
+from fastapi_runtime.a2a_application import A2AApplication
+from fastapi_runtime.models import A2ARuntimeConfig, SpecializeRequest, AppType, SpecializeResponse
 
 
 def import_src(path):
@@ -35,60 +31,15 @@ def read_runtime_config(file_root: str) -> A2ARuntimeConfig:
 
 AGENT_CARD_PATH = "/.well-known/agent.json"
 
-class A2AApplication(JSONRPCApplication):
-
-    def __init__(self, agent_card: AgentCard, agent_executor: AgentExecutor, runtime_config: A2ARuntimeConfig):
-        logging.debug("With runtime config: %s", runtime_config)
-        match runtime_config.queue_manager.provider:
-            case "InMemory":
-                queue_manager = InMemoryQueueManager()
-            case "Redis":
-                queue_manager = RedisQueueManager(
-                    redis_client=Redis.from_url(runtime_config.queue_manager.redis.redis_url),
-                    relay_channel_key_prefix=runtime_config.queue_manager.redis.relay_channel_key_prefix,
-                    task_registry_key=runtime_config.queue_manager.redis.task_registry_key,
-                    task_id_ttl_in_second=runtime_config.queue_manager.redis.task_id_ttl_in_second
-                )
-            case _:
-                raise Exception("Invalid queue manager provider")
-
-        match runtime_config.task_store.provider:
-            case "InMemory":
-                task_store = InMemoryTaskStore()
-            case "MySQL" | "Postgres" | "SQLite":
-                task_store = DatabaseTaskStore(
-                    db_url=runtime_config.task_store.sql.database_url,
-                    create_table_if_not_exists=runtime_config.task_store.sql.create_table,
-                    table_name=runtime_config.task_store.sql.task_store_table_name
-                )
-            case _:
-                raise Exception("Invalid task store provider")
-
-        request_handler = DefaultRequestHandler(
-            agent_executor=agent_executor,
-            task_store=task_store,
-            queue_manager=queue_manager
-        )
-        super().__init__(agent_card=agent_card, http_handler=request_handler)
-
-    def build(self, agent_card_url: str = '/.well-known/agent.json', rpc_url: str = '/',
-              **kwargs: Any) -> FastAPI | Starlette:
-        pass
-
-    async def handle_requests(self, request: Request) -> Response:
-        return await self._handle_requests(request)
-
-    async def get_agent_card(self, request: Request) -> Response:
-        return await self._handle_get_agent_card(request)
+WebAppFn = Callable[[Request], Response]
 
 
 class FuncApp(FastAPI):
-    def __init__(self, loglevel=logging.DEBUG):
-        super().__init__(title="tuna-fusion A2A Server")
-        self.fastapi_app = FastAPI()
+    def __init__(self, loglevel=logging.DEBUG, app_prefix:str="/"):
+        super().__init__(title="tuna-fusion runtime app")
         # init the class members
-        self._agent_app: Optional[A2AApplication] = None
-        self._web_app: Optional[Any] = None
+        self._app_prefix = app_prefix
+        self._mount: Optional[Mount] = None
         self.logger = logging.getLogger()
         self.ch = logging.StreamHandler(sys.stdout)
         self.logger.setLevel(loglevel)
@@ -98,8 +49,14 @@ class FuncApp(FastAPI):
         )
         self.logger.addHandler(self.ch)
         self._mutex = asyncio.Lock()
+        self._configure_routes()
 
-    def build_json_rpc_app(self, executor_factory: Callable[[], AgentExecutor], file_root: str) -> JSONRPCApplication:
+    def _configure_routes(self):
+        app = self
+        app.add_api_route(path='/specialize', endpoint=self.load, methods=["POST"])
+        app.add_api_route(path='/health', endpoint=self.health, methods=["GET"])
+
+    def build_a2a_application(self, executor_factory: Callable[[], AgentExecutor], file_root: str) -> ASGIApp:
         agent_executor = None
         try:
             agent_executor = executor_factory()
@@ -121,61 +78,40 @@ class FuncApp(FastAPI):
             self.logger.error("Failed to read runtime config", exc_info=e)
             raise e
 
-        return A2AApplication(agent_executor=agent_executor, agent_card=agent_card, runtime_config=runtime_config)
+        app =  A2AApplication(agent_executor=agent_executor, agent_card=agent_card, runtime_config=runtime_config)
+        return Mount(app=app.build(), path=self._app_prefix)
 
-    async def load(self, request: Request):
-        specialize_info = await request.json()
-        try:
-            request = SpecializeRequest.model_validate(specialize_info)
-        except ValidationError as e:
-            raise HTTPException(status_code=400, detail=e.errors())
+    # def build_fastmcp_server(self) -> :
+    def build_web_app(self, fn: WebAppFn) -> ASGIApp:
+        self.logger.info("Build web application using a WebAppFn")
+        app = FastAPI()
+        app.add_api_route("/{path_name:path}", endpoint=fn, methods=["GET", "POST", "PUT", "HEAD", "OPTIONS", "DELETE"])
+        return Mount(app=app, path=self._app_prefix)
 
+    async def load(self, request: SpecializeRequest) -> SpecializeResponse:
         handler = request.entrypoint
         filepath = request.deployArchive.filesystemFolderSource.path
         self.logger.info("Load app from %s with handler %s", filepath, handler)
 
+        t1 = time.time()
         try:
             fn = self._load(handler, filepath)
             async with self._mutex:
+                if self._mount:
+                    self.router.routes.remove(self._mount)
                 if request.appType is AppType.AgentApp:
-                    self._agent_app = self.build_json_rpc_app(fn, filepath)
+                    self._mount = self.build_a2a_application(fn, filepath)
                 if request.appType is AppType.WebApp:
-                    self._web_app = fn
+                    self._mount = self.build_web_app(fn)
+
+                self.router.routes.append(self._mount)
+            return SpecializeResponse(elapsedTime=time.time() - t1)
         except Exception as e:
             self.logger.error(f"Specialization failed: %s", e)
             raise HTTPException(status_code=500, detail=str(e))
 
     async def health(self):
         return Response(status_code=200)
-
-    async def agent_task_call(self, request: Request):
-        if self._agent_app is None:
-            self.logger.error("agent_app is None")
-            return Response(status_code=500)
-        self.logger.info(self._agent_app)
-        return await self._agent_app.handle_requests(request)
-
-    async def dispatch(self, request: Request):
-        async with self._mutex:
-            if self._agent_app:
-                if request.url.path == AGENT_CARD_PATH:
-                    return await self.agent_card_call(request)
-                else:
-                    return await self.agent_task_call(request)
-            elif self._web_app:
-                if asyncio.iscoroutinefunction(self._web_app):
-                    return await self._web_app(request)
-                else:
-                    return self._web_app(request)
-            else:
-                return Response(status_code=400, content="No agent or web app configured")
-
-    async def agent_card_call(self, request: Request):
-        if self._agent_app is None:
-            self.logger.error("agent_app is None")
-            return Response(status_code=500)
-        self.logger.info(self._agent_app)
-        return await self._agent_app.get_agent_card(request)
 
     def _load(self, handler: str, filepath: str):
         self.logger.info(

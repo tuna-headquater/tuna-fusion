@@ -70,10 +70,19 @@ class DeployArchive(BaseModel):
 class AppType(StrEnum):
     WebApp = "WebApp"
     AgentApp = "AgentApp"
+    FastMCPServer = "FastMCPServer"
 
 
 class SpecializeRequest(BaseModel):
     entrypoint: str
     deployArchive: DeployArchive
     appType: AppType
+
+
+class SpecializeResponse(BaseModel):
+    elapsedTime: float
+
+
+class ErrorResponse(BaseModel):
+    message: str
 

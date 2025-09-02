@@ -32,7 +32,3 @@ class HelloWorldAgentExecutor(AgentExecutor):
     async def cancel(self, context: RequestContext, event_queue: EventQueue) -> None:
         raise Exception('cancel not supported')
 
-
-def handle():
-    return HelloWorldAgentExecutor()
-
